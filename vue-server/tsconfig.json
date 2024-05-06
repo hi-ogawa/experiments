@@ -1,6 +1,8 @@
 {
 	"include": ["src"],
 	"compilerOptions": {
+		"jsx": "react-jsx",
+		"jsxImportSource": "vue",
 		"strict": true,
 		"noEmit": true,
 		"verbatimModuleSyntax": true,

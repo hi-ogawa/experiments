@@ -17,7 +17,7 @@ test("basic", async () => {
 			props: {},
 		},
 	);
-	const NoSetup = async () => h("div", { id: "no-setup" });
+	const NoSetup = async () => <div id="no-setup" />;
 
 	const vnode = h("main", { id: "hi" }, [
 		"text",
@@ -70,6 +70,7 @@ test("basic", async () => {
 		      "key": null,
 		      "props": {
 		        "id": "no-setup",
+		        "key": undefined,
 		      },
 		      "type": "div",
 		    },
