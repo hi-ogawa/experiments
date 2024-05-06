@@ -1,0 +1,13 @@
+{
+	"include": ["src"],
+	"compilerOptions": {
+		"strict": true,
+		"noEmit": true,
+		"verbatimModuleSyntax": true,
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
+		"target": "ESNext",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"types": []
+	}
+}
