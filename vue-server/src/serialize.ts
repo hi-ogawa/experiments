@@ -1,6 +1,6 @@
-import { type VNode, isVNode } from "vue";
 import { tinyassert } from "@hiogawa/utils";
 import { ShapeFlags } from "@vue/shared";
+import { type VNode, isVNode } from "vue";
 
 // https://github.com/hi-ogawa/js-utils/blob/5288c172b72699c769dc87e2f07e3ce6ec9b5199/packages/tiny-react/src/server/index.ts
 

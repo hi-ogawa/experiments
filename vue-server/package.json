@@ -4,7 +4,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"test": "vitest"
+		"test": "vitest",
+		"lint": "biome check --apply .",
+		"lint-check": "biome check ."
 	},
 	"dependencies": {
 		"@vue/shared": "^3.4.26",
