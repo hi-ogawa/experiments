@@ -1,5 +1,5 @@
-import { test, expect } from "vitest";
-import { h, defineComponent } from "vue";
+import { expect, test } from "vitest";
+import { defineComponent, h } from "vue";
 import { serialize } from "./serialize";
 
 test("basic", async () => {

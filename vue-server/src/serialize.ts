@@ -1,16 +1,8 @@
-import { isVNode, type VNode } from "vue";
-import { ShapeFlags } from "@vue/shared";
+import { type VNode, isVNode } from "vue";
 import { tinyassert } from "@hiogawa/utils";
+import { ShapeFlags } from "@vue/shared";
 
-// cf.
 // https://github.com/hi-ogawa/js-utils/blob/5288c172b72699c769dc87e2f07e3ce6ec9b5199/packages/tiny-react/src/server/index.ts
-
-// TODO:
-// - client reference
-// - deserialize slots passed from server to client
-// - builtins https://vuejs.org/api/built-in-directives.html
-// - jsx
-// - sfc
 
 type SerializeResult = {
 	data: unknown;
