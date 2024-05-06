@@ -1,5 +1,8 @@
 import { expect, test } from "vitest";
 import { defineComponent, h } from "vue";
+import AsyncVue from "./fixtures/async.vue";
+import BasicVue from "./fixtures/basic.vue";
+import SetupVue from "./fixtures/setup.vue";
 import { serialize } from "./serialize";
 
 test("basic", async () => {
@@ -83,3 +86,77 @@ test("basic", async () => {
 		}
 	`);
 });
+
+test("sfc template", async () => {
+	const vnode = h("main", { id: "hi" }, h(BasicVue));
+	expect(vnode).toMatchSnapshot();
+
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": "basic",
+		      "key": null,
+		      "props": null,
+		      "type": "div",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "hi",
+		  },
+		  "type": "main",
+		}
+	`);
+});
+
+test.only("sfc setup", async () => {
+	const vnode = h("main", { id: "hi" }, h(SetupVue));
+	expect(vnode).toMatchSnapshot();
+
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": "basic",
+		      "key": null,
+		      "props": null,
+		      "type": "div",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "hi",
+		  },
+		  "type": "main",
+		}
+	`);
+});
+
+test.skip("sfc async", async () => {
+	const vnode = h("main", { id: "hi" }, h(AsyncVue));
+	expect(vnode).toMatchSnapshot();
+
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": "basic",
+		      "key": null,
+		      "props": null,
+		      "type": "div",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "hi",
+		  },
+		  "type": "main",
+		}
+	`);
+});
+
+test.skip("sfc slots");

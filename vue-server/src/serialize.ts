@@ -50,7 +50,9 @@ class Serializer {
 				children: await this.serialize(node.children),
 			};
 		}
-		// TODO: client reference
+		// TODO: does vue runtime exposes utility to evaluate component?
+		// - createComponentInstance
+		// - setupComponent
 		if (node.shapeFlag & ShapeFlags.FUNCTIONAL_COMPONENT) {
 			const render = node.type as unknown;
 			tinyassert(typeof render === "function");
@@ -58,9 +60,19 @@ class Serializer {
 			return this.serialize(child);
 		}
 		if (node.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-			const setup = (node.type as any).setup;
-			tinyassert(typeof setup === "function");
-			const render = await setup(node.props, { slots: node.children });
+			let { setup, render } = node.type as any;
+			if (setup) {
+				tinyassert(typeof setup === "function");
+				const returned = await setup(node.props, {
+					slots: node.children,
+					expose: () => {},
+				});
+				console.log(returned);
+				render ??= await setup(node.props, {
+					slots: node.children,
+					expose: () => {},
+				});
+			}
 			tinyassert(typeof render === "function");
 			const child = await render();
 			return this.serialize(child);
