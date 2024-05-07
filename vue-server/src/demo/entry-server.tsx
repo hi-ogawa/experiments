@@ -2,6 +2,7 @@ import type { ViteDevServer } from "vite";
 import { createSSRApp } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { deserialize, serialize } from "../serialize";
+import { ClientCounter } from "./routes/_client";
 import Page from "./routes/page";
 
 export async function handler(request: Request) {
@@ -16,7 +17,7 @@ export async function handler(request: Request) {
 		});
 	}
 
-	const Root = () => deserialize(result.data, {});
+	const Root = () => deserialize(result.data, { ClientCounter });
 	const app = createSSRApp(Root);
 	const ssrHtml = await renderToString(app);
 	let html = await importHtmlTemplate();
@@ -28,6 +29,12 @@ export async function handler(request: Request) {
 				result,
 			)}</script>`,
 	);
+	if (import.meta.env.DEV) {
+		html = html.replace(
+			"<head>",
+			`<head><link rel="stylesheet" href="/src/demo/style.css?direct" />`,
+		);
+	}
 	return new Response(html, {
 		headers: {
 			"content-type": "text/html",
