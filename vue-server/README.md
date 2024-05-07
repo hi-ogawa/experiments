@@ -1,5 +1,7 @@
 # vue-server
 
+https://vue-server-demo.hiro18181.workers.dev/
+
 ## references
 
 - https://github.com/hi-ogawa/js-utils/pull/227
