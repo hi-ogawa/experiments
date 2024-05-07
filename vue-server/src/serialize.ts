@@ -4,6 +4,7 @@ import {
 	type ComponentInternalInstance,
 	type SuspenseBoundary,
 	type VNode,
+	type VNodeNormalizedChildren,
 	createVNode,
 	isVNode,
 	// @ts-expect-error no type?
@@ -81,22 +82,32 @@ class Serializer {
 					__snode: true,
 					__reference_id: id,
 					props: await this.serialize({ ...(node.props ?? {}), key: node.key }),
-					// TODO: slots function
-					children: await this.serialize(node.children),
+					children: await this.serializeClientChildren(node.children),
 				} satisfies SNode;
 			}
-
 			// setup app context for app.provide/component
 			// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/runtime-core/src/component.ts#L546-L548
 			node.appContext = this.context ?? null;
 			const instance = createComponentInstance(node, null, null);
 			await setupComponent(instance, true);
-			// TODO: wrap something?
 			const child = renderComponentRoot(instance);
 			return this.serialize(child);
 		}
 		console.error("[unexpected vnode]", [node.type, node.shapeFlag]);
 		throw new Error("unexpected vnode", { cause: node });
+	}
+
+	async serializeClientChildren(children: VNodeNormalizedChildren) {
+		if (!children || typeof children !== "object") {
+			return this.serialize(children);
+		}
+		let entries: [string, unknown][] = [];
+		for (const [k, v] of Object.entries(children)) {
+			if (typeof v === "function") {
+				entries.push([k, await this.serialize(v())]);
+			}
+		}
+		return Object.fromEntries(entries);
 	}
 }
 

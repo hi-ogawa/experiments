@@ -440,7 +440,7 @@ test("context global", async () => {
 	`);
 });
 
-test("client references", async () => {
+test("client reference basic", async () => {
 	const Server = defineComponent(async (_props, { slots }) => {
 		return () => <div id="server">{slots.default?.()}</div>;
 	});
@@ -489,6 +489,98 @@ test("client references", async () => {
 		    id="client"
 		    message="hi"
 		  />
+		</div>
+	`);
+});
+
+test("client reference slots", async () => {
+	const Server = defineComponent<{ id: string }>(async (props, { slots }) => {
+		return () => <div id={props.id}>{slots.default?.()}</div>;
+	});
+
+	const Client = defineComponent<{ id: string }>((props, { slots }) => {
+		return () => <span id={props.id}>{slots.default?.()}</span>;
+	});
+	registerClientReference(Client, "#Client");
+
+	const vnode = (
+		<Server id="server-1">
+			{() => (
+				<Client id="client-1">
+					{() => (
+						<Server id="server-2">{() => <Client id="client-2" />}</Server>
+					)}
+				</Client>
+			)}
+		</Server>
+	);
+	const result = await serialize(vnode);
+	expect(result).toMatchInlineSnapshot(`
+		{
+		  "data": {
+		    "__snode": true,
+		    "children": [
+		      {
+		        "__reference_id": "#Client",
+		        "__snode": true,
+		        "children": {
+		          "default": {
+		            "__snode": true,
+		            "children": [
+		              {
+		                "__reference_id": "#Client",
+		                "__snode": true,
+		                "children": null,
+		                "props": {
+		                  "id": "client-2",
+		                  "key": null,
+		                },
+		              },
+		            ],
+		            "props": {
+		              "id": "server-2",
+		              "key": null,
+		            },
+		            "type": "div",
+		          },
+		        },
+		        "props": {
+		          "id": "client-1",
+		          "key": null,
+		        },
+		      },
+		    ],
+		    "props": {
+		      "id": "server-1",
+		      "key": null,
+		    },
+		    "type": "div",
+		  },
+		  "referenceIds": [
+		    "#Client",
+		  ],
+		}
+	`);
+
+	const vnode2 = deserialize(result.data, { "#Client": Client });
+	expect(vnode2).matchSnapshot();
+
+	const rendered = await renderToString(vnode2 as any);
+	expect(renderStringToDom(rendered)).toMatchInlineSnapshot(`
+		<div
+		  id="server-1"
+		>
+		  <span
+		    id="client-1"
+		  >
+		    <div
+		      id="server-2"
+		    >
+		      <span
+		        id="client-2"
+		      />
+		    </div>
+		  </span>
 		</div>
 	`);
 });
