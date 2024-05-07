@@ -1,5 +1,6 @@
 import { ShapeFlags } from "@vue/shared";
 import {
+	type AppContext,
 	type ComponentInternalInstance,
 	type SuspenseBoundary,
 	type VNode,
@@ -14,13 +15,18 @@ type SerializeResult = {
 	data: unknown;
 };
 
-export async function serialize(input: unknown): Promise<SerializeResult> {
-	const serializer = new Serializer();
+export async function serialize(
+	input: unknown,
+	context?: AppContext,
+): Promise<SerializeResult> {
+	const serializer = new Serializer(context);
 	const data = await serializer.serialize(input);
 	return { data };
 }
 
 class Serializer {
+	constructor(private context?: AppContext) {}
+
 	async serialize(v: unknown): Promise<unknown> {
 		if (typeof v === "function") {
 			throw new Error("cannot serialize function", { cause: v });
@@ -48,7 +54,6 @@ class Serializer {
 		);
 	}
 
-	// TODO: text, comment, fragment?
 	// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/server-renderer/src/render.ts#L220
 	async serializeNode(node: VNode) {
 		if (node.shapeFlag & ShapeFlags.ELEMENT) {
@@ -59,9 +64,10 @@ class Serializer {
 				children: await this.serialize(node.children),
 			};
 		}
-		// TODO: parent, context, slot scope?
-		// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/server-renderer/src/render.ts#L94-L95
 		if (node.shapeFlag & ShapeFlags.COMPONENT) {
+			// TODO: do we need parent?
+			// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/runtime-core/src/component.ts#L546-L548
+			node.appContext = this.context ?? null;
 			const instance = createComponentInstance(node, null, null);
 			await setupComponent(instance, true);
 			const child = renderComponentRoot(instance);
@@ -73,8 +79,8 @@ class Serializer {
 				children: await this.serialize(node.children),
 			};
 		}
-		console.error("unsupported node", [node.type, node.shapeFlag]);
-		throw new Error("unsupported node", { cause: node });
+		console.error("[unexpected vnode]", [node.type, node.shapeFlag]);
+		throw new Error("unexpected vnode", { cause: node });
 	}
 
 	// TODO: client component's function slots passed from server need to be evaluated early

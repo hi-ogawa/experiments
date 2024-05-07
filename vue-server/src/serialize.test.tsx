@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { defineComponent } from "vue";
+import { createApp, defineComponent, inject } from "vue";
 import AsyncVue from "./fixtures/async.vue";
 import BasicVue from "./fixtures/basic.vue";
 import ImportVue from "./fixtures/import.vue";
@@ -284,6 +284,28 @@ test("sfc props", async () => {
 	`);
 });
 
-test.skip("provide/inject", async () => {});
+test("context inject", async () => {
+	const Injector = defineComponent(async () => {
+		const message = inject("message");
+		return () => <div id="inject">{message}</div>;
+	});
+
+	const app = createApp(<></>);
+	app.provide("message", "hey");
+	const result = await serialize(<Injector />, app._context);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": "hey",
+		  "key": null,
+		  "props": {
+		    "id": "inject",
+		    "key": undefined,
+		  },
+		  "type": "div",
+		}
+	`);
+});
+
+test.skip("context global", async () => {});
 
 test.skip("client references");
