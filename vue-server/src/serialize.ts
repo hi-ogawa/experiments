@@ -38,12 +38,13 @@ class Serializer {
 			return this.serializeNode(v);
 		}
 		if (Array.isArray(v)) {
-			return Promise.all(v.map((v) => this.serialize(v)));
+			return mapPromise(v, (v) => this.serialize(v));
 		}
 		return Object.fromEntries(
-			await Promise.all(
-				Object.entries(v).map(async ([k, v]) => [k, await this.serialize(v)]),
-			),
+			await mapPromise(Object.entries(v), async ([k, v]) => [
+				k,
+				await this.serialize(v),
+			]),
 		);
 	}
 
@@ -58,7 +59,7 @@ class Serializer {
 				children: await this.serialize(node.children),
 			};
 		}
-		// TODO: parent, context?
+		// TODO: parent, context, slot scope?
 		// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/server-renderer/src/render.ts#L94-L95
 		if (node.shapeFlag & ShapeFlags.COMPONENT) {
 			const instance = createComponentInstance(node, null, null);
@@ -66,6 +67,13 @@ class Serializer {
 			const child = renderComponentRoot(instance);
 			return this.serialize(child);
 		}
+		if (typeof node.type === "symbol") {
+			return {
+				type: node.type,
+				children: await this.serialize(node.children),
+			};
+		}
+		console.error("unsupported node", [node.type, node.shapeFlag]);
 		throw new Error("unsupported node", { cause: node });
 	}
 
@@ -73,6 +81,18 @@ class Serializer {
 	async serializeSlots(slots: unknown) {
 		slots;
 	}
+}
+
+// sequential for easier debugging
+async function mapPromise<T, U>(
+	xs: T[],
+	f: (x: T) => Promise<U>,
+): Promise<U[]> {
+	let ys: U[] = [];
+	for (const x of xs) {
+		ys.push(await f(x));
+	}
+	return ys;
 }
 
 // https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/runtime-core/src/index.ts#L362-L383

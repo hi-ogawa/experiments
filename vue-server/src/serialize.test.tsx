@@ -3,6 +3,7 @@ import { defineComponent } from "vue";
 import AsyncVue from "./fixtures/async.vue";
 import BasicVue from "./fixtures/basic.vue";
 import SetupVue from "./fixtures/setup.vue";
+import SlotVue from "./fixtures/slot.vue";
 import { serialize } from "./serialize";
 
 test("basic", async () => {
@@ -127,5 +128,111 @@ test("sfc async", async () => {
 	`);
 });
 
-test.skip("sfc slots");
+test("sfc slot fallback", async () => {
+	const vnode = <SlotVue />;
+	expect(vnode).toMatchSnapshot();
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": [
+		        {
+		          "children": [
+		            {
+		              "children": "header-fallback",
+		              "type": Symbol(v-txt),
+		            },
+		          ],
+		          "type": Symbol(v-fgt),
+		        },
+		      ],
+		      "key": null,
+		      "props": null,
+		      "type": "header",
+		    },
+		    {
+		      "children": [
+		        {
+		          "children": [
+		            {
+		              "children": "default-fallback",
+		              "type": Symbol(v-txt),
+		            },
+		          ],
+		          "type": Symbol(v-fgt),
+		        },
+		      ],
+		      "key": null,
+		      "props": null,
+		      "type": "main",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "container",
+		  },
+		  "type": "div",
+		}
+	`);
+});
+
+test("sfc slot basic", async () => {
+	const vnode = (
+		<SlotVue>
+			{{
+				default: () => "default!!",
+				header: () => "header!!",
+			}}
+		</SlotVue>
+	);
+	expect(vnode).toMatchSnapshot();
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": [
+		        {
+		          "children": [
+		            {
+		              "children": "header!!",
+		              "type": Symbol(v-txt),
+		            },
+		          ],
+		          "type": Symbol(v-fgt),
+		        },
+		      ],
+		      "key": null,
+		      "props": null,
+		      "type": "header",
+		    },
+		    {
+		      "children": [
+		        {
+		          "children": [
+		            {
+		              "children": "default!!",
+		              "type": Symbol(v-txt),
+		            },
+		          ],
+		          "type": Symbol(v-fgt),
+		        },
+		      ],
+		      "key": null,
+		      "props": null,
+		      "type": "main",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "container",
+		  },
+		  "type": "div",
+		}
+	`);
+});
+
+test.skip("sfc dep", async () => {});
+
 test.skip("client references");
