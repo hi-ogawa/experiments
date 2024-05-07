@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { createApp, defineComponent, inject } from "vue";
+import { createApp, defineComponent, inject, resolveComponent } from "vue";
 import AsyncVue from "./fixtures/async.vue";
 import BasicVue from "./fixtures/basic.vue";
 import ImportVue from "./fixtures/import.vue";
@@ -306,6 +306,45 @@ test("context inject", async () => {
 	`);
 });
 
-test.skip("context global", async () => {});
+test("context global", async () => {
+	const Wrapper = defineComponent(async () => {
+		const Global = resolveComponent("Global") as any;
+		return () => (
+			<div id="wrapper">
+				<Global />
+			</div>
+		);
+	});
+
+	const Global = defineComponent(async () => {
+		return () => <div id="global" />;
+	});
+
+	const app = createApp(<></>);
+	app.component("Global", Global);
+
+	const result = await serialize(<Wrapper />, app._context);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": null,
+		      "key": null,
+		      "props": {
+		        "id": "global",
+		        "key": undefined,
+		      },
+		      "type": "div",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "wrapper",
+		    "key": undefined,
+		  },
+		  "type": "div",
+		}
+	`);
+});
 
 test.skip("client references");
