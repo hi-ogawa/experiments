@@ -1,6 +1,7 @@
 {
 	"include": ["src", "vite.config.ts", "vitest.config.ts"],
 	"compilerOptions": {
+		"skipLibCheck": true,
 		"jsx": "react-jsx",
 		"jsxImportSource": "vue",
 		"noUnusedLocals": true,
