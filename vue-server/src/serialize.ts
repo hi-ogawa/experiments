@@ -69,7 +69,7 @@ class Serializer {
 		if (typeof node.type === "symbol" || node.shapeFlag & ShapeFlags.ELEMENT) {
 			return {
 				__snode: true,
-				type: node.type,
+				type: serializeNodeType(node.type),
 				props: await this.serialize({ ...(node.props ?? {}), key: node.key }),
 				children: await this.serialize(node.children),
 			} satisfies SNode;
@@ -134,6 +134,20 @@ type SNode = {
 	children: any;
 };
 
+function serializeNodeType(s: any) {
+	if (typeof s === "symbol") {
+		return "$" + s.description;
+	}
+	return s;
+}
+
+function deserializeNodeType(s: any) {
+	if (typeof s === "string" && s.startsWith("$")) {
+		return Symbol.for(s.slice(1));
+	}
+	return s;
+}
+
 export function registerClientReference(v: any, __reference_id: string) {
 	Object.assign(v, { __reference_id });
 }
@@ -192,7 +206,7 @@ class Deserializer {
 			);
 		}
 		return createVNode(
-			node.type,
+			deserializeNodeType(node.type),
 			this.deserialize(node.props) as any,
 			this.deserialize(node.children),
 		);
