@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { defineComponent } from "vue";
 import AsyncVue from "./fixtures/async.vue";
 import BasicVue from "./fixtures/basic.vue";
+import ImportVue from "./fixtures/import.vue";
 import SetupVue from "./fixtures/setup.vue";
 import SlotVue from "./fixtures/slot.vue";
 import { serialize } from "./serialize";
@@ -15,6 +16,12 @@ test("basic", async () => {
 
 	const Setup2 = defineComponent(async (_props, { slots }) => {
 		return () => <div id="setup2">{slots.default?.()}</div>;
+	});
+
+	const Setup3 = defineComponent<{ message: string }>({
+		setup: async (props) => {
+			return () => <div id="setup3">{props.message}</div>;
+		},
 	});
 
 	// no async render
@@ -32,6 +39,7 @@ test("basic", async () => {
 					</div>
 				)}
 			</Setup2>
+			<Setup3 message="prop!" />
 			<NoSetup />
 		</main>
 	);
@@ -233,6 +241,29 @@ test("sfc slot basic", async () => {
 	`);
 });
 
-test.skip("sfc dep", async () => {});
+test("sfc import", async () => {
+	const vnode = <ImportVue />;
+	expect(vnode).toMatchSnapshot();
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": [
+		    {
+		      "children": "basic",
+		      "key": null,
+		      "props": null,
+		      "type": "div",
+		    },
+		  ],
+		  "key": null,
+		  "props": {
+		    "id": "import",
+		  },
+		  "type": "div",
+		}
+	`);
+});
+
+test.skip("sfc props", async () => {});
 
 test.skip("client references");

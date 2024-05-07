@@ -95,6 +95,39 @@ exports[`basic 1`] = `
       "patchFlag": 0,
       "props": {
         "key": undefined,
+        "message": "prop!",
+      },
+      "ref": null,
+      "scopeId": null,
+      "shapeFlag": 4,
+      "slotScopeIds": null,
+      "ssContent": null,
+      "ssFallback": null,
+      "staticCount": 0,
+      "suspense": null,
+      "target": null,
+      "targetAnchor": null,
+      "transition": null,
+      "type": {
+        "setup": [Function],
+      },
+    },
+    {
+      "__v_isVNode": true,
+      "__v_skip": true,
+      "anchor": null,
+      "appContext": null,
+      "children": null,
+      "component": null,
+      "ctx": null,
+      "dirs": null,
+      "dynamicChildren": null,
+      "dynamicProps": null,
+      "el": null,
+      "key": null,
+      "patchFlag": 0,
+      "props": {
+        "key": undefined,
       },
       "ref": null,
       "scopeId": null,
@@ -199,6 +232,16 @@ exports[`basic 2`] = `
       "children": null,
       "key": null,
       "props": {
+        "id": "setup3",
+        "key": undefined,
+        "message": "prop!",
+      },
+      "type": "div",
+    },
+    {
+      "children": null,
+      "key": null,
+      "props": {
         "id": "no-setup",
         "key": undefined,
       },
@@ -281,6 +324,44 @@ exports[`sfc async 1`] = `
   "targetAnchor": null,
   "transition": null,
   "type": "main",
+}
+`;
+
+exports[`sfc import 1`] = `
+{
+  "__v_isVNode": true,
+  "__v_skip": true,
+  "anchor": null,
+  "appContext": null,
+  "children": null,
+  "component": null,
+  "ctx": null,
+  "dirs": null,
+  "dynamicChildren": null,
+  "dynamicProps": null,
+  "el": null,
+  "key": null,
+  "patchFlag": 0,
+  "props": {
+    "key": undefined,
+  },
+  "ref": null,
+  "scopeId": null,
+  "shapeFlag": 4,
+  "slotScopeIds": null,
+  "ssContent": null,
+  "ssFallback": null,
+  "staticCount": 0,
+  "suspense": null,
+  "target": null,
+  "targetAnchor": null,
+  "transition": null,
+  "type": {
+    "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/import.vue",
+    "__name": "import",
+    "render": [Function],
+    "setup": [Function],
+  },
 }
 `;
 
