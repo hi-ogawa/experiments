@@ -1,4 +1,4 @@
-import { defineComponent, ref } from "vue";
+import { defineComponent, inject, ref } from "vue";
 import { registerClientReference } from "../../serialize";
 import ClientSfc from "./_client-sfc.vue";
 
@@ -54,10 +54,25 @@ export const Link = defineComponent<{ href: string }>(
 	},
 );
 
+export const GlobalProgress = defineComponent(() => {
+	const isLoading = inject("isLoading", { value: false });
+	return () => (
+		<span
+			style={{
+				transition: "opacity 300ms",
+				opacity: isLoading.value ? "0.8" : "0",
+			}}
+		>
+			(Loading...)
+		</span>
+	);
+});
+
 // TODO: transform
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
 registerClientReference(ClientSfc, "ClientSfc");
 registerClientReference(Link, "Link");
+registerClientReference(GlobalProgress, "GlobalProgress");
 
 export { ClientSfc };

@@ -1,7 +1,7 @@
 import "./style.css";
 import "highlight.js/styles/github.css";
 import { tinyassert } from "@hiogawa/utils";
-import { createSSRApp, defineComponent, ref } from "vue";
+import { createSSRApp, defineComponent, provide, readonly, ref } from "vue";
 import { type SerializeResult, deserialize } from "../serialize";
 import * as referenceMap from "./routes/_client";
 
@@ -10,13 +10,17 @@ function main() {
 
 	const Root = defineComponent(() => {
 		const serialized = ref(initResult);
+		const isLoading = ref(false);
+		provide("isLoading", readonly(isLoading));
 
 		listenHistory(async () => {
+			isLoading.value = true;
 			const url = new URL(window.location.href);
 			url.searchParams.set("__serialize", "");
 			const res = await fetch(url);
 			tinyassert(res.ok);
 			serialized.value = await res.json();
+			isLoading.value = false;
 		});
 
 		return () => deserialize(serialized.value.data, referenceMap) as any;

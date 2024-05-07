@@ -45,6 +45,7 @@ export async function handler(request: Request) {
 const routes = {
 	"/": () => import("./routes/page"),
 	"/highlight": () => import("./routes/highlight/page"),
+	"/slow": () => import("./routes/slow/page"),
 };
 
 const Router = defineComponent<{ url: URL }>(
