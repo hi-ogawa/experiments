@@ -19,7 +19,13 @@ export const ClientCounter = defineComponent(() => {
 });
 
 export const ClientNested = defineComponent((_props, { slots }) => {
-	return () => <span>[client slot: {slots.default?.()}]</span>;
+	const count = ref(0);
+	return () => (
+		<span>
+			[<button onClick={() => count.value++}>{`client: ${count.value}`}</button>
+			: {slots.default?.()}]
+		</span>
+	);
 });
 
 // TODO: transform

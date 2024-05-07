@@ -26,5 +26,5 @@ export default defineComponent(async () => {
 });
 
 const ServerNested = defineComponent(async (_props, { slots }) => {
-	return () => <span>[server slot: {slots.default?.()}]</span>;
+	return () => <span>[server : {slots.default?.()}]</span>;
 });
