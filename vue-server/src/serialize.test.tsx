@@ -494,6 +494,28 @@ test("client reference basic", async () => {
 	`);
 });
 
+test.only("repro", async () => {
+	const Repro = defineComponent<{ foo: string }>((props, { slots }) => {
+		console.log("[Repro.arguments]", { props, slots });
+		return () => <div>{props.foo}</div>;
+	});
+	const result = await serialize(<Repro foo="/" />);
+	expect(result).toMatchInlineSnapshot(`
+		{
+		  "data": {
+		    "__snode": true,
+		    "children": null,
+		    "props": {
+		      "foo": "/",
+		      "key": undefined,
+		    },
+		    "type": "div",
+		  },
+		  "referenceIds": [],
+		}
+	`);
+});
+
 test("client reference slots", async () => {
 	const Server = defineComponent<{ id: string }>(async (props, { slots }) => {
 		return () => <div id={props.id}>{slots.default?.()}</div>;

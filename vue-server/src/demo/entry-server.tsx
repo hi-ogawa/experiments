@@ -1,13 +1,13 @@
 import type { ViteDevServer } from "vite";
-import { createSSRApp } from "vue";
+import { createSSRApp, defineComponent } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { deserialize, serialize } from "../serialize";
 import { ClientCounter, ClientNested, ClientSfc } from "./routes/_client";
-import Page from "./routes/page";
+import Layout from "./routes/layout";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
-	const result = await serialize(<Page />);
+	const result = await serialize(<Router url={url} />);
 
 	if (url.searchParams.has("__serialize")) {
 		return new Response(JSON.stringify(result), {
@@ -42,6 +42,20 @@ export async function handler(request: Request) {
 		},
 	});
 }
+
+const routes = {
+	"/": () => import("./routes/page"),
+};
+
+const Router = defineComponent<{ url: URL }>(async (props) => {
+	const route = routes[props.url.pathname as "/"];
+	let slot = () => <div>Not Found</div>;
+	if (route) {
+		const Page = (await route()).default;
+		slot = () => <Page />;
+	}
+	return () => <Layout>{slot}</Layout>;
+});
 
 declare let __vite_server: ViteDevServer;
 
