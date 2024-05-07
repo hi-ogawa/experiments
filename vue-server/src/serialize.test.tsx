@@ -8,7 +8,7 @@ import ImportVue from "./fixtures/import.vue";
 import PropsVue from "./fixtures/props.vue";
 import SetupVue from "./fixtures/setup.vue";
 import SlotVue from "./fixtures/slot.vue";
-import { deserialize, serialize } from "./serialize";
+import { deserialize, registerClientReference, serialize } from "./serialize";
 
 function renderStringToDom(innerHTML: string) {
 	const window = new Window({ url: "https://localhost:8080" });
@@ -59,7 +59,7 @@ test("basic", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchSnapshot();
 
-	const vnode2 = deserialize(result.data);
+	const vnode2 = deserialize(result.data, {});
 	expect(vnode2).toMatchSnapshot();
 
 	const rendered = await renderToString(vnode2 as any);
@@ -105,20 +105,20 @@ test("sfc template", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": "basic",
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "div",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "hi",
-		    "key": undefined,
+		    "key": null,
 		  },
 		  "type": "main",
 		}
@@ -136,20 +136,20 @@ test("sfc setup", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": "x = 0",
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "div",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "hi",
-		    "key": undefined,
+		    "key": null,
 		  },
 		  "type": "main",
 		}
@@ -167,20 +167,20 @@ test("sfc async", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": "async: hi",
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "div",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "hi",
-		    "key": undefined,
+		    "key": null,
 		  },
 		  "type": "main",
 		}
@@ -193,50 +193,64 @@ test("sfc slot fallback", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": [
 		        {
-		          "__v_isVNode": true,
+		          "__snode": true,
 		          "children": [
 		            {
-		              "__v_isVNode": true,
+		              "__snode": true,
 		              "children": "header-fallback",
+		              "props": {
+		                "key": null,
+		              },
 		              "type": Symbol(v-txt),
 		            },
 		          ],
+		          "props": {
+		            "key": "_header",
+		          },
 		          "type": Symbol(v-fgt),
 		        },
 		      ],
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "header",
 		    },
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": [
 		        {
-		          "__v_isVNode": true,
+		          "__snode": true,
 		          "children": [
 		            {
-		              "__v_isVNode": true,
+		              "__snode": true,
 		              "children": "default-fallback",
+		              "props": {
+		                "key": null,
+		              },
 		              "type": Symbol(v-txt),
 		            },
 		          ],
+		          "props": {
+		            "key": "_default",
+		          },
 		          "type": Symbol(v-fgt),
 		        },
 		      ],
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "main",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "container",
+		    "key": null,
 		  },
 		  "type": "div",
 		}
@@ -256,58 +270,69 @@ test("sfc slot basic", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": [
 		        {
-		          "__v_isVNode": true,
+		          "__snode": true,
 		          "children": [
 		            {
-		              "__v_isVNode": true,
+		              "__snode": true,
 		              "children": "header!!",
+		              "props": {
+		                "key": null,
+		              },
 		              "type": Symbol(v-txt),
 		            },
 		          ],
+		          "props": {
+		            "key": "_header",
+		          },
 		          "type": Symbol(v-fgt),
 		        },
 		      ],
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "header",
 		    },
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": [
 		        {
-		          "__v_isVNode": true,
+		          "__snode": true,
 		          "children": [
 		            {
-		              "__v_isVNode": true,
+		              "__snode": true,
 		              "children": "default!!",
+		              "props": {
+		                "key": null,
+		              },
 		              "type": Symbol(v-txt),
 		            },
 		          ],
+		          "props": {
+		            "key": "_default",
+		          },
 		          "type": Symbol(v-fgt),
 		        },
 		      ],
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "main",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "container",
+		    "key": null,
 		  },
 		  "type": "div",
 		}
 	`);
 });
-
-// can technically work unless client boundary?
-test.skip("scoped slot");
 
 test("sfc import", async () => {
 	const vnode = <ImportVue />;
@@ -315,19 +340,20 @@ test("sfc import", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": "basic",
-		      "key": null,
-		      "props": null,
+		      "props": {
+		        "key": null,
+		      },
 		      "type": "div",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "import",
+		    "key": null,
 		  },
 		  "type": "div",
 		}
@@ -340,11 +366,11 @@ test("sfc props", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": "prop!",
-		  "key": null,
 		  "props": {
 		    "id": "props",
+		    "key": null,
 		  },
 		  "type": "div",
 		}
@@ -362,12 +388,11 @@ test("context inject", async () => {
 	const result = await serialize(<Injector />, app._context);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": "hey",
-		  "key": null,
 		  "props": {
 		    "id": "inject",
-		    "key": undefined,
+		    "key": null,
 		  },
 		  "type": "div",
 		}
@@ -394,27 +419,76 @@ test("context global", async () => {
 	const result = await serialize(<Wrapper />, app._context);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
-		  "__v_isVNode": true,
+		  "__snode": true,
 		  "children": [
 		    {
-		      "__v_isVNode": true,
+		      "__snode": true,
 		      "children": null,
-		      "key": null,
 		      "props": {
 		        "id": "global",
-		        "key": undefined,
+		        "key": null,
 		      },
 		      "type": "div",
 		    },
 		  ],
-		  "key": null,
 		  "props": {
 		    "id": "wrapper",
-		    "key": undefined,
+		    "key": null,
 		  },
 		  "type": "div",
 		}
 	`);
 });
 
-test.skip("client references");
+test("client references", async () => {
+	const Server = defineComponent(async (_props, { slots }) => {
+		return () => <div id="server">{slots.default?.()}</div>;
+	});
+
+	const Client = defineComponent<{ message: string }>((props) => {
+		return () => <div id="client">{props.message}</div>;
+	});
+	registerClientReference(Client, "#Client");
+
+	const vnode = <Server>{() => <Client message="hi" />}</Server>;
+	const result = await serialize(vnode);
+	expect(result).toMatchInlineSnapshot(`
+		{
+		  "data": {
+		    "__snode": true,
+		    "children": [
+		      {
+		        "__reference_id": "#Client",
+		        "__snode": true,
+		        "children": null,
+		        "props": {
+		          "key": null,
+		          "message": "hi",
+		        },
+		      },
+		    ],
+		    "props": {
+		      "id": "server",
+		      "key": null,
+		    },
+		    "type": "div",
+		  },
+		  "referenceIds": [
+		    "#Client",
+		  ],
+		}
+	`);
+
+	const vnode2 = deserialize(result.data, { "#Client": Client });
+	const rendered = await renderToString(vnode2 as any);
+	expect(renderStringToDom(rendered)).toMatchInlineSnapshot(`
+		<div
+		  id="server"
+		>
+		  <div
+		    id="client"
+		    message="hi"
+		  />
+		</div>
+	`);
+});

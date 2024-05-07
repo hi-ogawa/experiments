@@ -172,95 +172,86 @@ exports[`basic 1`] = `
 
 exports[`basic 2`] = `
 {
-  "__v_isVNode": true,
+  "__snode": true,
   "children": [
     "text",
     {
-      "__v_isVNode": true,
+      "__snode": true,
       "children": [
         {
-          "__v_isVNode": true,
+          "__snode": true,
           "children": null,
-          "key": null,
           "props": {
-            "key": undefined,
+            "key": null,
           },
           "type": "a",
         },
       ],
-      "key": null,
       "props": {
         "id": "setup1",
-        "key": undefined,
+        "key": null,
       },
       "type": "div",
     },
     {
-      "__v_isVNode": true,
+      "__snode": true,
       "children": [
         {
-          "__v_isVNode": true,
+          "__snode": true,
           "children": [
             {
-              "__v_isVNode": true,
+              "__snode": true,
               "children": null,
-              "key": null,
               "props": {
-                "key": undefined,
+                "key": null,
               },
               "type": "span",
             },
             {
-              "__v_isVNode": true,
+              "__snode": true,
               "children": null,
-              "key": null,
               "props": {
                 "id": "no-setup",
-                "key": undefined,
+                "key": null,
               },
               "type": "div",
             },
           ],
-          "key": null,
           "props": {
-            "key": undefined,
+            "key": null,
           },
           "type": "div",
         },
       ],
-      "key": null,
       "props": {
         "id": "setup2",
-        "key": undefined,
+        "key": null,
       },
       "type": "div",
     },
     {
-      "__v_isVNode": true,
+      "__snode": true,
       "children": null,
-      "key": null,
       "props": {
         "id": "setup3",
-        "key": undefined,
+        "key": null,
         "message": "prop!",
       },
       "type": "div",
     },
     {
-      "__v_isVNode": true,
+      "__snode": true,
       "children": null,
-      "key": null,
       "props": {
         "id": "no-setup",
-        "key": undefined,
+        "key": null,
       },
       "type": "div",
     },
   ],
-  "key": null,
   "props": {
     "id": "hi",
-    "key": undefined,
+    "key": null,
   },
   "type": "main",
 }
@@ -295,7 +286,7 @@ exports[`basic 3`] = `
           "key": null,
           "patchFlag": 0,
           "props": {
-            "key": undefined,
+            "key": null,
           },
           "ref": null,
           "scopeId": null,
@@ -321,7 +312,7 @@ exports[`basic 3`] = `
       "patchFlag": 0,
       "props": {
         "id": "setup1",
-        "key": undefined,
+        "key": null,
       },
       "ref": null,
       "scopeId": null,
@@ -363,7 +354,7 @@ exports[`basic 3`] = `
               "key": null,
               "patchFlag": 0,
               "props": {
-                "key": undefined,
+                "key": null,
               },
               "ref": null,
               "scopeId": null,
@@ -394,7 +385,7 @@ exports[`basic 3`] = `
               "patchFlag": 0,
               "props": {
                 "id": "no-setup",
-                "key": undefined,
+                "key": null,
               },
               "ref": null,
               "scopeId": null,
@@ -419,7 +410,7 @@ exports[`basic 3`] = `
           "key": null,
           "patchFlag": 0,
           "props": {
-            "key": undefined,
+            "key": null,
           },
           "ref": null,
           "scopeId": null,
@@ -445,7 +436,7 @@ exports[`basic 3`] = `
       "patchFlag": 0,
       "props": {
         "id": "setup2",
-        "key": undefined,
+        "key": null,
       },
       "ref": null,
       "scopeId": null,
@@ -476,7 +467,7 @@ exports[`basic 3`] = `
       "patchFlag": 0,
       "props": {
         "id": "setup3",
-        "key": undefined,
+        "key": null,
         "message": "prop!",
       },
       "ref": null,
@@ -508,7 +499,7 @@ exports[`basic 3`] = `
       "patchFlag": 0,
       "props": {
         "id": "no-setup",
-        "key": undefined,
+        "key": null,
       },
       "ref": null,
       "scopeId": null,
@@ -534,7 +525,7 @@ exports[`basic 3`] = `
   "patchFlag": 0,
   "props": {
     "id": "hi",
-    "key": undefined,
+    "key": null,
   },
   "ref": null,
   "scopeId": null,

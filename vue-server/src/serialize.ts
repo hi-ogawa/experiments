@@ -18,6 +18,7 @@ import {
 
 type SerializeResult = {
 	data: unknown;
+	referenceIds: string[];
 };
 
 export async function serialize(
@@ -26,10 +27,12 @@ export async function serialize(
 ): Promise<SerializeResult> {
 	const serializer = new Serializer(context);
 	const data = await serializer.serialize(input);
-	return { data };
+	return { data, referenceIds: [...serializer.referenceIds] };
 }
 
 class Serializer {
+	referenceIds = new Set<string>();
+
 	constructor(private context?: AppContext) {}
 
 	async serialize(v: unknown): Promise<unknown> {
@@ -61,17 +64,27 @@ class Serializer {
 
 	// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/server-renderer/src/render.ts#L220
 	async serializeNode(node: VNode) {
-		if (node.shapeFlag & ShapeFlags.ELEMENT) {
+		if (typeof node.type === "symbol" || node.shapeFlag & ShapeFlags.ELEMENT) {
 			return {
-				__v_isVNode: true,
+				__snode: true,
 				type: node.type,
-				key: node.key,
-				props: await this.serialize(node.props),
+				props: await this.serialize({ ...(node.props ?? {}), key: node.key }),
 				children: await this.serialize(node.children),
-			};
+			} satisfies SNode;
 		}
 		if (node.shapeFlag & ShapeFlags.COMPONENT) {
-			// TODO: client references
+			// client reference
+			const id = (node.type as any).__reference_id;
+			if (id) {
+				this.referenceIds.add(id);
+				return {
+					__snode: true,
+					__reference_id: id,
+					props: await this.serialize({ ...(node.props ?? {}), key: node.key }),
+					// TODO: slots function
+					children: await this.serialize(node.children),
+				} satisfies SNode;
+			}
 
 			// setup app context for app.provide/component
 			// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/runtime-core/src/component.ts#L546-L548
@@ -81,13 +94,6 @@ class Serializer {
 			// TODO: wrap something?
 			const child = renderComponentRoot(instance);
 			return this.serialize(child);
-		}
-		if (typeof node.type === "symbol") {
-			return {
-				__v_isVNode: true,
-				type: node.type,
-				children: await this.serialize(node.children),
-			};
 		}
 		console.error("[unexpected vnode]", [node.type, node.shapeFlag]);
 		throw new Error("unexpected vnode", { cause: node });
@@ -106,18 +112,32 @@ async function mapPromise<T, U>(
 	return ys;
 }
 
+type SNode = {
+	__snode: true;
+	__reference_id?: string;
+	type?: any;
+	props: any;
+	children: any;
+};
+
+export function registerClientReference(v: any, __reference_id: string) {
+	Object.assign(v, { __reference_id });
+}
+
 //
 // deserialize
 //
 
-type SNode = Pick<VNode, "type" | "key" | "props" | "children">;
+export type ReferenceMap = Record<string, unknown>;
 
-export function deserialize(data: unknown) {
-	const deserializer = new Deserializer();
+export function deserialize(data: unknown, referenceMap: ReferenceMap) {
+	const deserializer = new Deserializer(referenceMap);
 	return deserializer.deserialize(data);
 }
 
 class Deserializer {
+	constructor(private referenceMap: ReferenceMap) {}
+
 	deserialize(v: unknown): unknown {
 		if (typeof v === "function") {
 			throw new Error("cannot serialize function", { cause: v });
@@ -131,8 +151,8 @@ class Deserializer {
 		) {
 			return v;
 		}
-		if (isVNode(v)) {
-			return this.deserializeNode(v);
+		if (typeof v === "object" && "__snode" in v) {
+			return this.deserializeNode(v as SNode);
 		}
 		if (Array.isArray(v)) {
 			return v.map((v) => this.deserialize(v));
@@ -142,13 +162,23 @@ class Deserializer {
 		);
 	}
 
-	deserializeNode(v: SNode) {
-		// TODO: key
-		v.key;
+	deserializeNode(node: SNode) {
+		let nodeType;
+		if (node.__reference_id) {
+			nodeType = this.referenceMap[node.__reference_id];
+			if (!nodeType) {
+				console.error(node);
+				throw new Error("reference not found: " + node.__reference_id, {
+					cause: node,
+				});
+			}
+		} else {
+			nodeType = node.type;
+		}
 		return createVNode(
-			v.type,
-			this.deserialize(v.props) as any,
-			this.deserialize(v.children),
+			nodeType,
+			this.deserialize(node.props) as any,
+			this.deserialize(node.children),
 		);
 	}
 }
@@ -174,11 +204,3 @@ const {
 	) => Promise<void> | undefined;
 	renderComponentRoot: (instance: ComponentInternalInstance) => VNode;
 } = ssrUtils;
-
-export function isClientReference(_v: unknown) {
-	throw "todo";
-}
-
-export function registerClientReference(v: Function, __client_id: string) {
-	Object.assign(v, { __client_id });
-}
