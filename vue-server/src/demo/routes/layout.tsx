@@ -12,8 +12,13 @@ export default defineComponent(async (_props, { slots }) => {
 				<li>
 					<Link href="/shiki">{() => "Shiki"}</Link>
 				</li>
+				<li>
+					<Link href="/not-found">{() => "Not found"}</Link>
+				</li>
 			</ul>
-			<input placeholder="test-input" />
+			<div style={{ marginBottom: "0.5rem" }}>
+				<input placeholder="test-input" />
+			</div>
 			{slots.default?.()}
 		</div>
 	);

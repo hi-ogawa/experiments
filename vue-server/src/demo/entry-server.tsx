@@ -44,6 +44,7 @@ export async function handler(request: Request) {
 
 const routes = {
 	"/": () => import("./routes/page"),
+	"/shiki": () => import("./routes/shiki/page"),
 };
 
 const Router = defineComponent<{ url: URL }>(
