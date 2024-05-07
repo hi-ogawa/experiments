@@ -656,7 +656,7 @@ exports[`sfc async 1`] = `
       "targetAnchor": null,
       "transition": null,
       "type": {
-        "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/async.vue",
+        "__file": "<test>/async.vue",
         "__name": "async",
         "render": [Function],
         "setup": [Function],
@@ -720,7 +720,7 @@ exports[`sfc import 1`] = `
   "targetAnchor": null,
   "transition": null,
   "type": {
-    "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/import.vue",
+    "__file": "<test>/import.vue",
     "__name": "import",
     "render": [Function],
     "setup": [Function],
@@ -759,7 +759,7 @@ exports[`sfc props 1`] = `
   "targetAnchor": null,
   "transition": null,
   "type": {
-    "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/props.vue",
+    "__file": "<test>/props.vue",
     "__name": "props",
     "props": {
       "message": {
@@ -809,7 +809,7 @@ exports[`sfc setup 1`] = `
       "targetAnchor": null,
       "transition": null,
       "type": {
-        "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/setup.vue",
+        "__file": "<test>/setup.vue",
         "__name": "setup",
         "render": [Function],
         "setup": [Function],
@@ -877,7 +877,7 @@ exports[`sfc slot basic 1`] = `
   "targetAnchor": null,
   "transition": null,
   "type": {
-    "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/slot.vue",
+    "__file": "<test>/slot.vue",
     "render": [Function],
   },
 }
@@ -913,7 +913,7 @@ exports[`sfc slot fallback 1`] = `
   "targetAnchor": null,
   "transition": null,
   "type": {
-    "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/slot.vue",
+    "__file": "<test>/slot.vue",
     "render": [Function],
   },
 }
@@ -955,7 +955,7 @@ exports[`sfc template 1`] = `
       "targetAnchor": null,
       "transition": null,
       "type": {
-        "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/basic.vue",
+        "__file": "<test>/basic.vue",
         "render": [Function],
       },
     },

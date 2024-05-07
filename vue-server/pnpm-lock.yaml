@@ -16,7 +16,7 @@ importers:
         version: 11.9.0
       vue:
         specifier: ^3.4.26
-        version: 3.4.26
+        version: 3.4.26(typescript@5.4.5)
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.7.2
@@ -35,13 +35,16 @@ importers:
         version: 20.12.10
       '@vitejs/plugin-vue':
         specifier: ^5.0.4
-        version: 5.0.4(vite@5.2.11(@types/node@20.12.10))(vue@3.4.26)
+        version: 5.0.4(vite@5.2.11(@types/node@20.12.10))(vue@3.4.26(typescript@5.4.5))
       esbuild:
         specifier: ^0.21.0
         version: 0.21.0
       happy-dom:
         specifier: ^14.10.1
         version: 14.10.1
+      typescript:
+        specifier: ^5.4.5
+        version: 5.4.5
       vite:
         specifier: ^5.2.11
         version: 5.2.11(@types/node@20.12.10)
@@ -1222,6 +1225,11 @@ packages:
     resolution: {integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==}
     engines: {node: '>=4'}
 
+  typescript@5.4.5:
+    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   ufo@1.5.3:
     resolution: {integrity: sha512-Y7HYmWaFwPUmkoQCUIAYpKqkOf+SbVj/2fJJZ4RJMCfZp0rTGwRbzQD+HghfnhKOjL9E01okqz+ncJskGYfBNw==}
 
@@ -1754,10 +1762,10 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@vitejs/plugin-vue@5.0.4(vite@5.2.11(@types/node@20.12.10))(vue@3.4.26)':
+  '@vitejs/plugin-vue@5.0.4(vite@5.2.11(@types/node@20.12.10))(vue@3.4.26(typescript@5.4.5))':
     dependencies:
       vite: 5.2.11(@types/node@20.12.10)
-      vue: 3.4.26
+      vue: 3.4.26(typescript@5.4.5)
 
   '@vitest/expect@1.6.0':
     dependencies:
@@ -1833,11 +1841,11 @@ snapshots:
       '@vue/shared': 3.4.26
       csstype: 3.1.3
 
-  '@vue/server-renderer@3.4.26(vue@3.4.26)':
+  '@vue/server-renderer@3.4.26(vue@3.4.26(typescript@5.4.5))':
     dependencies:
       '@vue/compiler-ssr': 3.4.26
       '@vue/shared': 3.4.26
-      vue: 3.4.26
+      vue: 3.4.26(typescript@5.4.5)
 
   '@vue/shared@3.4.26': {}
 
@@ -2336,6 +2344,8 @@ snapshots:
 
   type-detect@4.0.8: {}
 
+  typescript@5.4.5: {}
+
   ufo@1.5.3: {}
 
   undici-types@5.26.5: {}
@@ -2406,13 +2416,15 @@ snapshots:
       - supports-color
       - terser
 
-  vue@3.4.26:
+  vue@3.4.26(typescript@5.4.5):
     dependencies:
       '@vue/compiler-dom': 3.4.26
       '@vue/compiler-sfc': 3.4.26
       '@vue/runtime-dom': 3.4.26
-      '@vue/server-renderer': 3.4.26(vue@3.4.26)
+      '@vue/server-renderer': 3.4.26(vue@3.4.26(typescript@5.4.5))
       '@vue/shared': 3.4.26
+    optionalDependencies:
+      typescript: 5.4.5
 
   webidl-conversions@7.0.0: {}
 
