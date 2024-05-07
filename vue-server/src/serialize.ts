@@ -1,3 +1,4 @@
+import { tinyassert } from "@hiogawa/utils";
 import { ShapeFlags } from "@vue/shared";
 import {
 	type AppContext,
@@ -97,10 +98,12 @@ class Serializer {
 		throw new Error("unexpected vnode", { cause: node });
 	}
 
+	// TODO: need to deserialize since otherwise it reuses same vnode after revived
 	async serializeClientChildren(children: VNodeNormalizedChildren) {
-		if (!children || typeof children !== "object") {
-			return this.serialize(children);
+		if (children === null) {
+			return null;
 		}
+		tinyassert(typeof children === "object" && !Array.isArray(children));
 		let entries: [string, unknown][] = [];
 		for (const [k, v] of Object.entries(children)) {
 			if (typeof v === "function") {
@@ -174,22 +177,34 @@ class Deserializer {
 	}
 
 	deserializeNode(node: SNode) {
-		let nodeType;
 		if (node.__reference_id) {
-			nodeType = this.referenceMap[node.__reference_id];
-			if (!nodeType) {
+			const Component = this.referenceMap[node.__reference_id];
+			if (!Component) {
 				console.error(node);
 				throw new Error("reference not found: " + node.__reference_id, {
 					cause: node,
 				});
 			}
-		} else {
-			nodeType = node.type;
+			return createVNode(
+				Component,
+				this.deserialize(node.props) as any,
+				this.deserializeClientChildren(node.children),
+			);
 		}
 		return createVNode(
-			nodeType,
+			node.type,
 			this.deserialize(node.props) as any,
 			this.deserialize(node.children),
+		);
+	}
+
+	deserializeClientChildren(children: VNodeNormalizedChildren) {
+		if (children === null) {
+			return null;
+		}
+		tinyassert(typeof children === "object" && !Array.isArray(children));
+		return Object.fromEntries(
+			Object.entries(children).map(([k, v]) => [k, () => this.deserialize(v)]),
 		);
 	}
 }

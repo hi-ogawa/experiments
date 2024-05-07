@@ -7,6 +7,7 @@ import BasicVue from "./fixtures/basic.vue";
 import ImportVue from "./fixtures/import.vue";
 import PropsVue from "./fixtures/props.vue";
 import SetupVue from "./fixtures/setup.vue";
+import SlotClientVue from "./fixtures/slot-client.vue";
 import SlotVue from "./fixtures/slot.vue";
 import { deserialize, registerClientReference, serialize } from "./serialize";
 
@@ -581,6 +582,91 @@ test("client reference slots", async () => {
 		      />
 		    </div>
 		  </span>
+		</div>
+	`);
+});
+
+test("client reference sfc", async () => {
+	const vnode = (
+		<div id="server">
+			<SlotClientVue>
+				{{
+					default: () => <div>server-default</div>,
+					header: () => <div>server-header</div>,
+				}}
+			</SlotClientVue>
+		</div>
+	);
+	registerClientReference(SlotClientVue, "#Client");
+
+	const result = await serialize(vnode);
+	expect(result).toMatchInlineSnapshot(`
+		{
+		  "data": {
+		    "__snode": true,
+		    "children": [
+		      {
+		        "__reference_id": "#Client",
+		        "__snode": true,
+		        "children": {
+		          "default": {
+		            "__snode": true,
+		            "children": "server-default",
+		            "props": {
+		              "key": null,
+		            },
+		            "type": "div",
+		          },
+		          "header": {
+		            "__snode": true,
+		            "children": "server-header",
+		            "props": {
+		              "key": null,
+		            },
+		            "type": "div",
+		          },
+		        },
+		        "props": {
+		          "key": null,
+		        },
+		      },
+		    ],
+		    "props": {
+		      "id": "server",
+		      "key": null,
+		    },
+		    "type": "div",
+		  },
+		  "referenceIds": [
+		    "#Client",
+		  ],
+		}
+	`);
+
+	const vnode2 = deserialize(result.data, { "#Client": SlotClientVue });
+	const rendered = await renderToString(vnode2 as any);
+	expect(renderStringToDom(rendered)).toMatchInlineSnapshot(`
+		<div
+		  id="server"
+		>
+		  <div
+		    id="container"
+		  >
+		    <header>
+		      <!--[-->
+		      <div>
+		        server-header
+		      </div>
+		      <!--]-->
+		    </header>
+		    <main>
+		      <!--[-->
+		      <div>
+		        server-default
+		      </div>
+		      <!--]-->
+		    </main>
+		  </div>
 		</div>
 	`);
 });
