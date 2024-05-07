@@ -1,4 +1,5 @@
 import "./style.css";
+import "highlight.js/styles/github.css";
 import { tinyassert } from "@hiogawa/utils";
 import { createSSRApp, defineComponent, ref } from "vue";
 import { type SerializeResult, deserialize } from "../serialize";

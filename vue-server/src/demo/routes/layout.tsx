@@ -10,7 +10,7 @@ export default defineComponent(async (_props, { slots }) => {
 					<Link href="/">{() => "Home"}</Link>
 				</li>
 				<li>
-					<Link href="/shiki">{() => "Shiki"}</Link>
+					<Link href="/highlight">{() => "highlight.js"}</Link>
 				</li>
 				<li>
 					<Link href="/not-found">{() => "Not found"}</Link>
