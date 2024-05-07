@@ -30,11 +30,14 @@ test("basic", async () => {
 		return () => <div id="setup2">{slots.default?.()}</div>;
 	});
 
-	const Setup3 = defineComponent<{ message: string }>({
-		setup: async (props) => {
+	const Setup3 = defineComponent<{ message: string }>(
+		async (props) => {
 			return () => <div id="setup3">{props.message}</div>;
 		},
-	});
+		{
+			props: ["message"],
+		},
+	);
 
 	// no async render
 	const NoSetup = () => <div id="no-setup" />;
@@ -86,8 +89,9 @@ test("basic", async () => {
 		  </div>
 		  <div
 		    id="setup3"
-		    message="prop!"
-		  />
+		  >
+		    prop!
+		  </div>
 		  <div
 		    id="no-setup"
 		  />
@@ -208,13 +212,13 @@ test("sfc slot fallback", async () => {
 		              "props": {
 		                "key": null,
 		              },
-		              "type": Symbol(v-txt),
+		              "type": "$v-txt",
 		            },
 		          ],
 		          "props": {
 		            "key": "_header",
 		          },
-		          "type": Symbol(v-fgt),
+		          "type": "$v-fgt",
 		        },
 		      ],
 		      "props": {
@@ -234,13 +238,13 @@ test("sfc slot fallback", async () => {
 		              "props": {
 		                "key": null,
 		              },
-		              "type": Symbol(v-txt),
+		              "type": "$v-txt",
 		            },
 		          ],
 		          "props": {
 		            "key": "_default",
 		          },
-		          "type": Symbol(v-fgt),
+		          "type": "$v-fgt",
 		        },
 		      ],
 		      "props": {
@@ -285,13 +289,13 @@ test("sfc slot basic", async () => {
 		              "props": {
 		                "key": null,
 		              },
-		              "type": Symbol(v-txt),
+		              "type": "$v-txt",
 		            },
 		          ],
 		          "props": {
 		            "key": "_header",
 		          },
-		          "type": Symbol(v-fgt),
+		          "type": "$v-fgt",
 		        },
 		      ],
 		      "props": {
@@ -311,13 +315,13 @@ test("sfc slot basic", async () => {
 		              "props": {
 		                "key": null,
 		              },
-		              "type": Symbol(v-txt),
+		              "type": "$v-txt",
 		            },
 		          ],
 		          "props": {
 		            "key": "_default",
 		          },
-		          "type": Symbol(v-fgt),
+		          "type": "$v-fgt",
 		        },
 		      ],
 		      "props": {
@@ -446,9 +450,14 @@ test("client reference basic", async () => {
 		return () => <div id="server">{slots.default?.()}</div>;
 	});
 
-	const Client = defineComponent<{ message: string }>((props) => {
-		return () => <div id="client">{props.message}</div>;
-	});
+	const Client = defineComponent<{ message: string }>(
+		(props) => {
+			return () => <div id="client">{props.message}</div>;
+		},
+		{
+			props: ["message"],
+		},
+	);
 	registerClientReference(Client, "#Client");
 
 	const vnode = <Server>{() => <Client message="hi" />}</Server>;
@@ -488,50 +497,41 @@ test("client reference basic", async () => {
 		>
 		  <div
 		    id="client"
-		    message="hi"
-		  />
+		  >
+		    hi
+		  </div>
 		</div>
 	`);
 });
 
-test.only("repro", async () => {
-	const Repro = defineComponent<{ foo: string }>((props, { slots }) => {
-		console.log("[Repro.arguments]", { props, slots });
-		return () => <div>{props.foo}</div>;
-	});
-	const result = await serialize(<Repro foo="/" />);
-	expect(result).toMatchInlineSnapshot(`
-		{
-		  "data": {
-		    "__snode": true,
-		    "children": null,
-		    "props": {
-		      "foo": "/",
-		      "key": undefined,
-		    },
-		    "type": "div",
-		  },
-		  "referenceIds": [],
-		}
-	`);
-});
-
 test("client reference slots", async () => {
-	const Server = defineComponent<{ id: string }>(async (props, { slots }) => {
-		return () => <div id={props.id}>{slots.default?.()}</div>;
-	});
+	const Server = defineComponent<{ serverId: string }>(
+		async (props, { slots }) => {
+			return () => <div id={props.serverId}>{slots.default?.()}</div>;
+		},
+		{
+			props: ["serverId"],
+		},
+	);
 
-	const Client = defineComponent<{ id: string }>((props, { slots }) => {
-		return () => <span id={props.id}>{slots.default?.()}</span>;
-	});
+	const Client = defineComponent<{ clientId: string }>(
+		(props, { slots }) => {
+			return () => <span id={props.clientId}>{slots.default?.()}</span>;
+		},
+		{
+			props: ["clientId"],
+		},
+	);
 	registerClientReference(Client, "#Client");
 
 	const vnode = (
-		<Server id="server-1">
+		<Server serverId="server-1">
 			{() => (
-				<Client id="client-1">
+				<Client clientId="client-1">
 					{() => (
-						<Server id="server-2">{() => <Client id="client-2" />}</Server>
+						<Server serverId="server-2">
+							{() => <Client clientId="client-2" />}
+						</Server>
 					)}
 				</Client>
 			)}
@@ -555,7 +555,7 @@ test("client reference slots", async () => {
 		                "__snode": true,
 		                "children": null,
 		                "props": {
-		                  "id": "client-2",
+		                  "clientId": "client-2",
 		                  "key": null,
 		                },
 		              },
@@ -568,7 +568,7 @@ test("client reference slots", async () => {
 		          },
 		        },
 		        "props": {
-		          "id": "client-1",
+		          "clientId": "client-1",
 		          "key": null,
 		        },
 		      },

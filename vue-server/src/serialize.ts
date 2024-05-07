@@ -86,15 +86,12 @@ class Serializer {
 					children: await this.serializeClientChildren(node.children),
 				} satisfies SNode;
 			}
-			// console.log("[node]", node);
 			// setup app context for app.provide/component
 			// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/runtime-core/src/component.ts#L546-L548
 			node.appContext = this.context ?? null;
 			const instance = createComponentInstance(node, null, null);
 			await setupComponent(instance, true);
 			const child = renderComponentRoot(instance);
-			// console.log("[instance]", instance);
-			// console.log("[child]", child);
 			return this.serialize(child);
 		}
 		console.error("[unexpected vnode]", [node.type, node.shapeFlag]);

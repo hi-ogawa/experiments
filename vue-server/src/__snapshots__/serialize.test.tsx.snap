@@ -109,6 +109,10 @@ exports[`basic 1`] = `
       "targetAnchor": null,
       "transition": null,
       "type": {
+        "name": "",
+        "props": [
+          "message",
+        ],
         "setup": [Function],
       },
     },
@@ -231,11 +235,10 @@ exports[`basic 2`] = `
     },
     {
       "__snode": true,
-      "children": null,
+      "children": "prop!",
       "props": {
         "id": "setup3",
         "key": null,
-        "message": "prop!",
       },
       "type": "div",
     },
@@ -456,7 +459,7 @@ exports[`basic 3`] = `
       "__v_skip": true,
       "anchor": null,
       "appContext": null,
-      "children": null,
+      "children": "prop!",
       "component": null,
       "ctx": null,
       "dirs": null,
@@ -468,11 +471,10 @@ exports[`basic 3`] = `
       "props": {
         "id": "setup3",
         "key": null,
-        "message": "prop!",
       },
       "ref": null,
       "scopeId": null,
-      "shapeFlag": 1,
+      "shapeFlag": 9,
       "slotScopeIds": null,
       "ssContent": null,
       "ssFallback": null,
@@ -567,7 +569,7 @@ exports[`client reference slots 2`] = `
       "key": null,
       "patchFlag": 0,
       "props": {
-        "id": "client-1",
+        "clientId": "client-1",
         "key": null,
       },
       "ref": null,
@@ -584,6 +586,9 @@ exports[`client reference slots 2`] = `
       "type": {
         "__reference_id": "#Client",
         "name": "",
+        "props": [
+          "clientId",
+        ],
         "setup": [Function],
       },
     },

@@ -47,15 +47,20 @@ const routes = {
 	"/": () => import("./routes/page"),
 };
 
-const Router = defineComponent<{ url: URL }>(async (props) => {
-	const route = routes[props.url.pathname as "/"];
-	let slot = () => <div>Not Found</div>;
-	if (route) {
-		const Page = (await route()).default;
-		slot = () => <Page />;
-	}
-	return () => <Layout>{slot}</Layout>;
-});
+const Router = defineComponent<{ url: URL }>(
+	async (props) => {
+		const route = routes[props.url.pathname as "/"];
+		let slot = () => <div>Not Found</div>;
+		if (route) {
+			const Page = (await route()).default;
+			slot = () => <Page />;
+		}
+		return () => <Layout>{slot}</Layout>;
+	},
+	{
+		props: ["url"],
+	},
+);
 
 declare let __vite_server: ViteDevServer;
 
