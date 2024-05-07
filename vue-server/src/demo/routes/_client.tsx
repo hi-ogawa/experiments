@@ -5,8 +5,7 @@ export const ClientCounter = defineComponent(() => {
 	const count = ref(0);
 
 	return () => (
-		<div data-testid="client-component">
-			<h4>Client Component</h4>
+		<div data-testid="client-counter">
 			<div>{`Count: ${count.value}`}</div>
 			<button class="client-btn" onClick={() => count.value--}>
 				-1
@@ -18,4 +17,10 @@ export const ClientCounter = defineComponent(() => {
 	);
 });
 
+export const ClientNested = defineComponent((_props, { slots }) => {
+	return () => <span>[client slot: {slots.default?.()}]</span>;
+});
+
+// TODO: transform
 registerClientReference(ClientCounter, "ClientCounter");
+registerClientReference(ClientNested, "ClientNested");
