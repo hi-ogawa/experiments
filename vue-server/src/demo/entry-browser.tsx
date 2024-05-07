@@ -1,13 +1,26 @@
 import "./style.css";
 import { tinyassert } from "@hiogawa/utils";
-import { createSSRApp } from "vue";
+import { createSSRApp, defineComponent, ref } from "vue";
 import { type SerializeResult, deserialize } from "../serialize";
-import { ClientCounter, ClientNested, ClientSfc } from "./routes/_client";
+import * as referenceMap from "./routes/_client";
 
 function main() {
 	const initResult: SerializeResult = (globalThis as any).__serialized;
-	const Root = () =>
-		deserialize(initResult.data, { ClientCounter, ClientNested, ClientSfc });
+
+	const Root = defineComponent(() => {
+		const serialized = ref(initResult);
+
+		listenHistory(async () => {
+			const url = new URL(window.location.href);
+			url.searchParams.set("__serialize", "");
+			const res = await fetch(url);
+			tinyassert(res.ok);
+			serialized.value = await res.json();
+		});
+
+		return () => deserialize(serialized.value.data, referenceMap) as any;
+	});
+
 	const app = createSSRApp(Root);
 	const el = document.getElementById("root");
 	tinyassert(el);
@@ -16,6 +29,32 @@ function main() {
 		document.title = "🚨 HYDRATE ERROR";
 	});
 	app.mount(el);
+}
+
+function listenHistory(onNavigation: () => void) {
+	window.addEventListener("pushstate", onNavigation);
+	window.addEventListener("popstate", onNavigation);
+
+	const oldPushState = window.history.pushState;
+	window.history.pushState = function (...args) {
+		const res = oldPushState.apply(this, args);
+		onNavigation();
+		return res;
+	};
+
+	const oldReplaceState = window.history.replaceState;
+	window.history.replaceState = function (...args) {
+		const res = oldReplaceState.apply(this, args);
+		onNavigation();
+		return res;
+	};
+
+	return () => {
+		window.removeEventListener("pushstate", onNavigation);
+		window.removeEventListener("popstate", onNavigation);
+		window.history.pushState = oldPushState;
+		window.history.replaceState = oldReplaceState;
+	};
 }
 
 // patch console to notify hydration error

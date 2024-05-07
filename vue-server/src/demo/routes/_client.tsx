@@ -28,8 +28,36 @@ export const ClientNested = defineComponent((_props, { slots }) => {
 	);
 });
 
+export const Link = defineComponent<{ href: string }>(
+	(props, { slots }) => {
+		return () => (
+			<a
+				href={props.href}
+				onClick={(e) => {
+					if (
+						e.currentTarget instanceof HTMLAnchorElement &&
+						e.button === 0 &&
+						!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) &&
+						(!e.currentTarget.target || e.currentTarget.target === "_self")
+					) {
+						e.preventDefault();
+						history.pushState(null, "", e.currentTarget.href);
+					}
+				}}
+			>
+				{slots.default?.()}
+			</a>
+		);
+	},
+	{
+		props: ["href"],
+	},
+);
+
 // TODO: transform
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
 registerClientReference(ClientSfc, "ClientSfc");
+registerClientReference(Link, "Link");
+
 export { ClientSfc };

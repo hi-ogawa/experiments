@@ -1,4 +1,5 @@
 import { defineComponent } from "vue";
+import { Link } from "./_client";
 
 export default defineComponent(async (_props, { slots }) => {
 	return () => (
@@ -6,12 +7,13 @@ export default defineComponent(async (_props, { slots }) => {
 			<h4>Hello Server Component</h4>
 			<ul>
 				<li>
-					<a href="/">Home</a>
+					<Link href="/">{() => "Home"}</Link>
 				</li>
 				<li>
-					<a href="/shiki">Shiki</a>
+					<Link href="/shiki">{() => "Shiki"}</Link>
 				</li>
 			</ul>
+			<input placeholder="test-input" />
 			{slots.default?.()}
 		</div>
 	);
