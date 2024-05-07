@@ -1,0 +1,26 @@
+name: ci
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vue-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./vue-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
+      - run: pnpm i
+      - run: pnpm lint-check
+      - run: pnpm test
