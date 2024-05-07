@@ -3,11 +3,13 @@ import {
 	vitePluginLogger,
 	vitePluginSsrMiddleware,
 } from "@hiogawa/vite-plugin-ssr-middleware";
+import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
 
 export default defineConfig((env) => ({
 	clearScreen: false,
 	plugins: [
+		vue(),
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
 			entry: process.env["SERVER_ENTRY"] ?? "/src/demo/adapters/node",

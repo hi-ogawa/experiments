@@ -1,5 +1,5 @@
 import { defineComponent } from "vue";
-import { ClientCounter, ClientNested } from "./_client";
+import { ClientCounter, ClientNested, ClientSfc } from "./_client";
 
 export default defineComponent(async () => {
 	return () => (
@@ -8,6 +8,7 @@ export default defineComponent(async () => {
 			<div>{`Server Time: ${new Date().toString()}`}</div>
 			<h4>Client Component</h4>
 			<ClientCounter />
+			<ClientSfc />
 			<h4>Nested Server/Client</h4>
 			<ServerNested>
 				{() => (

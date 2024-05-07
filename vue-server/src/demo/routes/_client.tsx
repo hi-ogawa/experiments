@@ -1,5 +1,6 @@
 import { defineComponent, ref } from "vue";
 import { registerClientReference } from "../../serialize";
+import ClientSfc from "./_client-sfc.vue";
 
 export const ClientCounter = defineComponent(() => {
 	const count = ref(0);
@@ -24,3 +25,5 @@ export const ClientNested = defineComponent((_props, { slots }) => {
 // TODO: transform
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
+registerClientReference(ClientSfc, "ClientSfc");
+export { ClientSfc };

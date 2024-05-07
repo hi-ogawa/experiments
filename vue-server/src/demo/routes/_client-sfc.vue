@@ -1,1 +1,8 @@
-<!-- TODO -->
+<script setup>
+import { ref } from "vue";
+const count = ref(0);
+</script>
+
+<template>
+  <button class="client-btn" @click="count++">client sfc: {{ count }}</button>
+</template>
