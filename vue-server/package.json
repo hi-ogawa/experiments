@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@vue/shared": "^3.4.26",
+		"shiki": "^1.4.0",
 		"vue": "^3.4.26"
 	},
 	"devDependencies": {
