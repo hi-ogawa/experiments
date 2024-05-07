@@ -15,7 +15,7 @@ export default defineComponent(async () => {
 					<ClientNested>
 						{() => (
 							<ServerNested>
-								{() => <ClientNested>{() => <span>done</span>}</ClientNested>}
+								{() => <ClientNested>{() => <span>server</span>}</ClientNested>}
 							</ServerNested>
 						)}
 					</ClientNested>
