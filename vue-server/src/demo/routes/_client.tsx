@@ -7,7 +7,7 @@ export const ClientCounter = defineComponent(() => {
 	return () => (
 		<div data-testid="client-component">
 			<h4>Client Component</h4>
-			<div>Count: {count.value}</div>
+			<div>{`Count: ${count.value}`}</div>
 			<button class="client-btn" onClick={() => count.value--}>
 				-1
 			</button>
