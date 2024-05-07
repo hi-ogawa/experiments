@@ -1,5 +1,7 @@
-import { expect, test } from "vitest";
+import { Window } from "happy-dom";
+import { expect, onTestFinished, test } from "vitest";
 import { createApp, defineComponent, inject, resolveComponent } from "vue";
+import { renderToString } from "vue/server-renderer";
 import AsyncVue from "./fixtures/async.vue";
 import BasicVue from "./fixtures/basic.vue";
 import ImportVue from "./fixtures/import.vue";
@@ -7,6 +9,14 @@ import PropsVue from "./fixtures/props.vue";
 import SetupVue from "./fixtures/setup.vue";
 import SlotVue from "./fixtures/slot.vue";
 import { deserialize, serialize } from "./serialize";
+
+function renderStringToDom(innerHTML: string) {
+	const window = new Window({ url: "https://localhost:8080" });
+	const el = window.document.createElement("div");
+	el.innerHTML = innerHTML;
+	onTestFinished(() => window.close());
+	return el.firstChild;
+}
 
 test("basic", async () => {
 	const Setup1 = defineComponent({
@@ -51,6 +61,37 @@ test("basic", async () => {
 
 	const vnode2 = deserialize(result.data);
 	expect(vnode2).toMatchSnapshot();
+
+	const rendered = await renderToString(vnode2 as any);
+	expect(renderStringToDom(rendered)).toMatchInlineSnapshot(`
+		<main
+		  id="hi"
+		>
+		  text
+		  <div
+		    id="setup1"
+		  >
+		    <a />
+		  </div>
+		  <div
+		    id="setup2"
+		  >
+		    <div>
+		      <span />
+		      <div
+		        id="no-setup"
+		      />
+		    </div>
+		  </div>
+		  <div
+		    id="setup3"
+		    message="prop!"
+		  />
+		  <div
+		    id="no-setup"
+		  />
+		</main>
+	`);
 });
 
 test("sfc template", async () => {
