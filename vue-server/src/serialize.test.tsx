@@ -242,6 +242,9 @@ test("sfc slot basic", async () => {
 	`);
 });
 
+// can technically work unless client boundary?
+test.skip("scoped slot");
+
 test("sfc import", async () => {
 	const vnode = <ImportVue />;
 	expect(vnode).toMatchSnapshot();
