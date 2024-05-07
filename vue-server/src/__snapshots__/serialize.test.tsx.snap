@@ -60,7 +60,9 @@ exports[`basic 1`] = `
       "el": null,
       "key": null,
       "patchFlag": 0,
-      "props": null,
+      "props": {
+        "key": undefined,
+      },
       "ref": null,
       "scopeId": null,
       "shapeFlag": 36,
@@ -74,7 +76,6 @@ exports[`basic 1`] = `
       "transition": null,
       "type": {
         "name": "",
-        "props": {},
         "setup": [Function],
       },
     },
@@ -92,7 +93,9 @@ exports[`basic 1`] = `
       "el": null,
       "key": null,
       "patchFlag": 0,
-      "props": null,
+      "props": {
+        "key": undefined,
+      },
       "ref": null,
       "scopeId": null,
       "shapeFlag": 2,
@@ -133,6 +136,76 @@ exports[`basic 1`] = `
 }
 `;
 
+exports[`sfc async 1`] = `
+{
+  "__v_isVNode": true,
+  "__v_skip": true,
+  "anchor": null,
+  "appContext": null,
+  "children": [
+    {
+      "__v_isVNode": true,
+      "__v_skip": true,
+      "anchor": null,
+      "appContext": null,
+      "children": null,
+      "component": null,
+      "ctx": null,
+      "dirs": null,
+      "dynamicChildren": null,
+      "dynamicProps": null,
+      "el": null,
+      "key": null,
+      "patchFlag": 0,
+      "props": {
+        "key": undefined,
+      },
+      "ref": null,
+      "scopeId": null,
+      "shapeFlag": 4,
+      "slotScopeIds": null,
+      "ssContent": null,
+      "ssFallback": null,
+      "staticCount": 0,
+      "suspense": null,
+      "target": null,
+      "targetAnchor": null,
+      "transition": null,
+      "type": {
+        "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/async.vue",
+        "__name": "async",
+        "render": [Function],
+        "setup": [Function],
+      },
+    },
+  ],
+  "component": null,
+  "ctx": null,
+  "dirs": null,
+  "dynamicChildren": null,
+  "dynamicProps": null,
+  "el": null,
+  "key": null,
+  "patchFlag": 0,
+  "props": {
+    "id": "hi",
+    "key": undefined,
+  },
+  "ref": null,
+  "scopeId": null,
+  "shapeFlag": 17,
+  "slotScopeIds": null,
+  "ssContent": null,
+  "ssFallback": null,
+  "staticCount": 0,
+  "suspense": null,
+  "target": null,
+  "targetAnchor": null,
+  "transition": null,
+  "type": "main",
+}
+`;
+
 exports[`sfc setup 1`] = `
 {
   "__v_isVNode": true,
@@ -154,7 +227,9 @@ exports[`sfc setup 1`] = `
       "el": null,
       "key": null,
       "patchFlag": 0,
-      "props": null,
+      "props": {
+        "key": undefined,
+      },
       "ref": null,
       "scopeId": null,
       "shapeFlag": 4,
@@ -184,6 +259,7 @@ exports[`sfc setup 1`] = `
   "patchFlag": 0,
   "props": {
     "id": "hi",
+    "key": undefined,
   },
   "ref": null,
   "scopeId": null,
@@ -221,7 +297,9 @@ exports[`sfc template 1`] = `
       "el": null,
       "key": null,
       "patchFlag": 0,
-      "props": null,
+      "props": {
+        "key": undefined,
+      },
       "ref": null,
       "scopeId": null,
       "shapeFlag": 4,
@@ -249,6 +327,7 @@ exports[`sfc template 1`] = `
   "patchFlag": 0,
   "props": {
     "id": "hi",
+    "key": undefined,
   },
   "ref": null,
   "scopeId": null,

@@ -1,7 +1,7 @@
-<script setup lang="ts">
-await new Promise((resolve) => setTimeout(resolve, 1));
+<script setup>
+const y = await new Promise((resolve) => setTimeout(() => resolve("hi"), 1));
 </script>
 
 <template>
-  <div>async</div>
+  <div>async: {{ y }}</div>
 </template>

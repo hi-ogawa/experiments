@@ -1,6 +1,32 @@
 import { tinyassert } from "@hiogawa/utils";
 import { ShapeFlags } from "@vue/shared";
-import { type VNode, isVNode } from "vue";
+import {
+	type ComponentInternalInstance,
+	type SuspenseBoundary,
+	type VNode,
+	isVNode,
+	// @ts-expect-error no type?
+	ssrUtils,
+} from "vue";
+
+// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/runtime-core/src/index.ts#L362-L383
+// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/server-renderer/src/render.ts#L94-L95
+const {
+	createComponentInstance,
+	setupComponent,
+	renderComponentRoot,
+}: {
+	createComponentInstance: (
+		vnode: VNode,
+		parent: ComponentInternalInstance | null,
+		suspense: SuspenseBoundary | null,
+	) => ComponentInternalInstance;
+	setupComponent: (
+		instance: ComponentInternalInstance,
+		isSSR?: boolean,
+	) => Promise<void> | undefined;
+	renderComponentRoot: (instance: ComponentInternalInstance) => VNode;
+} = ssrUtils;
 
 // https://github.com/hi-ogawa/js-utils/blob/5288c172b72699c769dc87e2f07e3ce6ec9b5199/packages/tiny-react/src/server/index.ts
 
@@ -50,31 +76,11 @@ class Serializer {
 				children: await this.serialize(node.children),
 			};
 		}
-		// TODO: does vue runtime exposes utility to evaluate component?
-		// - createComponentInstance
-		// - setupComponent
-		if (node.shapeFlag & ShapeFlags.FUNCTIONAL_COMPONENT) {
-			const render = node.type as unknown;
-			tinyassert(typeof render === "function");
-			const child = await render(node.props, { slots: node.children });
-			return this.serialize(child);
-		}
-		if (node.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-			let { setup, render } = node.type as any;
-			if (setup) {
-				tinyassert(typeof setup === "function");
-				const returned = await setup(node.props, {
-					slots: node.children,
-					expose: () => {},
-				});
-				console.log(returned);
-				render ??= await setup(node.props, {
-					slots: node.children,
-					expose: () => {},
-				});
-			}
-			tinyassert(typeof render === "function");
-			const child = await render();
+		// TODO: parent, context?
+		if (node.shapeFlag & ShapeFlags.COMPONENT) {
+			const instance = createComponentInstance(node, null, null);
+			await setupComponent(instance, true);
+			const child = renderComponentRoot(instance);
 			return this.serialize(child);
 		}
 		throw new Error("unsupported node", { cause: node });

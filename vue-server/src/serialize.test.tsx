@@ -12,22 +12,27 @@ test("basic", async () => {
 			return () => h("div", { id: "setup1" }, slots["default"]?.());
 		},
 	});
-	const Setup2 = defineComponent(
-		async (_props, { slots }) => {
-			return () => h("div", { id: "setup2" }, slots["default"]?.());
-		},
-		{
-			props: {},
-		},
-	);
-	const NoSetup = async () => <div id="no-setup" />;
+
+	const Setup2 = defineComponent(async (_props, { slots }) => {
+		return () => h("div", { id: "setup2" }, slots["default"]?.());
+	});
+
+	// no async render
+	const NoSetup = () => <div id="no-setup" />;
 
 	const vnode = h("main", { id: "hi" }, [
 		"text",
 		null,
 		h(Setup1, () => h("a")),
-		h(Setup2, () => h("br")),
-		h(NoSetup),
+		<Setup2>
+			{() => (
+				<div>
+					<span />
+					<NoSetup />
+				</div>
+			)}
+		</Setup2>,
+		<NoSetup />,
 	]);
 
 	expect(vnode).toMatchSnapshot();
@@ -56,10 +61,30 @@ test("basic", async () => {
 		    {
 		      "children": [
 		        {
-		          "children": null,
+		          "children": [
+		            {
+		              "children": null,
+		              "key": null,
+		              "props": {
+		                "key": undefined,
+		              },
+		              "type": "span",
+		            },
+		            {
+		              "children": null,
+		              "key": null,
+		              "props": {
+		                "id": "no-setup",
+		                "key": undefined,
+		              },
+		              "type": "div",
+		            },
+		          ],
 		          "key": null,
-		          "props": null,
-		          "type": "br",
+		          "props": {
+		            "key": undefined,
+		          },
+		          "type": "div",
 		        },
 		      ],
 		      "key": null,
@@ -88,7 +113,11 @@ test("basic", async () => {
 });
 
 test("sfc template", async () => {
-	const vnode = h("main", { id: "hi" }, h(BasicVue));
+	const vnode = (
+		<main id="hi">
+			<BasicVue />
+		</main>
+	);
 	expect(vnode).toMatchSnapshot();
 
 	const result = await serialize(vnode);
@@ -105,14 +134,19 @@ test("sfc template", async () => {
 		  "key": null,
 		  "props": {
 		    "id": "hi",
+		    "key": undefined,
 		  },
 		  "type": "main",
 		}
 	`);
 });
 
-test.only("sfc setup", async () => {
-	const vnode = h("main", { id: "hi" }, h(SetupVue));
+test("sfc setup", async () => {
+	const vnode = (
+		<main id="hi">
+			<SetupVue />
+		</main>
+	);
 	expect(vnode).toMatchSnapshot();
 
 	const result = await serialize(vnode);
@@ -120,7 +154,7 @@ test.only("sfc setup", async () => {
 		{
 		  "children": [
 		    {
-		      "children": "basic",
+		      "children": "x = 0",
 		      "key": null,
 		      "props": null,
 		      "type": "div",
@@ -129,14 +163,19 @@ test.only("sfc setup", async () => {
 		  "key": null,
 		  "props": {
 		    "id": "hi",
+		    "key": undefined,
 		  },
 		  "type": "main",
 		}
 	`);
 });
 
-test.skip("sfc async", async () => {
-	const vnode = h("main", { id: "hi" }, h(AsyncVue));
+test("sfc async", async () => {
+	const vnode = (
+		<main id="hi">
+			<AsyncVue />
+		</main>
+	);
 	expect(vnode).toMatchSnapshot();
 
 	const result = await serialize(vnode);
@@ -144,7 +183,7 @@ test.skip("sfc async", async () => {
 		{
 		  "children": [
 		    {
-		      "children": "basic",
+		      "children": "async: hi",
 		      "key": null,
 		      "props": null,
 		      "type": "div",
@@ -153,6 +192,7 @@ test.skip("sfc async", async () => {
 		  "key": null,
 		  "props": {
 		    "id": "hi",
+		    "key": undefined,
 		  },
 		  "type": "main",
 		}
@@ -160,3 +200,4 @@ test.skip("sfc async", async () => {
 });
 
 test.skip("sfc slots");
+test.skip("client references");
