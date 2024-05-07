@@ -4,6 +4,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"build": "vite build && vite build --ssr",
+		"preview": "vite preview",
 		"test": "vitest",
 		"lint": "biome check --apply .",
 		"lint-check": "biome check ."
@@ -13,7 +15,10 @@
 		"vue": "^3.4.26"
 	},
 	"devDependencies": {
+		"@hattip/adapter-node": "^0.0.45",
 		"@hiogawa/utils": "1.6.4-pre.2",
+		"@hiogawa/vite-plugin-ssr-middleware": "^0.0.3",
+		"@types/node": "^20.12.10",
 		"@vitejs/plugin-vue": "^5.0.4",
 		"happy-dom": "^14.10.1",
 		"vite": "^5.2.11",

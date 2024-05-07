@@ -18,7 +18,7 @@ import {
 // serialize
 //
 
-type SerializeResult = {
+export type SerializeResult = {
 	data: unknown;
 	referenceIds: string[];
 };
