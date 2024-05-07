@@ -1,4 +1,3 @@
-import { tinyassert } from "@hiogawa/utils";
 import { ShapeFlags } from "@vue/shared";
 import {
 	type ComponentInternalInstance,
@@ -8,25 +7,6 @@ import {
 	// @ts-expect-error no type?
 	ssrUtils,
 } from "vue";
-
-// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/runtime-core/src/index.ts#L362-L383
-// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/server-renderer/src/render.ts#L94-L95
-const {
-	createComponentInstance,
-	setupComponent,
-	renderComponentRoot,
-}: {
-	createComponentInstance: (
-		vnode: VNode,
-		parent: ComponentInternalInstance | null,
-		suspense: SuspenseBoundary | null,
-	) => ComponentInternalInstance;
-	setupComponent: (
-		instance: ComponentInternalInstance,
-		isSSR?: boolean,
-	) => Promise<void> | undefined;
-	renderComponentRoot: (instance: ComponentInternalInstance) => VNode;
-} = ssrUtils;
 
 // https://github.com/hi-ogawa/js-utils/blob/5288c172b72699c769dc87e2f07e3ce6ec9b5199/packages/tiny-react/src/server/index.ts
 
@@ -67,6 +47,8 @@ class Serializer {
 		);
 	}
 
+	// TODO: text, comment, fragment?
+	// https://github.com/vuejs/core/blob/461946175df95932986cbd7b07bb9598ab3318cd/packages/server-renderer/src/render.ts#L220
 	async serializeNode(node: VNode) {
 		if (node.shapeFlag & ShapeFlags.ELEMENT) {
 			return {
@@ -77,6 +59,7 @@ class Serializer {
 			};
 		}
 		// TODO: parent, context?
+		// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/server-renderer/src/render.ts#L94-L95
 		if (node.shapeFlag & ShapeFlags.COMPONENT) {
 			const instance = createComponentInstance(node, null, null);
 			await setupComponent(instance, true);
@@ -92,7 +75,25 @@ class Serializer {
 	}
 }
 
-export function isClientReference(v: unknown) {
+// https://github.com/vuejs/core/blob/10d34a5624775f20437ccad074a97270ef74c3fb/packages/runtime-core/src/index.ts#L362-L383
+const {
+	createComponentInstance,
+	setupComponent,
+	renderComponentRoot,
+}: {
+	createComponentInstance: (
+		vnode: VNode,
+		parent: ComponentInternalInstance | null,
+		suspense: SuspenseBoundary | null,
+	) => ComponentInternalInstance;
+	setupComponent: (
+		instance: ComponentInternalInstance,
+		isSSR?: boolean,
+	) => Promise<void> | undefined;
+	renderComponentRoot: (instance: ComponentInternalInstance) => VNode;
+} = ssrUtils;
+
+export function isClientReference(_v: unknown) {
 	throw "todo";
 }
 

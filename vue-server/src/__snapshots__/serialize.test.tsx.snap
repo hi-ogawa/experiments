@@ -8,7 +8,6 @@ exports[`basic 1`] = `
   "appContext": null,
   "children": [
     "text",
-    null,
     {
       "__v_isVNode": true,
       "__v_skip": true,
@@ -26,7 +25,9 @@ exports[`basic 1`] = `
       "el": null,
       "key": null,
       "patchFlag": 0,
-      "props": null,
+      "props": {
+        "key": undefined,
+      },
       "ref": null,
       "scopeId": null,
       "shapeFlag": 36,
@@ -39,7 +40,6 @@ exports[`basic 1`] = `
       "targetAnchor": null,
       "transition": null,
       "type": {
-        "props": {},
         "setup": [Function],
       },
     },
@@ -120,6 +120,7 @@ exports[`basic 1`] = `
   "patchFlag": 0,
   "props": {
     "id": "hi",
+    "key": undefined,
   },
   "ref": null,
   "scopeId": null,
@@ -132,6 +133,83 @@ exports[`basic 1`] = `
   "target": null,
   "targetAnchor": null,
   "transition": null,
+  "type": "main",
+}
+`;
+
+exports[`basic 2`] = `
+{
+  "children": [
+    "text",
+    {
+      "children": [
+        {
+          "children": null,
+          "key": null,
+          "props": {
+            "key": undefined,
+          },
+          "type": "a",
+        },
+      ],
+      "key": null,
+      "props": {
+        "id": "setup1",
+        "key": undefined,
+      },
+      "type": "div",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": null,
+              "key": null,
+              "props": {
+                "key": undefined,
+              },
+              "type": "span",
+            },
+            {
+              "children": null,
+              "key": null,
+              "props": {
+                "id": "no-setup",
+                "key": undefined,
+              },
+              "type": "div",
+            },
+          ],
+          "key": null,
+          "props": {
+            "key": undefined,
+          },
+          "type": "div",
+        },
+      ],
+      "key": null,
+      "props": {
+        "id": "setup2",
+        "key": undefined,
+      },
+      "type": "div",
+    },
+    {
+      "children": null,
+      "key": null,
+      "props": {
+        "id": "no-setup",
+        "key": undefined,
+      },
+      "type": "div",
+    },
+  ],
+  "key": null,
+  "props": {
+    "id": "hi",
+    "key": undefined,
+  },
   "type": "main",
 }
 `;
