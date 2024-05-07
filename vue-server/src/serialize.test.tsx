@@ -3,6 +3,7 @@ import { defineComponent } from "vue";
 import AsyncVue from "./fixtures/async.vue";
 import BasicVue from "./fixtures/basic.vue";
 import ImportVue from "./fixtures/import.vue";
+import PropsVue from "./fixtures/props.vue";
 import SetupVue from "./fixtures/setup.vue";
 import SlotVue from "./fixtures/slot.vue";
 import { serialize } from "./serialize";
@@ -264,6 +265,22 @@ test("sfc import", async () => {
 	`);
 });
 
-test.skip("sfc props", async () => {});
+test("sfc props", async () => {
+	const vnode = <PropsVue message="prop!" />;
+	expect(vnode).toMatchSnapshot();
+	const result = await serialize(vnode);
+	expect(result.data).toMatchInlineSnapshot(`
+		{
+		  "children": "prop!",
+		  "key": null,
+		  "props": {
+		    "id": "props",
+		  },
+		  "type": "div",
+		}
+	`);
+});
+
+test.skip("provide/inject", async () => {});
 
 test.skip("client references");

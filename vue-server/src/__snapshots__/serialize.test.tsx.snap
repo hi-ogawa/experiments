@@ -365,6 +365,51 @@ exports[`sfc import 1`] = `
 }
 `;
 
+exports[`sfc props 1`] = `
+{
+  "__v_isVNode": true,
+  "__v_skip": true,
+  "anchor": null,
+  "appContext": null,
+  "children": null,
+  "component": null,
+  "ctx": null,
+  "dirs": null,
+  "dynamicChildren": null,
+  "dynamicProps": null,
+  "el": null,
+  "key": null,
+  "patchFlag": 0,
+  "props": {
+    "key": undefined,
+    "message": "prop!",
+  },
+  "ref": null,
+  "scopeId": null,
+  "shapeFlag": 4,
+  "slotScopeIds": null,
+  "ssContent": null,
+  "ssFallback": null,
+  "staticCount": 0,
+  "suspense": null,
+  "target": null,
+  "targetAnchor": null,
+  "transition": null,
+  "type": {
+    "__file": "/home/hiroshi/code/personal/experiments/vue-server/src/fixtures/props.vue",
+    "__name": "props",
+    "props": {
+      "message": {
+        "required": true,
+        "type": [Function],
+      },
+    },
+    "render": [Function],
+    "setup": [Function],
+  },
+}
+`;
+
 exports[`sfc setup 1`] = `
 {
   "__v_isVNode": true,
