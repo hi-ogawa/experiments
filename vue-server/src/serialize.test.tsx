@@ -6,7 +6,7 @@ import ImportVue from "./fixtures/import.vue";
 import PropsVue from "./fixtures/props.vue";
 import SetupVue from "./fixtures/setup.vue";
 import SlotVue from "./fixtures/slot.vue";
-import { serialize } from "./serialize";
+import { deserialize, serialize } from "./serialize";
 
 test("basic", async () => {
 	const Setup1 = defineComponent({
@@ -48,6 +48,9 @@ test("basic", async () => {
 
 	const result = await serialize(vnode);
 	expect(result.data).toMatchSnapshot();
+
+	const vnode2 = deserialize(result.data);
+	expect(vnode2).toMatchSnapshot();
 });
 
 test("sfc template", async () => {
@@ -61,8 +64,10 @@ test("sfc template", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": "basic",
 		      "key": null,
 		      "props": null,
@@ -90,8 +95,10 @@ test("sfc setup", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": "x = 0",
 		      "key": null,
 		      "props": null,
@@ -119,8 +126,10 @@ test("sfc async", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": "async: hi",
 		      "key": null,
 		      "props": null,
@@ -143,12 +152,16 @@ test("sfc slot fallback", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": [
 		        {
+		          "__v_isVNode": true,
 		          "children": [
 		            {
+		              "__v_isVNode": true,
 		              "children": "header-fallback",
 		              "type": Symbol(v-txt),
 		            },
@@ -161,10 +174,13 @@ test("sfc slot fallback", async () => {
 		      "type": "header",
 		    },
 		    {
+		      "__v_isVNode": true,
 		      "children": [
 		        {
+		          "__v_isVNode": true,
 		          "children": [
 		            {
+		              "__v_isVNode": true,
 		              "children": "default-fallback",
 		              "type": Symbol(v-txt),
 		            },
@@ -199,12 +215,16 @@ test("sfc slot basic", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": [
 		        {
+		          "__v_isVNode": true,
 		          "children": [
 		            {
+		              "__v_isVNode": true,
 		              "children": "header!!",
 		              "type": Symbol(v-txt),
 		            },
@@ -217,10 +237,13 @@ test("sfc slot basic", async () => {
 		      "type": "header",
 		    },
 		    {
+		      "__v_isVNode": true,
 		      "children": [
 		        {
+		          "__v_isVNode": true,
 		          "children": [
 		            {
+		              "__v_isVNode": true,
 		              "children": "default!!",
 		              "type": Symbol(v-txt),
 		            },
@@ -251,8 +274,10 @@ test("sfc import", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": "basic",
 		      "key": null,
 		      "props": null,
@@ -274,6 +299,7 @@ test("sfc props", async () => {
 	const result = await serialize(vnode);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": "prop!",
 		  "key": null,
 		  "props": {
@@ -295,6 +321,7 @@ test("context inject", async () => {
 	const result = await serialize(<Injector />, app._context);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": "hey",
 		  "key": null,
 		  "props": {
@@ -326,8 +353,10 @@ test("context global", async () => {
 	const result = await serialize(<Wrapper />, app._context);
 	expect(result.data).toMatchInlineSnapshot(`
 		{
+		  "__v_isVNode": true,
 		  "children": [
 		    {
+		      "__v_isVNode": true,
 		      "children": null,
 		      "key": null,
 		      "props": {
