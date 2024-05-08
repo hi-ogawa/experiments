@@ -4,8 +4,8 @@ import { ClientCounter, ClientNested, ClientSfc } from "./_client";
 export default defineComponent(async () => {
 	return () => (
 		<div>
-			<h4>Vue Server Component</h4>
-			<pre>{`rendered at: ${new Date().toString()}`}</pre>
+			<pre>{`Rendered at ${new Date()}`}</pre>
+			<pre>{`typeof window = ${typeof window}`}</pre>
 			<h4>Client Component</h4>
 			<ClientCounter />
 			<ClientSfc />

@@ -18,6 +18,9 @@ export default defineConfig({
 			},
 		},
 	],
+	test: {
+		dir: "src",
+	},
 });
 
 // force non-ssr transform to render vnode

@@ -1,4 +1,4 @@
-import { defineComponent, inject, ref } from "vue";
+import { defineComponent, inject, onMounted, ref } from "vue";
 import { registerClientReference } from "../../serialize";
 import ClientSfc from "./_client-sfc.vue";
 
@@ -68,11 +68,20 @@ export const GlobalProgress = defineComponent(() => {
 	);
 });
 
+export const Hydrated = defineComponent(() => {
+	const mounted = ref(0);
+	onMounted(() => {
+		mounted.value++;
+	});
+	return () => <span>{`[mounted: ${mounted.value}]`}</span>;
+});
+
 // TODO: transform
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
 registerClientReference(ClientSfc, "ClientSfc");
 registerClientReference(Link, "Link");
 registerClientReference(GlobalProgress, "GlobalProgress");
+registerClientReference(Hydrated, "Hydrated");
 
 export { ClientSfc };
