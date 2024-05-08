@@ -36,9 +36,12 @@ async function testNavigation(page: Page, options: { js: boolean }) {
 	await page.getByRole("link", { name: "SFC" }).click();
 	await page.waitForURL("/sfc");
 	await page.getByRole("heading", { name: "Server SFC" }).click();
-	await page.getByRole("button", { name: "client sfc: 0" }).click();
+	await page.getByRole("button", { name: "client counter 0" }).first().click();
 	if (options.js) {
-		await page.getByRole("button", { name: "client sfc: 1" }).click();
+		await page
+			.getByRole("button", { name: "client counter 1" })
+			.first()
+			.click();
 	}
 	await expect(page.getByPlaceholder("(test)")).toHaveValue(
 		options.js ? "hello" : "",

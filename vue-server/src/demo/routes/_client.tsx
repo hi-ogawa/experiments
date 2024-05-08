@@ -1,6 +1,5 @@
 import { defineComponent, inject, onMounted, ref } from "vue";
 import { registerClientReference } from "../../serialize";
-import ClientSfc from "./_client-sfc.vue";
 
 export const ClientCounter = defineComponent(() => {
 	const count = ref(0);
@@ -79,9 +78,13 @@ export const Hydrated = defineComponent(() => {
 // TODO: transform
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
-registerClientReference(ClientSfc, "ClientSfc");
 registerClientReference(Link, "Link");
 registerClientReference(GlobalProgress, "GlobalProgress");
 registerClientReference(Hydrated, "Hydrated");
 
-export { ClientSfc };
+import ClientSfc from "./_client-sfc.vue";
+import ClientSlot from "./_slot.vue";
+registerClientReference(ClientSfc, "ClientSfc");
+registerClientReference(ClientSlot, "ClientSlot");
+
+export { ClientSfc, ClientSlot };
