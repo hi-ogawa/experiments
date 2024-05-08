@@ -6,6 +6,10 @@ import { type SerializeResult, deserialize } from "../serialize";
 import * as referenceMap from "./routes/_client";
 
 function main() {
+	if (window.location.search.includes("__nojs")) {
+		return;
+	}
+
 	const initResult: SerializeResult = (globalThis as any).__serialized;
 
 	const Root = defineComponent(() => {
