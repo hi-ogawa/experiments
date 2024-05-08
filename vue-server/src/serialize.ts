@@ -98,7 +98,6 @@ class Serializer {
 		throw new Error("unexpected vnode", { cause: node });
 	}
 
-	// TODO: need to deserialize since otherwise it reuses same vnode after revived
 	async serializeClientChildren(children: VNodeNormalizedChildren) {
 		if (children === null) {
 			return null;
@@ -114,7 +113,7 @@ class Serializer {
 	}
 }
 
-// sequential for easier debugging
+// sequential for easier debugging for now
 async function mapPromise<T, U>(
 	xs: T[],
 	f: (x: T) => Promise<U>,
