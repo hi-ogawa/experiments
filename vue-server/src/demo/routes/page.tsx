@@ -5,7 +5,7 @@ export default defineComponent(async () => {
 	return () => (
 		<div>
 			<h4>Vue Server Component</h4>
-			<div>{`Server Time: ${new Date().toString()}`}</div>
+			<pre>{`rendered at: ${new Date().toString()}`}</pre>
 			<h4>Client Component</h4>
 			<ClientCounter />
 			<ClientSfc />

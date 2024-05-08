@@ -46,6 +46,7 @@ const routes = {
 	"/": () => import("./routes/page"),
 	"/highlight": () => import("./routes/highlight/page"),
 	"/slow": () => import("./routes/slow/page"),
+	"/sfc": () => import("./routes/sfc/page.server.vue"),
 };
 
 const Router = defineComponent<{ url: URL }>(

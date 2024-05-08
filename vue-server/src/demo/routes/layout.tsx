@@ -16,10 +16,13 @@ export default defineComponent(async (_props, { slots }) => {
 					<Link href="/highlight">{() => "highlight.js"}</Link>
 				</li>
 				<li>
-					<Link href="/not-found">{() => "Not found"}</Link>
+					<Link href="/slow">{() => "Slow"}</Link>
 				</li>
 				<li>
-					<Link href="/slow">{() => "Slow"}</Link>
+					<Link href="/sfc">{() => "SFC"}</Link>
+				</li>
+				<li>
+					<Link href="/not-found">{() => "Not found"}</Link>
 				</li>
 			</ul>
 			<div style={{ marginBottom: "0.5rem" }}>
