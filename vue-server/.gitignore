@@ -1,0 +1,5 @@
+node_modules
+dist
+test-results
+.vite-node
+.wrangler
