@@ -25,3 +25,6 @@ jobs:
       - run: pnpm lint-check
       - run: pnpm tsc
       - run: pnpm test
+      - run: pnpm test-e2e
+      - run: pnpm build
+      - run: pnpm test-e2e-preview
