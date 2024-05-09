@@ -47,3 +47,14 @@ async function testNavigation(page: Page, options: { js: boolean }) {
 		options.js ? "hello" : "",
 	);
 }
+
+test("highlight @js", async ({ page }) => {
+	await page.goto("/highlight");
+	await waitForHydration(page);
+	await expect(page.locator("pre.shiki")).toBeVisible();
+});
+
+testNoJs("highlight @nojs", async ({ page }) => {
+	await page.goto("/highlight");
+	await expect(page.locator("pre.shiki")).toBeVisible();
+});
