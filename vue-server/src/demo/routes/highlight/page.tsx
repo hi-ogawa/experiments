@@ -1,11 +1,21 @@
-import hljs from "highlight.js/lib/core";
-import hljsXml from "highlight.js/lib/languages/xml";
+import { type HighlighterCore, getHighlighterCore } from "shiki/core";
 import { defineComponent } from "vue";
 
+let highlighter: HighlighterCore;
+
 export default defineComponent(async () => {
-	hljs.registerLanguage("xml", hljsXml);
+	highlighter ??= await getHighlighterCore({
+		themes: [import("shiki/themes/vitesse-light.mjs")],
+		langs: [import("shiki/langs/vue.mjs")],
+		loadWasm: import("shiki/wasm"),
+	});
+
 	const code = await import("../_client-sfc.vue?raw");
-	const html = hljs.highlight(code.default, { language: "xml" }).value;
+	const html = highlighter.codeToHtml(code.default, {
+		lang: "vue",
+		theme: "vitesse-light",
+	});
+
 	return () => (
 		<div
 			style={{
@@ -14,7 +24,7 @@ export default defineComponent(async () => {
 				alignItems: "start",
 			}}
 		>
-			<h4>Highlight.js</h4>
+			<h4>Highlight (Shiki)</h4>
 			<div
 				style={{
 					border: "1px solid #cccccc",
@@ -22,7 +32,7 @@ export default defineComponent(async () => {
 				}}
 			>
 				<span>_client-sfc.vue</span>
-				<pre innerHTML={html}></pre>
+				<div innerHTML={html}></div>
 			</div>
 		</div>
 	);
