@@ -24,7 +24,7 @@ export default defineComponent(async () => {
 				alignItems: "start",
 			}}
 		>
-			<h4>Highlight.js</h4>
+			<h4>Shiki</h4>
 			<div
 				style={{
 					border: "1px solid #cccccc",
