@@ -15,11 +15,13 @@
 		"lint-check": "biome check .",
 		"cf-build": "SERVER_ENTRY=/src/demo/adapters/cloudflare-workers.ts pnpm build && bash misc/cloudflare-workers/build.sh",
 		"cf-preview": "cd misc/cloudflare-workers && wrangler dev",
+		"cf-dry": "cd misc/cloudflare-workers && wrangler publish --dry-run --outdir dist/dry",
 		"cf-release": "cd misc/cloudflare-workers && wrangler deploy"
 	},
 	"dependencies": {
 		"@vue/shared": "^3.4.26",
 		"highlight.js": "^11.9.0",
+		"shiki": "^1.5.0",
 		"vue": "^3.4.26"
 	},
 	"devDependencies": {

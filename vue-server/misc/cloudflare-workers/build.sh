@@ -15,6 +15,8 @@ rm -rf dist/client/index.html
 npx esbuild ../../dist/server/index.js \
   --outfile=dist/server/index.js \
   --metafile=dist/esbuild-metafile.json \
+  --alias:shiki/wasm=./alias-shiki-wasm.mjs \
+  --external:./shiki.wasm \
   --define:process.env.NODE_ENV='"production"' \
   --define:__VUE_OPTIONS_API__='false' \
   --define:__VUE_PROD_DEVTOOLS__='false' \
@@ -23,3 +25,6 @@ npx esbuild ../../dist/server/index.js \
   --bundle \
   --format=esm \
   --platform=browser
+
+# copy shiki wasm
+cp ../../node_modules/shiki/dist/onig.wasm dist/server/shiki.wasm

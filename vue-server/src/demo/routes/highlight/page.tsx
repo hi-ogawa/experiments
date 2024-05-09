@@ -1,11 +1,21 @@
-import hljs from "highlight.js/lib/core";
-import hljsXml from "highlight.js/lib/languages/xml";
+import { type HighlighterCore, getHighlighterCore } from "shiki/core";
 import { defineComponent } from "vue";
 
+let highlighter: HighlighterCore;
+
 export default defineComponent(async () => {
-	hljs.registerLanguage("xml", hljsXml);
+	highlighter ??= await getHighlighterCore({
+		themes: [import("shiki/themes/vitesse-light.mjs")],
+		langs: [import("shiki/langs/vue.mjs")],
+		loadWasm: import("shiki/wasm"),
+	});
+
 	const code = await import("../_client-sfc.vue?raw");
-	const html = hljs.highlight(code.default, { language: "xml" }).value;
+	const html = highlighter.codeToHtml(code.default, {
+		lang: "vue",
+		theme: "vitesse-light",
+	});
+
 	return () => (
 		<div
 			style={{
