@@ -1,5 +1,5 @@
 <script setup>
-const v = await new Promise((resolve) => setTimeout(resolve, Math.random().s));
+await new Promise((resolve) => setTimeout(resolve, 1));
 </script>
 
 <template>
