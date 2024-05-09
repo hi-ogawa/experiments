@@ -6,6 +6,7 @@ import {
 	type SuspenseBoundary,
 	type VNode,
 	type VNodeNormalizedChildren,
+	cloneVNode,
 	createVNode,
 	isVNode,
 	// @ts-expect-error no type?
@@ -217,7 +218,12 @@ class Deserializer {
 		}
 		tinyassert(typeof children === "object" && !Array.isArray(children));
 		return Object.fromEntries(
-			Object.entries(children).map(([k, v]) => [k, () => this.deserialize(v)]),
+			Object.entries(children).map(([k, v]) => {
+				// deserialize once and clone for each call?
+				const child = this.deserialize(v);
+				const slot = isVNode(child) ? () => cloneVNode(child) : () => child;
+				return [k, slot];
+			}),
 		);
 	}
 }
