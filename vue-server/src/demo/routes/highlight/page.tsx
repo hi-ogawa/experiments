@@ -24,7 +24,7 @@ export default defineComponent(async () => {
 				alignItems: "start",
 			}}
 		>
-			<h4>Shiki</h4>
+			<h4>Highlight (Shiki)</h4>
 			<div
 				style={{
 					border: "1px solid #cccccc",
@@ -32,7 +32,7 @@ export default defineComponent(async () => {
 				}}
 			>
 				<span>_client-sfc.vue</span>
-				<pre innerHTML={html}></pre>
+				<div innerHTML={html}></div>
 			</div>
 		</div>
 	);
