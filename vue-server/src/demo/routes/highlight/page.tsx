@@ -1,16 +1,12 @@
 import { type HighlighterCore, getHighlighterCore } from "shiki/core";
 import { defineComponent, inject } from "vue";
-import {
-	SERVER_REQUEST_CONTEXT,
-	type ServerRequestContext,
-} from "../../features/server-context";
 import { Form } from "../_client";
 import DEFAULT_CODE from "../_client-sfc.vue?raw";
 
 let highlighter: HighlighterCore;
 
 export default defineComponent(async () => {
-	const serverContext = inject<ServerRequestContext>(SERVER_REQUEST_CONTEXT)!;
+	const serverContext = inject<{ url: URL }>("SERVER_REQUEST")!;
 	let code = serverContext.url.searchParams.get("code") ?? DEFAULT_CODE;
 	code = code.replaceAll(/\r/g, ""); // CRLF -> LF
 

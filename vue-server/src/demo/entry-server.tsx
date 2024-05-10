@@ -2,10 +2,6 @@ import type { ViteDevServer } from "vite";
 import { createSSRApp, defineComponent } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { deserialize, serialize } from "../serialize";
-import {
-	SERVER_REQUEST_CONTEXT,
-	type ServerRequestContext,
-} from "./features/server-context";
 import * as referenceMap from "./routes/_client";
 import Layout from "./routes/layout";
 
@@ -13,7 +9,7 @@ export async function handler(request: Request) {
 	const url = new URL(request.url);
 
 	const serverApp = createSSRApp(() => null);
-	serverApp.provide<ServerRequestContext>(SERVER_REQUEST_CONTEXT, { url });
+	serverApp.provide("SERVER_REQUEST", { url });
 
 	const result = await serialize(<Router url={url} />, serverApp._context);
 
