@@ -53,6 +53,27 @@ export const Link = defineComponent<{ href: string }>(
 	},
 );
 
+export const LinkForm = defineComponent((_props, { slots }) => {
+	return () => (
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				tinyassert(e.currentTarget instanceof HTMLFormElement);
+				const url = new URL(e.currentTarget.action);
+				const data = new FormData(e.currentTarget);
+				data.forEach((v, k) => {
+					if (typeof v === "string") {
+						url.searchParams.set(k, v);
+					}
+				});
+				history.pushState({}, "", url);
+			}}
+		>
+			{slots.default?.()}
+		</form>
+	);
+});
+
 export const GlobalProgress = defineComponent(() => {
 	const isLoading = inject("isLoading", { value: false });
 	return () => (
@@ -79,9 +100,11 @@ export const Hydrated = defineComponent(() => {
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
 registerClientReference(Link, "Link");
+registerClientReference(LinkForm, "LinkForm");
 registerClientReference(GlobalProgress, "GlobalProgress");
 registerClientReference(Hydrated, "Hydrated");
 
+import { tinyassert } from "@hiogawa/utils";
 import ClientSfc from "./_client-sfc.vue";
 import ClientSlot from "./_slot.vue";
 registerClientReference(ClientSfc, "ClientSfc");

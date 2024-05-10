@@ -4,6 +4,7 @@ import {
 	SERVER_REQUEST_CONTEXT,
 	type ServerRequestContext,
 } from "../../features/server-context";
+import { LinkForm } from "../_client";
 import DEFAULT_CODE from "../_client-sfc.vue?raw";
 
 let highlighter: HighlighterCore;
@@ -42,26 +43,28 @@ export default defineComponent(async () => {
 					minWidth: "54rem",
 				}}
 			>
-				{/* TODO: GET form client side navigation */}
-				<form
+				<LinkForm
 					style={{
 						flex: "1",
 						display: "flex",
 						flexDirection: "column",
 						gap: "0.5rem",
 					}}
-					method="GET"
 				>
-					<textarea
-						style={{
-							flex: "1",
-							padding: "0.5rem",
-						}}
-						name="code"
-						value={code}
-					/>
-					<button>Submit</button>
-				</form>
+					{() => (
+						<>
+							<textarea
+								style={{
+									flex: "1",
+									padding: "0.5rem",
+								}}
+								name="code"
+								value={code}
+							/>
+							<button>Submit</button>
+						</>
+					)}
+				</LinkForm>
 				<div
 					style={{
 						flex: "1",
