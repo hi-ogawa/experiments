@@ -58,3 +58,25 @@ testNoJs("highlight @nojs", async ({ page }) => {
 	await page.goto("/highlight");
 	await expect(page.locator("pre.shiki")).toBeVisible();
 });
+
+test("form navigation @js", async ({ page }) => {
+	await page.goto("/highlight");
+	await waitForHydration(page);
+	await testFormNavigation(page, { js: true });
+});
+
+testNoJs("form navigation @nojs", async ({ page }) => {
+	await page.goto("/highlight");
+	await testFormNavigation(page, { js: false });
+});
+
+async function testFormNavigation(page: Page, options: { js: boolean }) {
+	await page.getByPlaceholder("(test)").fill("hello");
+	const code = `<script setup>console.log("hello")</script>`;
+	await page.locator('textarea[name="code"]').fill(code);
+	await page.getByRole("button", { name: "Submit" }).click();
+	await page.waitForURL((url) => url.searchParams.get("code") === code);
+	await expect(page.getByPlaceholder("(test)")).toHaveValue(
+		options.js ? "hello" : "",
+	);
+}
