@@ -1,3 +1,4 @@
+import { tinyassert } from "@hiogawa/utils";
 import { defineComponent, inject, onMounted, ref } from "vue";
 import { registerClientReference } from "../../serialize";
 
@@ -60,8 +61,6 @@ export const Form = defineComponent<{ replace?: boolean }>(
 				onSubmit={(e) => {
 					e.preventDefault();
 					tinyassert(e.currentTarget instanceof HTMLFormElement);
-					// TODO: server action?
-					tinyassert(e.currentTarget.method === "get");
 					const url = new URL(e.currentTarget.action);
 					const data = new FormData(e.currentTarget);
 					data.forEach((v, k) => {
@@ -115,7 +114,6 @@ registerClientReference(Form, "Form");
 registerClientReference(GlobalProgress, "GlobalProgress");
 registerClientReference(Hydrated, "Hydrated");
 
-import { tinyassert } from "@hiogawa/utils";
 import ClientSfc from "./_client-sfc.vue";
 import ClientSlot from "./_slot.vue";
 registerClientReference(ClientSfc, "ClientSfc");
