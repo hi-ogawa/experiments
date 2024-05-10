@@ -4,7 +4,7 @@ import {
 	SERVER_REQUEST_CONTEXT,
 	type ServerRequestContext,
 } from "../../features/server-context";
-import { LinkForm } from "../_client";
+import { Form } from "../_client";
 import DEFAULT_CODE from "../_client-sfc.vue?raw";
 
 let highlighter: HighlighterCore;
@@ -43,13 +43,14 @@ export default defineComponent(async () => {
 					minWidth: "54rem",
 				}}
 			>
-				<LinkForm
+				<Form
 					style={{
 						flex: "1",
 						display: "flex",
 						flexDirection: "column",
 						gap: "0.5rem",
 					}}
+					replace
 				>
 					{() => (
 						<>
@@ -64,7 +65,7 @@ export default defineComponent(async () => {
 							<button>Submit</button>
 						</>
 					)}
-				</LinkForm>
+				</Form>
 				<div
 					style={{
 						flex: "1",

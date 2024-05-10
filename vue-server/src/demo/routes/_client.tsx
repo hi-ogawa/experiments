@@ -53,26 +53,37 @@ export const Link = defineComponent<{ href: string }>(
 	},
 );
 
-export const LinkForm = defineComponent((_props, { slots }) => {
-	return () => (
-		<form
-			onSubmit={(e) => {
-				e.preventDefault();
-				tinyassert(e.currentTarget instanceof HTMLFormElement);
-				const url = new URL(e.currentTarget.action);
-				const data = new FormData(e.currentTarget);
-				data.forEach((v, k) => {
-					if (typeof v === "string") {
-						url.searchParams.set(k, v);
+export const Form = defineComponent<{ replace?: boolean }>(
+	(props, { slots }) => {
+		return () => (
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					tinyassert(e.currentTarget instanceof HTMLFormElement);
+					// TODO: server action?
+					tinyassert(e.currentTarget.method === "get");
+					const url = new URL(e.currentTarget.action);
+					const data = new FormData(e.currentTarget);
+					data.forEach((v, k) => {
+						if (typeof v === "string") {
+							url.searchParams.set(k, v);
+						}
+					});
+					if (props.replace) {
+						history.replaceState({}, "", url);
+					} else {
+						history.pushState({}, "", url);
 					}
-				});
-				history.pushState({}, "", url);
-			}}
-		>
-			{slots.default?.()}
-		</form>
-	);
-});
+				}}
+			>
+				{slots.default?.()}
+			</form>
+		);
+	},
+	{
+		props: ["replace"],
+	},
+);
 
 export const GlobalProgress = defineComponent(() => {
 	const isLoading = inject("isLoading", { value: false });
@@ -100,7 +111,7 @@ export const Hydrated = defineComponent(() => {
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
 registerClientReference(Link, "Link");
-registerClientReference(LinkForm, "LinkForm");
+registerClientReference(Form, "Form");
 registerClientReference(GlobalProgress, "GlobalProgress");
 registerClientReference(Hydrated, "Hydrated");
 
