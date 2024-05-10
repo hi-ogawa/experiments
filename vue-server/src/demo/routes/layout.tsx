@@ -13,7 +13,7 @@ export default defineComponent(async (_props, { slots }) => {
 					<Link href="/">{() => "Home"}</Link>
 				</li>
 				<li>
-					<Link href="/highlight">{() => "highlight.js"}</Link>
+					<Link href="/highlight">{() => "Highlight (Shiki)"}</Link>
 				</li>
 				<li>
 					<Link href="/slow">{() => "Slow"}</Link>
