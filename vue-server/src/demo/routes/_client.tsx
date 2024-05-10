@@ -1,3 +1,4 @@
+import { tinyassert } from "@hiogawa/utils";
 import { defineComponent, inject, onMounted, ref } from "vue";
 import { registerClientReference } from "../../serialize";
 
@@ -53,6 +54,36 @@ export const Link = defineComponent<{ href: string }>(
 	},
 );
 
+export const Form = defineComponent<{ replace?: boolean }>(
+	(props, { slots }) => {
+		return () => (
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					tinyassert(e.currentTarget instanceof HTMLFormElement);
+					const url = new URL(e.currentTarget.action);
+					const data = new FormData(e.currentTarget);
+					data.forEach((v, k) => {
+						if (typeof v === "string") {
+							url.searchParams.set(k, v);
+						}
+					});
+					if (props.replace) {
+						history.replaceState({}, "", url);
+					} else {
+						history.pushState({}, "", url);
+					}
+				}}
+			>
+				{slots.default?.()}
+			</form>
+		);
+	},
+	{
+		props: ["replace"],
+	},
+);
+
 export const GlobalProgress = defineComponent(() => {
 	const isLoading = inject("isLoading", { value: false });
 	return () => (
@@ -79,6 +110,7 @@ export const Hydrated = defineComponent(() => {
 registerClientReference(ClientCounter, "ClientCounter");
 registerClientReference(ClientNested, "ClientNested");
 registerClientReference(Link, "Link");
+registerClientReference(Form, "Form");
 registerClientReference(GlobalProgress, "GlobalProgress");
 registerClientReference(Hydrated, "Hydrated");
 

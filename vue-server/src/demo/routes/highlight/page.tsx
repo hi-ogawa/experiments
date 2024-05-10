@@ -1,17 +1,22 @@
 import { type HighlighterCore, getHighlighterCore } from "shiki/core";
-import { defineComponent } from "vue";
+import { defineComponent, inject } from "vue";
+import { Form } from "../_client";
+import DEFAULT_CODE from "../_client-sfc.vue?raw";
 
 let highlighter: HighlighterCore;
 
 export default defineComponent(async () => {
+	const serverContext = inject<{ url: URL }>("SERVER_REQUEST")!;
+	let code = serverContext.url.searchParams.get("code") ?? DEFAULT_CODE;
+	code = code.replaceAll(/\r/g, ""); // CRLF -> LF
+
 	highlighter ??= await getHighlighterCore({
 		themes: [import("shiki/themes/vitesse-light.mjs")],
 		langs: [import("shiki/langs/vue.mjs")],
 		loadWasm: import("shiki/wasm"),
 	});
 
-	const code = await import("../_client-sfc.vue?raw");
-	const html = highlighter.codeToHtml(code.default, {
+	const html = highlighter.codeToHtml(code, {
 		lang: "vue",
 		theme: "vitesse-light",
 	});
@@ -27,12 +32,46 @@ export default defineComponent(async () => {
 			<h4>Highlight (Shiki)</h4>
 			<div
 				style={{
-					border: "1px solid #cccccc",
-					padding: "0.5rem",
+					display: "flex",
+					gap: "1rem",
+					alignItems: "stretch",
+					minHeight: "20rem",
+					minWidth: "54rem",
 				}}
 			>
-				<span>_client-sfc.vue</span>
-				<div innerHTML={html}></div>
+				<Form
+					style={{
+						flex: "1",
+						display: "flex",
+						flexDirection: "column",
+						gap: "0.5rem",
+					}}
+					replace
+				>
+					{() => (
+						<>
+							<textarea
+								style={{
+									flex: "1",
+									padding: "0.5rem",
+								}}
+								name="code"
+								value={code}
+							/>
+							<button>Submit</button>
+						</>
+					)}
+				</Form>
+				<div
+					style={{
+						flex: "1",
+						border: "1px solid #cccccc",
+						padding: "0.5rem",
+					}}
+				>
+					<style>{`pre.shiki { margin: 0 }`}</style>
+					<div innerHTML={html}></div>
+				</div>
 			</div>
 		</div>
 	);
