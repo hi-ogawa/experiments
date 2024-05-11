@@ -65,6 +65,16 @@ function vitePluginVueServer(): PluginOption {
 		},
 		{
 			name: vitePluginVueServer.name + ":hmr",
+			apply: "serve",
+			transform(_code, id, options) {
+				// track which id is processed in which environment
+				// by intercepting transform
+				if (options?.ssr) {
+					serverIds.add(id);
+				} else {
+					clientIds.add(id);
+				}
+			},
 			handleHotUpdate(ctx) {
 				if (
 					ctx.modules.length > 0 &&
@@ -85,18 +95,6 @@ function vitePluginVueServer(): PluginOption {
 				}
 			},
 		},
-		{
-			// track which id is processed in which environment
-			// by intercepting transform
-			name: vitePluginLogger.name + ":track-environment",
-			transform(_code, id, options) {
-				if (options?.ssr) {
-					serverIds.add(id);
-				} else {
-					clientIds.add(id);
-				}
-			},
-		},
 	];
 }
 
@@ -113,7 +111,7 @@ function patchServerVue(plugin: Plugin): Plugin {
 		return oldLoad.apply(this, [id, { ssr: false }]);
 	};
 
-	// also remove handleHotUpdate and handle server component hmr on our own
+	// also remove handleHotUpdate since we handle server component hmr on our own
 	tinyassert(typeof plugin.handleHotUpdate === "function");
 	delete plugin.handleHotUpdate;
 
