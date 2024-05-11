@@ -49,15 +49,6 @@ function vitePluginVueServer(): PluginOption {
 			}),
 		),
 		{
-			name: "wip",
-			enforce: "pre",
-			transform(code, id, options) {
-				if (id.includes("_slot.")) {
-					console.log({ id, code, options });
-				}
-			},
-		},
-		{
 			name: "patch-vue-server-hot",
 			apply: "serve",
 			transform(code, id, _options) {
@@ -110,11 +101,16 @@ function vitePluginVueServer(): PluginOption {
 }
 
 function patchServerVue(plugin: Plugin): Plugin {
+	// need to force non-ssr transform to always render vnode
 	tinyassert(typeof plugin.transform === "function");
 	const oldTransform = plugin.transform;
 	plugin.transform = async function (code, id, _options) {
-		// need to force non-ssr transform to always render vnode
 		return oldTransform.apply(this, [code, id, { ssr: false }]);
+	};
+	tinyassert(typeof plugin.load === "function");
+	const oldLoad = plugin.load;
+	plugin.load = async function (id, _options) {
+		return oldLoad.apply(this, [id, { ssr: false }]);
 	};
 
 	// also remove handleHotUpdate and handle server component hmr on our own
