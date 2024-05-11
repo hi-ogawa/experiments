@@ -52,7 +52,7 @@ function vitePluginVueServer(): PluginOption {
 			name: "wip",
 			enforce: "pre",
 			transform(code, id, options) {
-				if (id.includes(".vue")) {
+				if (id.includes("_slot.")) {
 					console.log({ id, code, options });
 				}
 			},
