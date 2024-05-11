@@ -6,10 +6,12 @@ import {
 } from "@hiogawa/vite-plugin-ssr-middleware";
 import vue from "@vitejs/plugin-vue";
 import { type Plugin, type PluginOption, defineConfig } from "vite";
+import vitPluginInspect from "vite-plugin-inspect";
 
 export default defineConfig((env) => ({
 	clearScreen: false,
 	plugins: [
+		vitPluginInspect(),
 		vitePluginVueServer(),
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
@@ -48,6 +50,7 @@ function vitePluginVueServer(): PluginOption {
 		),
 		{
 			name: "patch-vue-server-hot",
+			apply: "serve",
 			transform(code, id, _options) {
 				if (id.endsWith(".server.vue")) {
 					// remove import.meta.hot.accept from *.server.vue
@@ -56,7 +59,7 @@ function vitePluginVueServer(): PluginOption {
 						.replace(/.*__hmrId.*/, "")
 						.replace(/.*__VUE_HMR_RUNTIME__.*/, "")
 						.replace("import.meta.hot.accept", "(() => {})");
-					return code;
+					return { code, map: null };
 				}
 			},
 		},
@@ -98,11 +101,16 @@ function vitePluginVueServer(): PluginOption {
 }
 
 function patchServerVue(plugin: Plugin): Plugin {
+	// need to force non-ssr transform to always render vnode
 	tinyassert(typeof plugin.transform === "function");
 	const oldTransform = plugin.transform;
 	plugin.transform = async function (code, id, _options) {
-		// need to force non-ssr transform to always render vnode
 		return oldTransform.apply(this, [code, id, { ssr: false }]);
+	};
+	tinyassert(typeof plugin.load === "function");
+	const oldLoad = plugin.load;
+	plugin.load = async function (id, _options) {
+		return oldLoad.apply(this, [id, { ssr: false }]);
 	};
 
 	// also remove handleHotUpdate and handle server component hmr on our own

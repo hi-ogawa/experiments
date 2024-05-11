@@ -6,8 +6,8 @@
 		"dev": "vite",
 		"build": "vite build && vite build --ssr",
 		"preview": "vite preview",
-		"tsc": "tsc -b",
-		"tsc-dev": "tsc -b --watch --preserveWatchOutput",
+		"tsc": "vue-tsc -b",
+		"tsc-dev": "vue-tsc -b --watch --preserveWatchOutput",
 		"test": "vitest",
 		"test-e2e": "playwright test",
 		"test-e2e-preview": "E2E_PREVIEW=1 playwright test",
@@ -35,7 +35,9 @@
 		"happy-dom": "^14.10.1",
 		"typescript": "^5.4.5",
 		"vite": "^5.2.11",
+		"vite-plugin-inspect": "^0.8.4",
 		"vitest": "^1.6.0",
+		"vue-tsc": "^2.0.17",
 		"wrangler": "^3.53.1"
 	},
 	"packageManager": "pnpm@9.0.6+sha512.f6d863130973207cb7a336d6b439a242a26ac8068077df530d6a86069419853dc1ffe64029ec594a9c505a3a410d19643c870aba6776330f5cfddcf10a9c1617"
