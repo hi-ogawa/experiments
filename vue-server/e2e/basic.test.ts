@@ -1,5 +1,5 @@
 import { type Page, expect, test } from "@playwright/test";
-import { testNoJs, waitForHydration } from "./helper";
+import { createEditor, testNoJs, waitForHydration } from "./helper";
 
 test("basic @js", async ({ page }) => {
 	await page.goto("/");
@@ -80,3 +80,17 @@ async function testFormNavigation(page: Page, options: { js: boolean }) {
 		options.js ? "hello" : "",
 	);
 }
+
+test("hmr server @dev", async ({ page }) => {
+	await page.goto("/");
+	await waitForHydration(page);
+	await page.pause();
+
+	// using file = createEditor("src/demo/routes/layout.tsx");
+	// file.edit(s => s);
+});
+
+test("hmr sfc @dev", async ({ page }) => {
+	await page.goto("/sfc");
+	await waitForHydration(page);
+});

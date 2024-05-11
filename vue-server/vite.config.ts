@@ -63,7 +63,11 @@ function vitePluginVueServer(): PluginOption {
 		{
 			name: vitePluginVueServer.name + ":hmr",
 			handleHotUpdate(ctx) {
-				if (ctx.modules.every((m) => m.id && !clientIds.has(m.id))) {
+				if (
+					ctx.modules.length > 0 &&
+					ctx.modules.every((m) => m.id && !clientIds.has(m.id))
+				) {
+					console.log(`[vue-server] update ${ctx.file}`);
 					ctx.server.hot.send({
 						type: "custom",
 						event: "vue-server:update",
