@@ -5,7 +5,12 @@ import {
 	vitePluginSsrMiddleware,
 } from "@hiogawa/vite-plugin-ssr-middleware";
 import vue from "@vitejs/plugin-vue";
-import { type Plugin, type PluginOption, defineConfig } from "vite";
+import {
+	type Plugin,
+	type PluginOption,
+	defineConfig,
+	parseAstAsync,
+} from "vite";
 import vitPluginInspect from "vite-plugin-inspect";
 
 export default defineConfig((env) => ({
@@ -95,6 +100,23 @@ function vitePluginVueServer(): PluginOption {
 				}
 			},
 		},
+		{
+			name: vitePluginVueServer.name + ":register-client-reference",
+			async transform(code, id, options) {
+				if (options?.ssr && /^("use client"|'use client')/.test(code)) {
+					const { exportNames } = await parseExports(code);
+					const outCode = [
+						code,
+						`import { registerClientReference as $$register } from "/src/serialize";`,
+						...[...exportNames].map(
+							(name) => `$$register(${name}, "${id}#${name}");`,
+						),
+					].join("\n");
+					return { code: outCode, map: null };
+				}
+				return;
+			},
+		},
 	];
 }
 
@@ -116,4 +138,37 @@ function patchServerVue(plugin: Plugin): Plugin {
 	delete plugin.handleHotUpdate;
 
 	return plugin;
+}
+
+async function parseExports(code: string) {
+	const ast = await parseAstAsync(code);
+	const exportNames = new Set<string>();
+	for (const node of ast.body) {
+		// named exports
+		if (node.type === "ExportNamedDeclaration") {
+			if (node.declaration) {
+				if (
+					node.declaration.type === "FunctionDeclaration" ||
+					node.declaration.type === "ClassDeclaration"
+				) {
+					/**
+					 * export function foo() {}
+					 */
+					exportNames.add(node.declaration.id.name);
+				} else if (node.declaration.type === "VariableDeclaration") {
+					/**
+					 * export const foo = 1, bar = 2
+					 */
+					for (const decl of node.declaration.declarations) {
+						if (decl.id.type === "Identifier") {
+							exportNames.add(decl.id.name);
+						}
+					}
+				}
+			}
+		}
+	}
+	return {
+		exportNames,
+	};
 }
