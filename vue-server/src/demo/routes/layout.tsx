@@ -6,6 +6,12 @@ export default defineComponent(async (_props, { slots }) => {
 		<div style={{ padding: "1rem 0" }}>
 			<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
 				<h4 style={{ margin: "0" }}>Vue Server Component</h4>
+				<a
+					href="https://github.com/hi-ogawa/experiments/tree/main/vue-server"
+					target="_blank"
+				>
+					GitHub
+				</a>
 				<GlobalProgress />
 			</div>
 			<ul>
