@@ -32,6 +32,9 @@ export default defineConfig((env) => ({
 }));
 
 function vitePluginVueServer(): PluginOption {
+	const clientIds = new Set<string>();
+	const serverIds = new Set<string>();
+
 	return [
 		// client sfc (i.e. browser and ssr)
 		vue({
@@ -60,9 +63,7 @@ function vitePluginVueServer(): PluginOption {
 		{
 			name: vitePluginVueServer.name + ":hmr",
 			handleHotUpdate(ctx) {
-				// TODO: how to detect this module is only loaded on server?
-				// TODO: what if shared component?
-				if (ctx.file.includes("page.tsx")) {
+				if (ctx.modules.every((m) => m.id && !clientIds.has(m.id))) {
 					ctx.server.hot.send({
 						type: "custom",
 						event: "vue-server:update",
@@ -74,6 +75,18 @@ function vitePluginVueServer(): PluginOption {
 					// so we simply return empty to avoid full-reload
 					// https://github.com/vitejs/vite/blob/f71ba5b94a6e862460a96c7bf5e16d8ae66f9fe7/packages/vite/src/node/server/index.ts#L796-L798
 					return [];
+				}
+			},
+		},
+		{
+			// track which id is processed in which environment
+			// by intercepting transform
+			name: vitePluginLogger.name + ":track-environment",
+			transform(_code, id, options) {
+				if (options?.ssr) {
+					serverIds.add(id);
+				} else {
+					clientIds.add(id);
 				}
 			},
 		},
