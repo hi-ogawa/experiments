@@ -16,8 +16,8 @@ import vitPluginInspect from "vite-plugin-inspect";
 export default defineConfig((env) => ({
 	clearScreen: false,
 	plugins: [
-		vitPluginInspect(),
-		!!process.env["VITE_INSPECT"] && vitePluginVueServer(),
+		!!process.env["VITE_INSPECT"] && vitPluginInspect(),
+		vitePluginVueServer(),
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
 			entry: process.env["SERVER_ENTRY"] ?? "/src/demo/adapters/node",
