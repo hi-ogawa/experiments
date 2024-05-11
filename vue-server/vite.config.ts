@@ -6,10 +6,12 @@ import {
 } from "@hiogawa/vite-plugin-ssr-middleware";
 import vue from "@vitejs/plugin-vue";
 import { type Plugin, type PluginOption, defineConfig } from "vite";
+import vitPluginInspect from "vite-plugin-inspect";
 
 export default defineConfig((env) => ({
 	clearScreen: false,
 	plugins: [
+		vitPluginInspect(),
 		vitePluginVueServer(),
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
@@ -46,6 +48,15 @@ function vitePluginVueServer(): PluginOption {
 				include: ["**/*.server.vue"],
 			}),
 		),
+		{
+			name: "wip",
+			enforce: "pre",
+			transform(code, id, options) {
+				if (id.includes(".vue")) {
+					console.log({ id, code, options });
+				}
+			},
+		},
 		{
 			name: "patch-vue-server-hot",
 			apply: "serve",
