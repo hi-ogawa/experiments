@@ -17,7 +17,7 @@ export default defineConfig((env) => ({
 	clearScreen: false,
 	plugins: [
 		vitPluginInspect(),
-		vitePluginVueServer(),
+		!!process.env["VITE_INSPECT"] && vitePluginVueServer(),
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
 			entry: process.env["SERVER_ENTRY"] ?? "/src/demo/adapters/node",
