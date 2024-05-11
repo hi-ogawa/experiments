@@ -37,6 +37,13 @@ function main() {
 		document.title = "🚨 HYDRATE ERROR";
 	});
 	app.mount(el);
+
+	if (import.meta.hot) {
+		import.meta.hot.on("vue-server:update", (e) => {
+			console.log("[vue-server] hot update", e.file);
+			window.history.replaceState({}, "", window.location.href);
+		});
+	}
 }
 
 function listenHistory(onNavigation: () => void) {
