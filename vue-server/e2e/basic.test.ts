@@ -1,5 +1,5 @@
 import { type Page, expect, test } from "@playwright/test";
-import { testNoJs, waitForHydration } from "./helper";
+import { createEditor, testNoJs, waitForHydration } from "./helper";
 
 test("basic @js", async ({ page }) => {
 	await page.goto("/");
@@ -80,3 +80,60 @@ async function testFormNavigation(page: Page, options: { js: boolean }) {
 		options.js ? "hello" : "",
 	);
 }
+
+test("hmr server @dev", async ({ page }) => {
+	await page.goto("/");
+	await waitForHydration(page);
+	await page.pause();
+
+	// check client state is preserved
+	await page.getByRole("button", { name: "client sfc: 0" }).click();
+	await page.getByRole("button", { name: "client sfc: 1" }).isVisible();
+	await page.getByRole("heading", { name: "Vue Server Component" }).click();
+
+	using file = createEditor("src/demo/routes/layout.tsx");
+	file.edit((s) =>
+		s.replace("Vue Server Component", "Vue [EDIT] Server Component"),
+	);
+
+	await page
+		.getByRole("heading", { name: "Vue [EDIT] Server Component" })
+		.click();
+	await page.getByRole("button", { name: "client sfc: 1" }).isVisible();
+
+	await page.reload();
+	await page
+		.getByRole("heading", { name: "Vue [EDIT] Server Component" })
+		.click();
+	await page.getByRole("button", { name: "client sfc: 0" }).isVisible();
+});
+
+test("hmr sfc @dev", async ({ page }) => {
+	await page.goto("/sfc");
+	await waitForHydration(page);
+	await page.pause();
+
+	await page.getByRole("button", { name: "client counter 0" }).first().click();
+	await page.getByRole("button", { name: "client counter 1" }).click();
+	await page.getByRole("button", { name: "client counter 2" }).isVisible();
+	await expect(page.getByText("server random")).toHaveCount(2);
+
+	using clientFile = createEditor("src/demo/routes/_slot.vue");
+	clientFile.edit((s) => s.replace("client counter", "client [EDIT] counter"));
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 2" })
+		.isVisible();
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 0" })
+		.isVisible();
+
+	using serverFile = createEditor("src/demo/routes/_slot.server.vue");
+	serverFile.edit((s) => s.replace("server random", "server [EDIT] random"));
+	await expect(page.getByText("server [EDIT] random")).toHaveCount(2);
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 2" })
+		.isVisible();
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 0" })
+		.isVisible();
+});

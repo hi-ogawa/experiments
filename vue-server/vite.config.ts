@@ -32,12 +32,15 @@ export default defineConfig((env) => ({
 }));
 
 function vitePluginVueServer(): PluginOption {
+	const clientIds = new Set<string>();
+	const serverIds = new Set<string>();
+
 	return [
-		// non server (i.e. browser and ssr)
+		// client sfc (i.e. browser and ssr)
 		vue({
 			exclude: ["**/*.server.vue"],
 		}),
-		// server
+		// server sfc
 		patchServerVue(
 			vue({
 				include: ["**/*.server.vue"],
@@ -57,19 +60,52 @@ function vitePluginVueServer(): PluginOption {
 				}
 			},
 		},
+		{
+			name: vitePluginVueServer.name + ":hmr",
+			handleHotUpdate(ctx) {
+				if (
+					ctx.modules.length > 0 &&
+					ctx.modules.every((m) => m.id && !clientIds.has(m.id))
+				) {
+					console.log(`[vue-server] update ${ctx.file}`);
+					ctx.server.hot.send({
+						type: "custom",
+						event: "vue-server:update",
+						data: {
+							file: ctx.file,
+						},
+					});
+					// server module/transform cache is already invalidated up to server entry,
+					// so we simply return empty to avoid full-reload
+					// https://github.com/vitejs/vite/blob/f71ba5b94a6e862460a96c7bf5e16d8ae66f9fe7/packages/vite/src/node/server/index.ts#L796-L798
+					return [];
+				}
+			},
+		},
+		{
+			// track which id is processed in which environment
+			// by intercepting transform
+			name: vitePluginLogger.name + ":track-environment",
+			transform(_code, id, options) {
+				if (options?.ssr) {
+					serverIds.add(id);
+				} else {
+					clientIds.add(id);
+				}
+			},
+		},
 	];
 }
 
-// force non-ssr transform to always render vnode
 function patchServerVue(plugin: Plugin): Plugin {
 	tinyassert(typeof plugin.transform === "function");
 	const oldTransform = plugin.transform;
-	plugin.transform = function (code, id, _options) {
-		return oldTransform.apply(this, [code, id]);
+	plugin.transform = async function (code, id, _options) {
+		// need to force non-ssr transform to always render vnode
+		return oldTransform.apply(this, [code, id, { ssr: false }]);
 	};
 
-	// also remove handleHotUpdate
-	// otherwise we get `TypeError: true is not a function` somewhere...
+	// also remove handleHotUpdate and handle server component hmr on our own
 	tinyassert(typeof plugin.handleHotUpdate === "function");
 	delete plugin.handleHotUpdate;
 
