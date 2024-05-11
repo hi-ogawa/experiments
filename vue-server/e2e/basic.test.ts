@@ -86,8 +86,20 @@ test("hmr server @dev", async ({ page }) => {
 	await waitForHydration(page);
 	await page.pause();
 
-	// using file = createEditor("src/demo/routes/layout.tsx");
-	// file.edit(s => s);
+	// check client state is preserved
+	await page.getByRole("button", { name: "client sfc: 0" }).click();
+	await page.getByRole("button", { name: "client sfc: 1" }).isVisible();
+	await page.getByRole("heading", { name: "Vue Server Component" }).click();
+
+	using file = createEditor("src/demo/routes/layout.tsx");
+	file.edit((s) =>
+		s.replace("Vue Server Component", "Vue [EDIT] Server Component"),
+	);
+
+	await page
+		.getByRole("heading", { name: "Vue [EDIT] Server Component" })
+		.click();
+	await page.getByRole("button", { name: "client sfc: 1" }).isVisible();
 });
 
 test("hmr sfc @dev", async ({ page }) => {
