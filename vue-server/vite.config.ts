@@ -44,6 +44,20 @@ function vitePluginVueServer(): PluginOption {
 			}),
 		),
 		{
+			name: "patch-vue-server-hot",
+			transform(code, id, _options) {
+				if (id.endsWith(".server.vue")) {
+					// remove import.meta.hot.accept from *.server.vue
+					// https://github.com/vitejs/vite-plugin-vue/blob/46d0baa45c9e7cf4cd3ed773af5ba9f2a503b446/packages/plugin-vue/src/main.ts#L156
+					code = code
+						.replace(/.*__hmrId.*/, "")
+						.replace(/.*__VUE_HMR_RUNTIME__.*/, "")
+						.replace("import.meta.hot.accept", "(() => {})");
+					return code;
+				}
+			},
+		},
+		{
 			name: vitePluginVueServer.name + ":hmr",
 			handleHotUpdate(ctx) {
 				// TODO: how to detect this module is only loaded on server?
@@ -71,25 +85,10 @@ function patchServerVue(plugin: Plugin): Plugin {
 	const oldTransform = plugin.transform;
 	plugin.transform = async function (code, id, _options) {
 		// need to force non-ssr transform to always render vnode
-		const result = await oldTransform.apply(this, [code, id, { ssr: false }]);
-		// also need to remove import.meta.hot.accept from *.server.vue
-		// https://github.com/vitejs/vite-plugin-vue/blob/46d0baa45c9e7cf4cd3ed773af5ba9f2a503b446/packages/plugin-vue/src/main.ts#L156
-		if (
-			result &&
-			typeof result === "object" &&
-			typeof result.code === "string" &&
-			result.code.includes("__VUE_HMR_RUNTIME__")
-		) {
-			result.code = result.code
-				.replace(/.*__hmrId.*/, "")
-				.replace(/.*__VUE_HMR_RUNTIME__.*/, "")
-				.replace("import.meta.hot.accept", "(() => {})");
-		}
-		return result;
+		return oldTransform.apply(this, [code, id, { ssr: false }]);
 	};
 
-	// also remove handleHotUpdate
-	// otherwise we get `TypeError: true is not a function` somewhere...
+	// also remove handleHotUpdate and handle server component hmr on our own
 	tinyassert(typeof plugin.handleHotUpdate === "function");
 	delete plugin.handleHotUpdate;
 

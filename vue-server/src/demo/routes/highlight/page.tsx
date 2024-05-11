@@ -29,7 +29,7 @@ export default defineComponent(async () => {
 				alignItems: "start",
 			}}
 		>
-			<h4>hello Highlight (Shiki)</h4>
+			<h4>Highlight (Shiki)</h4>
 			<div
 				style={{
 					display: "flex",
