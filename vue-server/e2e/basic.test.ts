@@ -100,9 +100,40 @@ test("hmr server @dev", async ({ page }) => {
 		.getByRole("heading", { name: "Vue [EDIT] Server Component" })
 		.click();
 	await page.getByRole("button", { name: "client sfc: 1" }).isVisible();
+
+	await page.reload();
+	await page
+		.getByRole("heading", { name: "Vue [EDIT] Server Component" })
+		.click();
+	await page.getByRole("button", { name: "client sfc: 0" }).isVisible();
 });
 
 test("hmr sfc @dev", async ({ page }) => {
 	await page.goto("/sfc");
 	await waitForHydration(page);
+	await page.pause();
+
+	await page.getByRole("button", { name: "client counter 0" }).first().click();
+	await page.getByRole("button", { name: "client counter 1" }).click();
+	await page.getByRole("button", { name: "client counter 2" }).isVisible();
+	await expect(page.getByText("server random")).toHaveCount(2);
+
+	using clientFile = createEditor("src/demo/routes/_slot.vue");
+	clientFile.edit((s) => s.replace("client counter", "client [EDIT] counter"));
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 2" })
+		.isVisible();
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 0" })
+		.isVisible();
+
+	using serverFile = createEditor("src/demo/routes/_slot.server.vue");
+	serverFile.edit((s) => s.replace("server random", "server [EDIT] random"));
+	await expect(page.getByText("server [EDIT] random")).toHaveCount(2);
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 2" })
+		.isVisible();
+	await page
+		.getByRole("button", { name: "client [EDIT] counter 0" })
+		.isVisible();
 });
