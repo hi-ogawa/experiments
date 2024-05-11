@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 await new Promise((resolve) => setTimeout(resolve, 1));
 </script>
 

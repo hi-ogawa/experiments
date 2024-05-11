@@ -48,6 +48,7 @@ function vitePluginVueServer(): PluginOption {
 		),
 		{
 			name: "patch-vue-server-hot",
+			apply: "serve",
 			transform(code, id, _options) {
 				if (id.endsWith(".server.vue")) {
 					// remove import.meta.hot.accept from *.server.vue
@@ -56,7 +57,7 @@ function vitePluginVueServer(): PluginOption {
 						.replace(/.*__hmrId.*/, "")
 						.replace(/.*__VUE_HMR_RUNTIME__.*/, "")
 						.replace("import.meta.hot.accept", "(() => {})");
-					return code;
+					return { code, map: null };
 				}
 			},
 		},
