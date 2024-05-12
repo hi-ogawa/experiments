@@ -2,14 +2,15 @@ import "./style.css";
 import { tinyassert } from "@hiogawa/utils";
 import { createSSRApp, defineComponent, provide, readonly, ref } from "vue";
 import { type SerializeResult, deserialize } from "../serialize";
-import * as referenceMap from "./routes/_client";
+import { createReferenceMap } from "./integrations/client-reference/runtime";
 
-function main() {
+async function main() {
 	if (window.location.search.includes("__nojs")) {
 		return;
 	}
 
 	const initResult: SerializeResult = (globalThis as any).__serialized;
+	const referenceMap = await createReferenceMap(initResult.referenceIds);
 
 	const Root = defineComponent(() => {
 		const serialized = ref(initResult);
@@ -22,7 +23,12 @@ function main() {
 			url.searchParams.set("__serialize", "");
 			const res = await fetch(url);
 			tinyassert(res.ok);
-			serialized.value = await res.json();
+			const result: SerializeResult = await res.json();
+			Object.assign(
+				referenceMap,
+				await createReferenceMap(result.referenceIds),
+			);
+			serialized.value = result;
 			isLoading.value = false;
 		});
 

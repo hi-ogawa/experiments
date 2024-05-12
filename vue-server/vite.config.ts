@@ -111,13 +111,29 @@ function vitePluginVueServer(): PluginOption {
 		{
 			name: vitePluginVueServer.name + ":register-client-reference",
 			async transform(code, id, options) {
-				if (options?.ssr && /^("use client"|'use client')/.test(code)) {
-					const { exportNames } = await parseExports(code);
+				if (options?.ssr) {
+					let nameMap: [string, string][];
+					if (/^("use client"|'use client')/.test(code)) {
+						const result = await parseExports(code);
+						nameMap = [...result.exportNames].map((name) => [name, name]);
+					} else if (
+						// vue ssr transform means "client" component (i.e. ".vue" without ".server.vue")
+						// TODO: what about build?
+						id.endsWith(".vue") &&
+						/__vite_useSSRContext/.test(code)
+					) {
+						// it's difficult to handle `export default _export_sfc(_sfc_main, ...)`
+						// so for now we directly mutate `_sfc_main` as client reference.
+						nameMap = [["_sfc_main", "default"]];
+					} else {
+						return;
+					}
 					const outCode = [
 						code,
 						`import { registerClientReference as $$register } from "/src/serialize";`,
-						...[...exportNames].map(
-							(name) => `$$register(${name}, "${id}#${name}");`,
+						...nameMap.map(
+							([name, exportName]) =>
+								`$$register(${name}, "${id}#${exportName}");`,
 						),
 					].join("\n");
 					return { code: outCode, map: null };
@@ -125,6 +141,9 @@ function vitePluginVueServer(): PluginOption {
 				return;
 			},
 		},
+		createVirtualPlugin("client-references", () => {
+			return { code: "todo", map: null };
+		}),
 	];
 }
 
@@ -149,6 +168,8 @@ function patchServerVue(plugin: Plugin): Plugin {
 }
 
 async function parseExports(code: string) {
+	// for now, support simple named exports
+	// (sfc default export is handled separately above)
 	const ast = await parseAstAsync(code);
 	const exportNames = new Set<string>();
 	for (const node of ast.body) {
@@ -179,4 +200,22 @@ async function parseExports(code: string) {
 	return {
 		exportNames,
 	};
+}
+
+function createVirtualPlugin(name: string, load: Plugin["load"]) {
+	name = "virtual:" + name;
+	return {
+		name,
+		resolveId(source, _importer, _options) {
+			if (source === name || source.startsWith(`${name}?`)) {
+				return `\0${source}`;
+			}
+			return;
+		},
+		load(id, options) {
+			if (id === `\0${name}` || id.startsWith(`\0${name}?`)) {
+				return (load as any).apply(this, [id, options]);
+			}
+		},
+	} satisfies Plugin;
 }

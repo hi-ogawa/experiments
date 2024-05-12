@@ -2,7 +2,7 @@ import type { ViteDevServer } from "vite";
 import { createSSRApp, defineComponent } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { deserialize, serialize } from "../serialize";
-import * as referenceMap from "./routes/_client";
+import { createReferenceMap } from "./integrations/client-reference/runtime";
 import Layout from "./routes/layout";
 
 export async function handler(request: Request) {
@@ -21,6 +21,7 @@ export async function handler(request: Request) {
 		});
 	}
 
+	const referenceMap = await createReferenceMap(result.referenceIds);
 	const Root = () => deserialize(result.data, referenceMap);
 	const app = createSSRApp(Root);
 	const ssrHtml = await renderToString(app);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ClientSlot } from "../_client";
 import ServerSlot from "../_slot.server.vue";
+import ClientSlot from "../_slot.vue";
 </script>
 
 <template>
