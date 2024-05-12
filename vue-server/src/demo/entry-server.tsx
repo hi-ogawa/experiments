@@ -1,4 +1,3 @@
-import type { ViteDevServer } from "vite";
 import { createSSRApp, defineComponent } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { deserialize, serialize } from "../serialize";
@@ -25,7 +24,7 @@ export async function handler(request: Request) {
 	const Root = () => deserialize(result.data, referenceMap);
 	const app = createSSRApp(Root);
 	const ssrHtml = await renderToString(app);
-	let html = await importHtmlTemplate();
+	let html = (await import("virtual:index-html" as string)).default as string;
 	html = html.replace("<body>", () => `<div id="root">${ssrHtml}</div>`);
 	html = html.replace(
 		"<head>",
@@ -68,19 +67,6 @@ const Router = defineComponent<{ url: URL }>(
 		props: ["url"],
 	},
 );
-
-declare let __vite_server: ViteDevServer;
-
-async function importHtmlTemplate() {
-	let html: string;
-	if (import.meta.env.DEV) {
-		html = (await import("/index.html?raw")).default;
-		html = await __vite_server.transformIndexHtml("/", html);
-	} else {
-		html = (await import("/dist/client/index.html?raw")).default;
-	}
-	return html;
-}
 
 // https://github.com/remix-run/remix/blob/7f30f0bc976f0b97a020e81be33f90f68d4e527a/packages/remix-server-runtime/markup.ts#L7-L16
 function escpaeScriptString(s: string) {

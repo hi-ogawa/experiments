@@ -7,8 +7,10 @@ import {
 } from "@hiogawa/vite-plugin-ssr-middleware";
 import vue from "@vitejs/plugin-vue";
 import {
+	type ConfigEnv,
 	type Plugin,
 	type PluginOption,
+	type ViteDevServer,
 	build,
 	defineConfig,
 	parseAstAsync,
@@ -25,12 +27,6 @@ export default defineConfig((env) => ({
 			entry: process.env["SERVER_ENTRY"] ?? "/src/demo/adapters/node",
 			preview: path.resolve("dist/server/index.js"),
 		}),
-		{
-			name: "global-vite-server",
-			configureServer(server) {
-				(globalThis as any).__vite_server = server;
-			},
-		},
 	],
 	optimizeDeps: {
 		entries: ["./src/demo/routes/**/(page|layout).*"],
@@ -111,32 +107,41 @@ function vitePluginVueServer(): PluginOption {
 	];
 }
 
-class BuildManager {
-	step?: "pre";
+class PluginManager {
+	env!: ConfigEnv;
+	server?: ViteDevServer;
+	// "server-pre" build to collect client boundaries
+	// before actual client / server build
+	buildType?: "server-pre" | "client" | "server";
 }
 
-const buildManager: BuildManager = ((
+const manager: PluginManager = ((
 	globalThis as any
-).__VUE_SERVER_BUILD_MANAGER ??= new BuildManager());
+).__VUE_SERVER_BUILD_MANAGER ??= new PluginManager());
 
 function clientReferencePlugin(): PluginOption {
 	const clientBoundaryIds = new Set<string>();
 
 	return [
 		{
-			// invoke build to collect client boundaries
-			// before actual client / server build
-			name: clientReferencePlugin.name + ":builder",
-			apply: (_config, env) => env.command === "build" && !env.isSsrBuild,
+			name: clientReferencePlugin.name + ":manager",
+			config(_config, env) {
+				manager.env = env;
+			},
+			configureServer(server) {
+				manager.server = server;
+			},
 			async buildStart(_options) {
-				buildManager.step = "pre";
-				await build({
-					build: {
-						ssr: true,
-						outDir: "dist/pre",
-					},
-				});
-				buildManager.step = undefined;
+				if (manager.env.command === "build" && !manager.env.isSsrBuild) {
+					manager.buildType = "server-pre";
+					await build({
+						build: {
+							ssr: true,
+							outDir: "dist/server-pre",
+						},
+					});
+					manager.buildType = "client";
+				}
 			},
 		},
 		{
@@ -172,7 +177,7 @@ function clientReferencePlugin(): PluginOption {
 				return;
 			},
 			buildEnd() {
-				if (buildManager.step === "pre") {
+				if (manager.buildType === "server-pre") {
 					const code = [
 						"export default {",
 						...[...clientBoundaryIds].map(
@@ -189,11 +194,28 @@ function clientReferencePlugin(): PluginOption {
 			},
 		},
 		createVirtualPlugin("client-references", async () => {
+			if (manager.buildType === "server-pre") {
+				return "/*** pre build ***/";
+			}
 			const code = await fs.promises.readFile(
 				"dist/pre/client-references.mjs",
 				"utf-8",
 			);
 			return { code, map: null };
+		}),
+		createVirtualPlugin("index-html", async function () {
+			if (manager.buildType === "server-pre") {
+				return "/*** pre build ***/";
+			}
+			let code: string;
+			if (manager.server) {
+				this.addWatchFile("index.html");
+				code = await fs.promises.readFile("index.html", "utf-8");
+				code = await manager.server.transformIndexHtml("/", code);
+			} else {
+				code = await fs.promises.readFile("dist/client/index.html", "utf-8");
+			}
+			return { code: `export default ${JSON.stringify(code)}`, map: null };
 		}),
 		vitePluginSilenceDirectiveBuildWarning(),
 	];
