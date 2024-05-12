@@ -30,6 +30,11 @@ export default defineConfig((env) => ({
 			},
 		},
 	],
+	optimizeDeps: {
+		entries: ["./src/demo/routes/**/(page|layout).*"],
+		// TODO: why does scan miss this?
+		include: ["vue/jsx-dev-runtime"],
+	},
 	build: {
 		outDir: env.isSsrBuild ? "dist/server" : "dist/client",
 		sourcemap: true,
@@ -95,6 +100,9 @@ function vitePluginVueServer(): PluginOption {
 					});
 					// server module/transform cache is already invalidated up to server entry,
 					// so we simply return empty to avoid full-reload
+					// TODO: on Vite 6 environment api, we either need to manually invalidateTree
+					//       on module runner or we actually don't need to do anything since
+					//       server module update doesn't cause browser full-reload.
 					// https://github.com/vitejs/vite/blob/f71ba5b94a6e862460a96c7bf5e16d8ae66f9fe7/packages/vite/src/node/server/index.ts#L796-L798
 					return [];
 				}
