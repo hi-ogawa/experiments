@@ -1,5 +1,6 @@
 import { defineComponent } from "vue";
-import { ClientCounter, ClientNested, ClientSfc } from "./_client";
+import { ClientCounter, ClientNested } from "./_client";
+import ClientSfc from "./_client-sfc.vue";
 
 export default defineComponent(async () => {
 	return () => (

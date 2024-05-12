@@ -1,6 +1,7 @@
+"use client";
+
 import { tinyassert } from "@hiogawa/utils";
 import { defineComponent, inject, onMounted, ref } from "vue";
-import { registerClientReference } from "../../serialize";
 
 export const ClientCounter = defineComponent(() => {
 	const count = ref(0);
@@ -105,18 +106,3 @@ export const Hydrated = defineComponent(() => {
 	});
 	return () => <span>{`[mounted: ${mounted.value}]`}</span>;
 });
-
-// TODO: transform
-registerClientReference(ClientCounter, "ClientCounter");
-registerClientReference(ClientNested, "ClientNested");
-registerClientReference(Link, "Link");
-registerClientReference(Form, "Form");
-registerClientReference(GlobalProgress, "GlobalProgress");
-registerClientReference(Hydrated, "Hydrated");
-
-import ClientSfc from "./_client-sfc.vue";
-import ClientSlot from "./_slot.vue";
-registerClientReference(ClientSfc, "ClientSfc");
-registerClientReference(ClientSlot, "ClientSlot");
-
-export { ClientSfc, ClientSlot };
