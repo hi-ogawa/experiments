@@ -132,15 +132,19 @@ function clientReferencePlugin(): PluginOption {
 				manager.server = server;
 			},
 			async buildStart(_options) {
-				if (manager.env.command === "build" && !manager.env.isSsrBuild) {
-					manager.buildType = "server-pre";
-					await build({
-						build: {
-							ssr: true,
-							outDir: "dist/server-pre",
-						},
-					});
-					manager.buildType = "client";
+				if (manager.env.command === "build") {
+					if (!manager.env.isSsrBuild) {
+						manager.buildType = "server-pre";
+						await build({
+							build: {
+								ssr: true,
+								outDir: "dist/server-pre",
+							},
+						});
+						manager.buildType = "client";
+					} else if (!manager.buildType) {
+						manager.buildType = "server";
+					}
 				}
 			},
 		},
@@ -198,7 +202,7 @@ function clientReferencePlugin(): PluginOption {
 				return "/*** pre build ***/";
 			}
 			const code = await fs.promises.readFile(
-				"dist/pre/client-references.mjs",
+				"dist/server-pre/client-references.mjs",
 				"utf-8",
 			);
 			return { code, map: null };
