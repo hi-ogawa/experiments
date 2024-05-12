@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { tinyassert } from "@hiogawa/utils";
 import {
@@ -8,6 +9,7 @@ import vue from "@vitejs/plugin-vue";
 import {
 	type Plugin,
 	type PluginOption,
+	build,
 	defineConfig,
 	parseAstAsync,
 } from "vite";
@@ -44,8 +46,7 @@ export default defineConfig((env) => ({
 }));
 
 function vitePluginVueServer(): PluginOption {
-	const clientIds = new Set<string>();
-	const serverIds = new Set<string>();
+	const browserIds = new Set<string>();
 
 	return [
 		// client sfc (i.e. browser and ssr)
@@ -79,16 +80,14 @@ function vitePluginVueServer(): PluginOption {
 			transform(_code, id, options) {
 				// track which id is processed in which environment
 				// by intercepting transform
-				if (options?.ssr) {
-					serverIds.add(id);
-				} else {
-					clientIds.add(id);
+				if (!options?.ssr) {
+					browserIds.add(id);
 				}
 			},
 			handleHotUpdate(ctx) {
 				if (
 					ctx.modules.length > 0 &&
-					ctx.modules.every((m) => m.id && !clientIds.has(m.id))
+					ctx.modules.every((m) => m.id && !browserIds.has(m.id))
 				) {
 					console.log(`[vue-server] update ${ctx.file}`);
 					ctx.server.hot.send({
@@ -108,8 +107,40 @@ function vitePluginVueServer(): PluginOption {
 				}
 			},
 		},
+		clientReferencePlugin(),
+	];
+}
+
+class BuildManager {
+	step?: "pre";
+}
+
+const buildManager: BuildManager = ((
+	globalThis as any
+).__VUE_SERVER_BUILD_MANAGER ??= new BuildManager());
+
+function clientReferencePlugin(): PluginOption {
+	const clientBoundaryIds = new Set<string>();
+
+	return [
 		{
-			name: vitePluginVueServer.name + ":register-client-reference",
+			// invoke build to collect client boundaries
+			// before actual client / server build
+			name: clientReferencePlugin.name + ":builder",
+			apply: (_config, env) => env.command === "build" && !env.isSsrBuild,
+			async buildStart(_options) {
+				buildManager.step = "pre";
+				await build({
+					build: {
+						ssr: true,
+						outDir: "dist/pre",
+					},
+				});
+				buildManager.step = undefined;
+			},
+		},
+		{
+			name: clientReferencePlugin.name + ":register-client-reference",
 			async transform(code, id, options) {
 				if (options?.ssr) {
 					let nameMap: [string, string][];
@@ -118,7 +149,6 @@ function vitePluginVueServer(): PluginOption {
 						nameMap = [...result.exportNames].map((name) => [name, name]);
 					} else if (
 						// vue ssr transform means "client" component (i.e. ".vue" without ".server.vue")
-						// TODO: what about build?
 						id.endsWith(".vue") &&
 						/__vite_useSSRContext/.test(code)
 					) {
@@ -128,6 +158,7 @@ function vitePluginVueServer(): PluginOption {
 					} else {
 						return;
 					}
+					clientBoundaryIds.add(id);
 					const outCode = [
 						code,
 						`import { registerClientReference as $$register } from "/src/serialize";`,
@@ -140,10 +171,31 @@ function vitePluginVueServer(): PluginOption {
 				}
 				return;
 			},
+			buildEnd() {
+				if (buildManager.step === "pre") {
+					const code = [
+						"export default {",
+						...[...clientBoundaryIds].map(
+							(id) => `"${id}": () => import("${id}"),`,
+						),
+						"}",
+					].join("\n");
+					this.emitFile({
+						type: "prebuilt-chunk",
+						fileName: "client-references.mjs",
+						code,
+					});
+				}
+			},
 		},
-		createVirtualPlugin("client-references", () => {
-			return { code: "todo", map: null };
+		createVirtualPlugin("client-references", async () => {
+			const code = await fs.promises.readFile(
+				"dist/pre/client-references.mjs",
+				"utf-8",
+			);
+			return { code, map: null };
 		}),
+		vitePluginSilenceDirectiveBuildWarning(),
 	];
 }
 
@@ -218,4 +270,42 @@ function createVirtualPlugin(name: string, load: Plugin["load"]) {
 			}
 		},
 	} satisfies Plugin;
+}
+
+function vitePluginSilenceDirectiveBuildWarning(): Plugin {
+	return {
+		name: vitePluginSilenceDirectiveBuildWarning.name,
+		enforce: "post",
+		config(config, _env) {
+			return {
+				build: {
+					rollupOptions: {
+						onwarn(warning, defaultHandler) {
+							// https://github.com/vitejs/vite/issues/15012#issuecomment-1948550039
+							if (
+								warning.code === "SOURCEMAP_ERROR" &&
+								warning.loc?.line === 1 &&
+								warning.loc.column === 0
+							) {
+								return;
+							}
+							// https://github.com/TanStack/query/pull/5161#issuecomment-1506683450
+							if (
+								(warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+									warning.message.includes(`"use client"`)) ||
+								warning.message.includes(`"use server"`)
+							) {
+								return;
+							}
+							if (config.build?.rollupOptions?.onwarn) {
+								config.build.rollupOptions.onwarn(warning, defaultHandler);
+							} else {
+								defaultHandler(warning);
+							}
+						},
+					},
+				},
+			};
+		},
+	};
 }
