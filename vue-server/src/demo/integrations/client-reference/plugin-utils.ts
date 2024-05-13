@@ -7,7 +7,7 @@ export async function transformClientReference(input: string, id: string) {
 	const { entries } = await parseExports(input);
 	const output = new MagicString(input);
 	output.prepend(
-		`import { registerClientReference as $$register } from "/src/serialize";`,
+		`import { registerClientReference as $$register } from "/src/serialize";\n`,
 	);
 	for (const e of entries) {
 		if (e.namedDecl) {
@@ -79,10 +79,13 @@ export async function parseExports(input: string) {
 				}
 			} else {
 				/**
-				 * export { foo, bar } from './foo'
 				 * export { foo, bar as car }
+				 * export { foo, bar as car } from './foo'
 				 */
-				console.error(node);
+				for (const spec of node.specifiers) {
+					spec.exported;
+					spec.local;
+				}
 				throw new Error("unsupported");
 			}
 		}

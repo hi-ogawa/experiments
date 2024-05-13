@@ -17,7 +17,8 @@ export class Cls {}
 
 		const output = await transformClientReference(input, "<id>");
 		expect(output.toString()).toMatchInlineSnapshot(`
-			"import { registerClientReference as $$register } from "/src/serialize";import { defineComponent, h } from "vue";
+			"import { registerClientReference as $$register } from "/src/serialize";
+			import { defineComponent, h } from "vue";
 
 			export const Arrow = /* @__PURE__ */ $$register((() => {}), "<id>#Arrow");
 
@@ -35,7 +36,10 @@ export class Cls {}
 
 		const output = await transformClientReference(input, "<id>");
 		expect(output.toString()).toMatchInlineSnapshot(
-			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register((function Fn() {}), "<id>#default")"`,
+			`
+			"import { registerClientReference as $$register } from "/src/serialize";
+			export default /* @__PURE__ */ $$register((function Fn() {}), "<id>#default")"
+		`,
 		);
 	});
 
@@ -44,16 +48,51 @@ export class Cls {}
 
 		const output = await transformClientReference(input, "<id>");
 		expect(output.toString()).toMatchInlineSnapshot(
-			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register((class Cls {}), "<id>#default")"`,
+			`
+			"import { registerClientReference as $$register } from "/src/serialize";
+			export default /* @__PURE__ */ $$register((class Cls {}), "<id>#default")"
+		`,
 		);
 	});
 
 	test("unsupported", async () => {
 		// TODO
 		const input = `\
-      const x = 0;
-      export { x }
-    `;
+			const x = 0;
+			export { x }
+		`;
+
+		expect(() =>
+			transformClientReference(input, "<id>"),
+		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+	});
+
+	test("export rename", async () => {
+		// TODO
+		const input = `\
+			const x = 0;
+			export { x as y }
+		`;
+
+		expect(() =>
+			transformClientReference(input, "<id>"),
+		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+	});
+
+	test("re-export basic", async () => {
+		const input = `\
+			export { x } from "./dep"
+		`;
+
+		expect(() =>
+			transformClientReference(input, "<id>"),
+		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+	});
+
+	test("re-export rename", async () => {
+		const input = `\
+			export { x as y } from "./dep"
+		`;
 
 		expect(() =>
 			transformClientReference(input, "<id>"),
