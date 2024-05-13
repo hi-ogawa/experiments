@@ -9,9 +9,12 @@ export async function transformClientReference(input: string, id: string) {
 	output.prepend(
 		`import { registerClientReference as $$register } from "/src/serialize";`,
 	);
-	for (const entry of entries) {
-		output.prependRight(entry.node.start, "/* @__PURE__ */ $$register((");
-		output.prependRight(entry.node.end, `), "${id}#${entry.name}")`);
+	for (const e of entries) {
+		if (e.namedDecl) {
+			output.prependLeft(e.node.start, `const ${e.name} = `);
+		}
+		output.prependRight(e.node.start, "/* @__PURE__ */ $$register((");
+		output.prependRight(e.node.end, `), "${id}#${e.name}")`);
 	}
 	return output;
 }
@@ -37,7 +40,11 @@ declare module "estree" {
 
 export async function parseExports(input: string) {
 	const ast = await parseAstAsync(input);
-	const entries: { name: string; node: estree.BaseNode }[] = [];
+	const entries: {
+		name: string;
+		node: estree.BaseNode;
+		namedDecl?: boolean;
+	}[] = [];
 
 	for (const node of ast.body) {
 		// named exports
@@ -53,6 +60,7 @@ export async function parseExports(input: string) {
 					entries.push({
 						name: node.declaration.id.name,
 						node: node.declaration,
+						namedDecl: true,
 					});
 				} else if (node.declaration.type === "VariableDeclaration") {
 					/**

@@ -10,8 +10,8 @@ export const Arrow = () => {};
 
 export default "hi";
 
-// TODO
 export function Fn() {}
+export async function AsyncFn() {}
 export class Cls {}
 `;
 
@@ -23,9 +23,9 @@ export class Cls {}
 
 			export default /* @__PURE__ */ $$register(("hi"), "<id>#default");
 
-			// TODO
-			export /* @__PURE__ */ $$register((function Fn() {}), "<id>#Fn")
-			export /* @__PURE__ */ $$register((class Cls {}), "<id>#Cls")
+			export const Fn = /* @__PURE__ */ $$register((function Fn() {}), "<id>#Fn")
+			export const AsyncFn = /* @__PURE__ */ $$register((async function AsyncFn() {}), "<id>#AsyncFn")
+			export const Cls = /* @__PURE__ */ $$register((class Cls {}), "<id>#Cls")
 			"
 		`);
 	});
@@ -49,6 +49,7 @@ export class Cls {}
 	});
 
 	test("unsupported", async () => {
+    // TODO
 		const input = `\
       const x = 0;
       export { x }
