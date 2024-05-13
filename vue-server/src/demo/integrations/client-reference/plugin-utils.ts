@@ -11,10 +11,10 @@ export async function transformClientReference(input: string, id: string) {
 	);
 	for (const e of entries) {
 		if (e.namedDecl) {
-			output.prependLeft(e.node.start, `const ${e.name} = `);
+			output.prependLeft(e.expr.start, `const ${e.name} = `);
 		}
-		output.prependRight(e.node.start, "/* @__PURE__ */ $$register((");
-		output.prependRight(e.node.end, `), "${id}#${e.name}")`);
+		output.prependRight(e.expr.start, "$$register((");
+		output.prependRight(e.expr.end, `), "${id}#${e.name}")`);
 	}
 	return output;
 }
@@ -42,7 +42,8 @@ export async function parseExports(input: string) {
 	const ast = await parseAstAsync(input);
 	const entries: {
 		name: string;
-		node: estree.BaseNode;
+		expr: estree.BaseNode;
+		stmt: estree.BaseNode;
 		namedDecl?: boolean;
 	}[] = [];
 
@@ -59,7 +60,8 @@ export async function parseExports(input: string) {
 					 */
 					entries.push({
 						name: node.declaration.id.name,
-						node: node.declaration,
+						expr: node.declaration,
+						stmt: node,
 						namedDecl: true,
 					});
 				} else if (node.declaration.type === "VariableDeclaration") {
@@ -71,7 +73,8 @@ export async function parseExports(input: string) {
 						tinyassert(decl.init);
 						entries.push({
 							name: decl.id.name,
-							node: decl.init,
+							expr: decl.init,
+							stmt: node,
 						});
 					}
 				} else {
@@ -82,9 +85,16 @@ export async function parseExports(input: string) {
 				 * export { foo, bar as car }
 				 * export { foo, bar as car } from './foo'
 				 */
+				if (node.source) {
+					throw new Error("unsupported");
+				}
 				for (const spec of node.specifiers) {
-					spec.exported;
-					spec.local;
+					if (spec.local.name !== spec.exported.name) {
+						throw new Error("unsupported");
+					}
+					// spec.local.name;
+					// const $$register_{name} = $$register(name, ...);
+					// export { $$register_{name} as name }
 				}
 				throw new Error("unsupported");
 			}
@@ -98,7 +108,8 @@ export async function parseExports(input: string) {
 		if (node.type === "ExportDefaultDeclaration") {
 			entries.push({
 				name: "default",
-				node: node.declaration,
+				expr: node.declaration,
+				stmt: node,
 			});
 		}
 	}
