@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { parseExports, transformClientReference } from "./plugin-utils";
+import { transformClientReference } from "./plugin-utils";
 
-describe(parseExports, () => {
+describe(transformClientReference, () => {
 	test("basic", async () => {
 		const input = `\
 import { defineComponent, h } from "vue";
@@ -28,5 +28,14 @@ export class Cls {}
 			export /* @__PURE__ */ $$register((class Cls {}), "<id>#Cls")
 			"
 		`);
+	});
+
+	test("default", async () => {
+		const input = `export default "hi"`;
+
+		const output = await transformClientReference(input, "<id>");
+		expect(output.toString()).toMatchInlineSnapshot(
+			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register(("hi"), "<id>#default")"`,
+		);
 	});
 });
