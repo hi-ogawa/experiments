@@ -18,6 +18,7 @@ import vitPluginInspect from "vite-plugin-inspect";
 import {
 	createVirtualPlugin,
 	transformClientReference,
+	transformEmptyExports,
 	vitePluginSilenceDirectiveBuildWarning,
 } from "./src/demo/integrations/client-reference/plugin-utils";
 
@@ -162,12 +163,11 @@ function clientReferencePlugin(): PluginOption {
 						(id.endsWith(".vue") && /__vite_useSSRContext/.test(code))
 					) {
 						clientBoundaryIds.add(id);
-						// TODO
-						// don't crawl further once client boundary is found,
-						// but still need to fake exports to not break build.
 						if (manager.buildType === "server-pre") {
+							// don't need to crawl further once client boundary is found,
+							// but still need to fake exports to not break build.
+							return { code: await transformEmptyExports(code), map: null };
 						}
-
 						const result = await transformClientReference(code, id);
 						return { code: result.toString(), map: result.generateMap() };
 					}

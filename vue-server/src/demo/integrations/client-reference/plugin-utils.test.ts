@@ -47,4 +47,15 @@ export class Cls {}
 			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register((class Cls {}), "<id>#default")"`,
 		);
 	});
+
+	test("unsupported", async () => {
+		const input = `\
+      const x = 0;
+      export { x }
+    `;
+
+		expect(() =>
+			transformClientReference(input, "<id>"),
+		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+	});
 });

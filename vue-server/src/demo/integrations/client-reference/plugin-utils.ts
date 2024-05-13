@@ -16,6 +16,17 @@ export async function transformClientReference(input: string, id: string) {
 	return output;
 }
 
+export async function transformEmptyExports(input: string) {
+	const { entries } = await parseExports(input);
+	return entries
+		.map((e) =>
+			e.name === "default"
+				? "export default undefined;"
+				: `export const ${e.name} = undefined;`,
+		)
+		.join("\n");
+}
+
 // extend types for rollup ast with node position
 declare module "estree" {
 	interface BaseNode {
@@ -56,9 +67,15 @@ export async function parseExports(input: string) {
 						});
 					}
 				} else {
-					console.error(node);
-					throw new Error("unsupported");
+					node.declaration satisfies never;
 				}
+			} else {
+				/**
+				 * export { foo, bar } from './foo'
+				 * export { foo, bar as car }
+				 */
+				console.error(node);
+				throw new Error("unsupported");
 			}
 		}
 
