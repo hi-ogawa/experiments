@@ -6,12 +6,12 @@ describe(transformClientReference, () => {
 		const input = `\
 import { defineComponent, h } from "vue";
 
-export const Arrow = () => "hi";
+export const Arrow = () => {};
 
 export default "hi";
 
 // TODO
-export function Fn() { return "hi" }
+export function Fn() {}
 export class Cls {}
 `;
 
@@ -19,23 +19,32 @@ export class Cls {}
 		expect(output.toString()).toMatchInlineSnapshot(`
 			"import { registerClientReference as $$register } from "/src/serialize";import { defineComponent, h } from "vue";
 
-			export const Arrow = /* @__PURE__ */ $$register((() => "hi"), "<id>#Arrow");
+			export const Arrow = /* @__PURE__ */ $$register((() => {}), "<id>#Arrow");
 
 			export default /* @__PURE__ */ $$register(("hi"), "<id>#default");
 
 			// TODO
-			export /* @__PURE__ */ $$register((function Fn() { return "hi" }), "<id>#Fn")
+			export /* @__PURE__ */ $$register((function Fn() {}), "<id>#Fn")
 			export /* @__PURE__ */ $$register((class Cls {}), "<id>#Cls")
 			"
 		`);
 	});
 
-	test("default", async () => {
-		const input = `export default "hi"`;
+	test("default function", async () => {
+		const input = `export default function Fn() {}`;
 
 		const output = await transformClientReference(input, "<id>");
 		expect(output.toString()).toMatchInlineSnapshot(
-			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register(("hi"), "<id>#default")"`,
+			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register((function Fn() {}), "<id>#default")"`,
+		);
+	});
+
+	test("default class", async () => {
+		const input = `export default class Cls {}`;
+
+		const output = await transformClientReference(input, "<id>");
+		expect(output.toString()).toMatchInlineSnapshot(
+			`"import { registerClientReference as $$register } from "/src/serialize";export default /* @__PURE__ */ $$register((class Cls {}), "<id>#default")"`,
 		);
 	});
 });
