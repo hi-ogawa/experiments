@@ -88,16 +88,29 @@ export async function parseExports(input: string) {
 				if (node.source) {
 					throw new Error("unsupported");
 				}
+				// remove
+				node.start;
+				node.end;
+				// append
+				// registerName
+				// registerExpr
 				for (const spec of node.specifiers) {
-					if (spec.local.name !== spec.exported.name) {
-						throw new Error("unsupported");
-					}
-					// spec.local.name;
+					spec.local.name;
+					spec.exported.name;
+					// append registerName
+					// registerName()
 					// const $$register_{name} = $$register(name, ...);
 					// export { $$register_{name} as name }
 				}
 				throw new Error("unsupported");
 			}
+		}
+
+		/**
+		 * export * from './foo'
+		 */
+		if (node.type === "ExportAllDeclaration") {
+			throw new Error("unsupported");
 		}
 
 		/**

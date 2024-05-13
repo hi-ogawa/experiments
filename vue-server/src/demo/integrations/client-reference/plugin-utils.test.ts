@@ -92,4 +92,14 @@ export class Cls {}
 			`[Error: unsupported]`,
 		);
 	});
+
+	test("re-export all", async () => {
+		const input = `\
+			export * as all from "./dep"
+		`;
+
+		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
+			`[Error: unsupported]`,
+		);
+	});
 });
