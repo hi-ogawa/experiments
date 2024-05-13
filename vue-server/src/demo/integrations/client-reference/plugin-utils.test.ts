@@ -49,7 +49,7 @@ export class Cls {}
 	});
 
 	test("unsupported", async () => {
-    // TODO
+		// TODO
 		const input = `\
       const x = 0;
       export { x }
