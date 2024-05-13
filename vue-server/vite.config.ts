@@ -13,9 +13,14 @@ import {
 	type ViteDevServer,
 	build,
 	defineConfig,
-	parseAstAsync,
 } from "vite";
 import vitPluginInspect from "vite-plugin-inspect";
+import {
+	createVirtualPlugin,
+	transformClientReference,
+	transformEmptyExports,
+	vitePluginSilenceDirectiveBuildWarning,
+} from "./src/demo/integrations/client-reference/plugin-utils";
 
 export default defineConfig((env) => ({
 	clearScreen: false,
@@ -152,31 +157,20 @@ function clientReferencePlugin(): PluginOption {
 			name: clientReferencePlugin.name + ":register-client-reference",
 			async transform(code, id, options) {
 				if (options?.ssr) {
-					let nameMap: [string, string][];
-					if (/^("use client"|'use client')/.test(code)) {
-						const result = await parseExports(code);
-						nameMap = [...result.exportNames].map((name) => [name, name]);
-					} else if (
+					if (
+						/^("use client"|'use client')/.test(code) ||
 						// vue ssr transform means "client" component (i.e. ".vue" without ".server.vue")
-						id.endsWith(".vue") &&
-						/__vite_useSSRContext/.test(code)
+						(id.endsWith(".vue") && /__vite_useSSRContext/.test(code))
 					) {
-						// it's difficult to handle `export default _export_sfc(_sfc_main, ...)`
-						// so for now we directly mutate `_sfc_main` as client reference.
-						nameMap = [["_sfc_main", "default"]];
-					} else {
-						return;
+						clientBoundaryIds.add(id);
+						if (manager.buildType === "server-pre") {
+							// don't need to crawl further once client boundary is found,
+							// but still need to fake exports to not break build.
+							return { code: await transformEmptyExports(code), map: null };
+						}
+						const result = await transformClientReference(code, id);
+						return { code: result.toString(), map: result.generateMap() };
 					}
-					clientBoundaryIds.add(id);
-					const outCode = [
-						code,
-						`import { registerClientReference as $$register } from "/src/serialize";`,
-						...nameMap.map(
-							([name, exportName]) =>
-								`$$register(${name}, "${id}#${exportName}");`,
-						),
-					].join("\n");
-					return { code: outCode, map: null };
 				}
 				return;
 			},
@@ -243,95 +237,4 @@ function patchServerVue(plugin: Plugin): Plugin {
 	delete plugin.handleHotUpdate;
 
 	return plugin;
-}
-
-async function parseExports(code: string) {
-	// for now, support simple named exports
-	// (sfc default export is handled separately above)
-	const ast = await parseAstAsync(code);
-	const exportNames = new Set<string>();
-	for (const node of ast.body) {
-		// named exports
-		if (node.type === "ExportNamedDeclaration") {
-			if (node.declaration) {
-				if (
-					node.declaration.type === "FunctionDeclaration" ||
-					node.declaration.type === "ClassDeclaration"
-				) {
-					/**
-					 * export function foo() {}
-					 */
-					exportNames.add(node.declaration.id.name);
-				} else if (node.declaration.type === "VariableDeclaration") {
-					/**
-					 * export const foo = 1, bar = 2
-					 */
-					for (const decl of node.declaration.declarations) {
-						if (decl.id.type === "Identifier") {
-							exportNames.add(decl.id.name);
-						}
-					}
-				}
-			}
-		}
-	}
-	return {
-		exportNames,
-	};
-}
-
-function createVirtualPlugin(name: string, load: Plugin["load"]) {
-	name = "virtual:" + name;
-	return {
-		name,
-		resolveId(source, _importer, _options) {
-			if (source === name || source.startsWith(`${name}?`)) {
-				return `\0${source}`;
-			}
-			return;
-		},
-		load(id, options) {
-			if (id === `\0${name}` || id.startsWith(`\0${name}?`)) {
-				return (load as any).apply(this, [id, options]);
-			}
-		},
-	} satisfies Plugin;
-}
-
-function vitePluginSilenceDirectiveBuildWarning(): Plugin {
-	return {
-		name: vitePluginSilenceDirectiveBuildWarning.name,
-		enforce: "post",
-		config(config, _env) {
-			return {
-				build: {
-					rollupOptions: {
-						onwarn(warning, defaultHandler) {
-							// https://github.com/vitejs/vite/issues/15012#issuecomment-1948550039
-							if (
-								warning.code === "SOURCEMAP_ERROR" &&
-								warning.loc?.line === 1 &&
-								warning.loc.column === 0
-							) {
-								return;
-							}
-							// https://github.com/TanStack/query/pull/5161#issuecomment-1506683450
-							if (
-								(warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-									warning.message.includes(`"use client"`)) ||
-								warning.message.includes(`"use server"`)
-							) {
-								return;
-							}
-							if (config.build?.rollupOptions?.onwarn) {
-								config.build.rollupOptions.onwarn(warning, defaultHandler);
-							} else {
-								defaultHandler(warning);
-							}
-						},
-					},
-				},
-			};
-		},
-	};
 }

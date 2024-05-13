@@ -33,6 +33,9 @@ importers:
       '@playwright/test':
         specifier: ^1.44.0
         version: 1.44.0
+      '@types/estree':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@types/node':
         specifier: ^20.12.10
         version: 20.12.10

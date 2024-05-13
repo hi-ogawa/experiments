@@ -148,7 +148,7 @@ function deserializeNodeType(s: any) {
 }
 
 export function registerClientReference(v: any, __reference_id: string) {
-	Object.assign(v, { __reference_id });
+	return Object.assign(v, { __reference_id });
 }
 
 //
