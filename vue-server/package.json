@@ -29,6 +29,7 @@
 		"@hiogawa/utils": "1.6.4-pre.2",
 		"@hiogawa/vite-plugin-ssr-middleware": "^0.0.3",
 		"@playwright/test": "^1.44.0",
+		"@types/estree": "^1.0.5",
 		"@types/node": "^20.12.10",
 		"@vitejs/plugin-vue": "^5.0.4",
 		"esbuild": "^0.21.0",

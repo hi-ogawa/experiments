@@ -16,6 +16,7 @@ import {
 	parseAstAsync,
 } from "vite";
 import vitPluginInspect from "vite-plugin-inspect";
+import { MagicString } from "vue/compiler-sfc";
 
 export default defineConfig((env) => ({
 	clearScreen: false,
@@ -152,6 +153,35 @@ function clientReferencePlugin(): PluginOption {
 			name: clientReferencePlugin.name + ":register-client-reference",
 			async transform(code, id, options) {
 				if (options?.ssr) {
+					if (
+						/^("use client"|'use client')/.test(code) ||
+						// vue ssr transform means "client" component (i.e. ".vue" without ".server.vue")
+						(id.endsWith(".vue") && /__vite_useSSRContext/.test(code))
+					) {
+						clientBoundaryIds.add(id);
+						const { entries } = await parseExports2(code);
+						if (manager.buildType === "server-pre") {
+							// TODO
+							// don't crawl further once client boundary is found,
+							// but still need to fake exports to not break build.
+							// return {
+							// 	code: entries.map(e => e.name === "default" ? `` : ``).join("\n"),
+							// 	map: null,
+							// };
+						}
+						const result = new MagicString(code);
+						result.prepend(
+							`import { registerClientReference as $$register } from "/src/serialize";`,
+						);
+						for (const entry of entries) {
+							result.prependRight(
+								entry.node.start,
+								"/* @__PURE__ */ $$register((",
+							);
+							result.prependRight(entry.node.end, `), "${id}#${entry.name}")`);
+						}
+						return { code: result.toString(), map: result.generateMap() };
+					}
 					let nameMap: [string, string][];
 					if (/^("use client"|'use client')/.test(code)) {
 						const result = await parseExports(code);
@@ -243,6 +273,70 @@ function patchServerVue(plugin: Plugin): Plugin {
 	delete plugin.handleHotUpdate;
 
 	return plugin;
+}
+
+import type * as estree from "estree";
+
+// extend types for rollup ast with node position
+declare module "estree" {
+	interface BaseNode {
+		start: number;
+		end: number;
+	}
+}
+
+async function parseExports2(input: string) {
+	const ast = await parseAstAsync(input);
+	const entries: { name: string; node: estree.BaseNode }[] = [];
+
+	for (const node of ast.body) {
+		// named exports
+		if (node.type === "ExportNamedDeclaration") {
+			if (node.declaration) {
+				if (
+					node.declaration.type === "FunctionDeclaration" ||
+					node.declaration.type === "ClassDeclaration"
+				) {
+					/**
+					 * export function foo() {}
+					 */
+					entries.push({
+						name: node.declaration.id.name,
+						node: node.declaration,
+					});
+				} else if (node.declaration.type === "VariableDeclaration") {
+					/**
+					 * export const foo = 1, bar = 2
+					 */
+					for (const decl of node.declaration.declarations) {
+						tinyassert(decl.id.type === "Identifier");
+						tinyassert(decl.init);
+						entries.push({
+							name: decl.id.name,
+							node: decl.init,
+						});
+					}
+				} else {
+					console.error(node);
+					throw new Error("unsupported");
+				}
+			}
+		}
+
+		/**
+		 * export default function foo() {}
+		 * export default class A {}
+		 * export default () => {}
+		 */
+		if (node.type === "ExportDefaultDeclaration") {
+			entries.push({
+				name: "default",
+				node: node.declaration,
+			});
+		}
+	}
+
+	return { entries };
 }
 
 async function parseExports(code: string) {
