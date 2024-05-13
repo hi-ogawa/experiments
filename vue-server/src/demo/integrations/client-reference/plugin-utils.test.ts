@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { transformClientReference } from "./plugin-utils";
 
+async function testTransform(input: string) {
+	const output = await transformClientReference(input, "<file>");
+	return output.toString();
+}
+
 describe(transformClientReference, () => {
 	test("basic", async () => {
 		const input = `\
@@ -15,18 +20,17 @@ export async function AsyncFn() {}
 export class Cls {}
 `;
 
-		const output = await transformClientReference(input, "<id>");
-		expect(output.toString()).toMatchInlineSnapshot(`
+		expect(await testTransform(input)).toMatchInlineSnapshot(`
 			"import { registerClientReference as $$register } from "/src/serialize";
 			import { defineComponent, h } from "vue";
 
-			export const Arrow = /* @__PURE__ */ $$register((() => {}), "<id>#Arrow");
+			export const Arrow = /* @__PURE__ */ $$register((() => {}), "<file>#Arrow");
 
-			export default /* @__PURE__ */ $$register(("hi"), "<id>#default");
+			export default /* @__PURE__ */ $$register(("hi"), "<file>#default");
 
-			export const Fn = /* @__PURE__ */ $$register((function Fn() {}), "<id>#Fn")
-			export const AsyncFn = /* @__PURE__ */ $$register((async function AsyncFn() {}), "<id>#AsyncFn")
-			export const Cls = /* @__PURE__ */ $$register((class Cls {}), "<id>#Cls")
+			export const Fn = /* @__PURE__ */ $$register((function Fn() {}), "<file>#Fn")
+			export const AsyncFn = /* @__PURE__ */ $$register((async function AsyncFn() {}), "<file>#AsyncFn")
+			export const Cls = /* @__PURE__ */ $$register((class Cls {}), "<file>#Cls")
 			"
 		`);
 	});
@@ -34,11 +38,10 @@ export class Cls {}
 	test("default function", async () => {
 		const input = `export default function Fn() {}`;
 
-		const output = await transformClientReference(input, "<id>");
-		expect(output.toString()).toMatchInlineSnapshot(
+		expect(await testTransform(input)).toMatchInlineSnapshot(
 			`
 			"import { registerClientReference as $$register } from "/src/serialize";
-			export default /* @__PURE__ */ $$register((function Fn() {}), "<id>#default")"
+			export default /* @__PURE__ */ $$register((function Fn() {}), "<file>#default")"
 		`,
 		);
 	});
@@ -46,11 +49,10 @@ export class Cls {}
 	test("default class", async () => {
 		const input = `export default class Cls {}`;
 
-		const output = await transformClientReference(input, "<id>");
-		expect(output.toString()).toMatchInlineSnapshot(
+		expect(await testTransform(input)).toMatchInlineSnapshot(
 			`
 			"import { registerClientReference as $$register } from "/src/serialize";
-			export default /* @__PURE__ */ $$register((class Cls {}), "<id>#default")"
+			export default /* @__PURE__ */ $$register((class Cls {}), "<file>#default")"
 		`,
 		);
 	});
@@ -62,9 +64,9 @@ export class Cls {}
 			export { x }
 		`;
 
-		expect(() =>
-			transformClientReference(input, "<id>"),
-		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
+			`[Error: unsupported]`,
+		);
 	});
 
 	test("export rename", async () => {
@@ -74,9 +76,9 @@ export class Cls {}
 			export { x as y }
 		`;
 
-		expect(() =>
-			transformClientReference(input, "<id>"),
-		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
+			`[Error: unsupported]`,
+		);
 	});
 
 	test("re-export basic", async () => {
@@ -84,9 +86,9 @@ export class Cls {}
 			export { x } from "./dep"
 		`;
 
-		expect(() =>
-			transformClientReference(input, "<id>"),
-		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
+			`[Error: unsupported]`,
+		);
 	});
 
 	test("re-export rename", async () => {
@@ -94,8 +96,8 @@ export class Cls {}
 			export { x as y } from "./dep"
 		`;
 
-		expect(() =>
-			transformClientReference(input, "<id>"),
-		).rejects.toMatchInlineSnapshot(`[Error: unsupported]`);
+		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
+			`[Error: unsupported]`,
+		);
 	});
 });
