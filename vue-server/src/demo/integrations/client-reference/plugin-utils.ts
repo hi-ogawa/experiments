@@ -130,6 +130,95 @@ export async function parseExports(input: string) {
 	return { entries };
 }
 
+export async function transformWrapExports(input: string, id: string) {
+	const ast = await parseAstAsync(input);
+	const output = new MagicString(input);
+	const exportNames: string[] = [];
+
+	function wrapNode(name: string, expr: estree.BaseNode) {
+		exportNames.push(name);
+		output.prependRight(expr.start, "$$register((");
+		output.prependLeft(expr.end, `), "${id}#${name}")`);
+	}
+
+	function wrapExport(name: string, exportName = name) {
+		exportNames.push(exportName);
+		output.append(
+			`const $$tmp_${name} = $$register(${name}, "${id}#${name}");\n`,
+		);
+		output.append(`export { $$tmp_${name} as ${exportName} };\n`);
+	}
+
+	for (const node of ast.body) {
+		// named exports
+		if (node.type === "ExportNamedDeclaration") {
+			if (node.declaration) {
+				if (
+					node.declaration.type === "FunctionDeclaration" ||
+					node.declaration.type === "ClassDeclaration"
+				) {
+					/**
+					 * export function foo() {}
+					 */
+					output.remove(node.start, node.start + 6);
+					wrapExport(node.declaration.id.name);
+				} else if (node.declaration.type === "VariableDeclaration") {
+					/**
+					 * export const foo = 1, bar = 2
+					 */
+					output.remove(node.start, node.start + 6);
+					for (const decl of node.declaration.declarations) {
+						tinyassert(decl.id.type === "Identifier");
+						wrapExport(decl.id.name);
+					}
+				} else {
+					node.declaration satisfies never;
+				}
+			} else {
+				if (node.source) {
+					/**
+					 * export { foo, bar as car } from './foo'
+					 */
+					output.remove(node.start, node.end);
+					for (const spec of node.specifiers) {
+						const name = spec.local.name;
+						output.append(
+							`import { ${name} as $$import_${name} } from ${node.source.raw};\n`,
+						);
+						wrapExport(`$$import_${name}`, spec.exported.name);
+					}
+				} else {
+					/**
+					 * export { foo, bar as car }
+					 */
+					output.remove(node.start, node.end);
+					for (const spec of node.specifiers) {
+						wrapExport(spec.local.name, spec.exported.name);
+					}
+				}
+			}
+		}
+
+		/**
+		 * export * from './foo'
+		 */
+		if (node.type === "ExportAllDeclaration") {
+			throw new Error("unsupported");
+		}
+
+		/**
+		 * export default function foo() {}
+		 * export default class A {}
+		 * export default () => {}
+		 */
+		if (node.type === "ExportDefaultDeclaration") {
+			wrapNode("default", node.declaration);
+		}
+	}
+
+	return { exportNames, output };
+}
+
 export function createVirtualPlugin(name: string, load: Plugin["load"]) {
 	name = "virtual:" + name;
 	return {
