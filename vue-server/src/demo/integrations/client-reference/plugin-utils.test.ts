@@ -11,17 +11,17 @@ describe(transformClientReference, () => {
 		const input = `
 export const Arrow = () => {};
 export default "hi";
-export function Fn() {}
-export async function AsyncFn() {}
-export class Cls {}
+export function Fn() {};
+export async function AsyncFn() {};
+export class Cls {};
 `;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
 			"
 			 const Arrow = () => {};
 			export default $$register(("hi"), "<file>#default");
-			 function Fn() {}
-			 async function AsyncFn() {}
-			 class Cls {}
+			 function Fn() {};
+			 async function AsyncFn() {};
+			 class Cls {};
 			const $$tmp_Arrow = $$register(Arrow, "<file>#Arrow");
 			export { $$tmp_Arrow as Arrow };
 			const $$tmp_Fn = $$register(Fn, "<file>#Fn");
