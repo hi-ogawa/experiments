@@ -4,30 +4,24 @@ import { type Plugin, parseAstAsync } from "vite";
 import { MagicString } from "vue/compiler-sfc";
 
 export async function transformClientReference(input: string, id: string) {
-	const { entries } = await parseExports(input);
-	const output = new MagicString(input);
-	output.prepend(
-		`import { registerClientReference as $$register } from "/src/serialize";`,
+	const { output } = await transformWrapExports(
+		input,
+		(expr, name) => `$$wrap((${expr}), ${JSON.stringify(id + "#" + name)})`,
 	);
-	for (const e of entries) {
-		if (e.namedDecl) {
-			output.prependLeft(e.node.start, `const ${e.name} = `);
-		}
-		output.prependRight(e.node.start, "/* @__PURE__ */ $$register((");
-		output.prependRight(e.node.end, `), "${id}#${e.name}")`);
-	}
+	output.prepend(
+		`import { registerClientReference as $$wrap } from "/src/serialize";\n`,
+	);
 	return output;
 }
 
 export async function transformEmptyExports(input: string) {
-	const { entries } = await parseExports(input);
-	return entries
-		.map((e) =>
-			e.name === "default"
-				? "export default undefined;"
-				: `export const ${e.name} = undefined;`,
-		)
-		.join("\n");
+	const { exportNames } = await transformWrapExports(input, () => "");
+	const stmts = exportNames.map((name) =>
+		name === "default"
+			? "export default undefined"
+			: `export const ${name} = undefined`,
+	);
+	return [...stmts, ""].join(";\n");
 }
 
 // extend types for rollup ast with node position
@@ -38,13 +32,31 @@ declare module "estree" {
 	}
 }
 
-export async function parseExports(input: string) {
+async function transformWrapExports(
+	input: string,
+	wrap: (expr: string, name: string) => string,
+) {
 	const ast = await parseAstAsync(input);
-	const entries: {
-		name: string;
-		node: estree.BaseNode;
-		namedDecl?: boolean;
-	}[] = [];
+	const output = new MagicString(input);
+	const exportNames: string[] = [];
+	const toBeAppended: string[] = [];
+
+	function wrapNode(name: string, expr: estree.BaseNode) {
+		exportNames.push(name);
+		output.update(
+			expr.start,
+			expr.end,
+			wrap(input.slice(expr.start, expr.end), name),
+		);
+	}
+
+	function wrapExport(name: string, exportName = name) {
+		exportNames.push(exportName);
+		toBeAppended.push(
+			`const $$tmp_${name} = ${wrap(name, exportName)}`,
+			`export { $$tmp_${name} as ${exportName} }`,
+		);
+	}
 
 	for (const node of ast.body) {
 		// named exports
@@ -57,34 +69,51 @@ export async function parseExports(input: string) {
 					/**
 					 * export function foo() {}
 					 */
-					entries.push({
-						name: node.declaration.id.name,
-						node: node.declaration,
-						namedDecl: true,
-					});
+					output.remove(node.start, node.start + 6);
+					wrapExport(node.declaration.id.name);
 				} else if (node.declaration.type === "VariableDeclaration") {
 					/**
 					 * export const foo = 1, bar = 2
 					 */
+					output.remove(node.start, node.start + 6);
 					for (const decl of node.declaration.declarations) {
 						tinyassert(decl.id.type === "Identifier");
-						tinyassert(decl.init);
-						entries.push({
-							name: decl.id.name,
-							node: decl.init,
-						});
+						wrapExport(decl.id.name);
 					}
 				} else {
 					node.declaration satisfies never;
 				}
 			} else {
-				/**
-				 * export { foo, bar } from './foo'
-				 * export { foo, bar as car }
-				 */
-				console.error(node);
-				throw new Error("unsupported");
+				if (node.source) {
+					/**
+					 * export { foo, bar as car } from './foo'
+					 */
+					output.remove(node.start, node.end);
+					for (const spec of node.specifiers) {
+						const name = spec.local.name;
+						toBeAppended.push(
+							`import { ${name} as $$import_${name} } from ${node.source.raw}`,
+						);
+						wrapExport(`$$import_${name}`, spec.exported.name);
+					}
+				} else {
+					/**
+					 * export { foo, bar as car }
+					 */
+					output.remove(node.start, node.end);
+					for (const spec of node.specifiers) {
+						wrapExport(spec.local.name, spec.exported.name);
+					}
+				}
 			}
+		}
+
+		/**
+		 * export * from './foo'
+		 */
+		if (node.type === "ExportAllDeclaration") {
+			// vue sfc uses this to re-export setup script. for now we can ignore.
+			// https://github.com/vitejs/vite-plugin-vue/blob/30a97c1ddbdfb0e23b7dc14a1d2fb609668b9987/packages/plugin-vue/src/main.ts#L372
 		}
 
 		/**
@@ -93,14 +122,13 @@ export async function parseExports(input: string) {
 		 * export default () => {}
 		 */
 		if (node.type === "ExportDefaultDeclaration") {
-			entries.push({
-				name: "default",
-				node: node.declaration,
-			});
+			wrapNode("default", node.declaration);
 		}
 	}
 
-	return { entries };
+	output.append(["", ...toBeAppended, ""].join(";\n"));
+
+	return { exportNames, output };
 }
 
 export function createVirtualPlugin(name: string, load: Plugin["load"]) {
