@@ -4,11 +4,10 @@ import { type Plugin, parseAstAsync } from "vite";
 import { MagicString } from "vue/compiler-sfc";
 
 export async function transformClientReference(input: string, id: string) {
-	const { output } = await transformWrapExports({
+	const { output } = await transformWrapExports(
 		input,
-		wrap: (expr, name) =>
-			`$$wrap((${expr}), ${JSON.stringify(id + "#" + name)})`,
-	});
+		(expr, name) => `$$wrap((${expr}), ${JSON.stringify(id + "#" + name)})`,
+	);
 	output.prepend(
 		`import { registerClientReference as $$wrap } from "/src/serialize";\n`,
 	);
@@ -16,7 +15,7 @@ export async function transformClientReference(input: string, id: string) {
 }
 
 export async function transformEmptyExports(input: string) {
-	const { exportNames } = await transformWrapExports({ input, wrap: () => "" });
+	const { exportNames } = await transformWrapExports(input, () => "");
 	const stmts = exportNames.map((name) =>
 		name === "default"
 			? "export default undefined"
@@ -33,10 +32,10 @@ declare module "estree" {
 	}
 }
 
-async function transformWrapExports({
-	input,
-	wrap,
-}: { input: string; wrap: (expr: string, name: string) => string }) {
+async function transformWrapExports(
+	input: string,
+	wrap: (expr: string, name: string) => string,
+) {
 	const ast = await parseAstAsync(input);
 	const output = new MagicString(input);
 	const exportNames: string[] = [];
