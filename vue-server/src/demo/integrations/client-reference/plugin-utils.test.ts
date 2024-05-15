@@ -2,14 +2,10 @@ import { describe, expect, test } from "vitest";
 import {
 	transformClientReference,
 	transformEmptyExports,
-	transformWrapExports,
 } from "./plugin-utils";
 
 async function testTransform(input: string) {
-	const { output } = await transformWrapExports({
-		input,
-		wrap: (expr, name) => `$$wrap((${expr}), "<file>#${name}")`,
-	});
+	const output = await transformClientReference(input, "<file>");
 	return output.toString();
 }
 
@@ -23,7 +19,8 @@ export async function AsyncFn() {};
 export class Cls {};
 `;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-			"
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+
 			 const Arrow = () => {};
 			export default $$wrap(("hi"), "<file>#default");
 			 function Fn() {};
@@ -46,7 +43,8 @@ export class Cls {};
 		const input = `export default function Fn() {}`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(
 			`
-			"export default $$wrap((function Fn() {}), "<file>#default");
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			export default $$wrap((function Fn() {}), "<file>#default");
 			"
 		`,
 		);
@@ -56,7 +54,8 @@ export class Cls {};
 		const input = `export default class Cls {}`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(
 			`
-			"export default $$wrap((class Cls {}), "<file>#default");
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			export default $$wrap((class Cls {}), "<file>#default");
 			"
 		`,
 		);
@@ -68,7 +67,8 @@ const x = 0;
 export { x }
 `;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-			"
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+
 			const x = 0;
 
 			;
@@ -84,7 +84,8 @@ const x = 0;
 export { x as y }
 `;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-			"
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+
 			const x = 0;
 
 			;
@@ -97,7 +98,8 @@ export { x as y }
 	test("re-export simple", async () => {
 		const input = `export { x } from "./dep"`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-			";
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			;
 			import { x as $$import_x } from "./dep";
 			const $$tmp_$$import_x = $$wrap(($$import_x), "<file>#x");
 			export { $$tmp_$$import_x as x };
@@ -108,7 +110,8 @@ export { x as y }
 	test("re-export rename", async () => {
 		const input = `export { x as y } from "./dep"`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-			";
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			;
 			import { x as $$import_x } from "./dep";
 			const $$tmp_$$import_x = $$wrap(($$import_x), "<file>#y");
 			export { $$tmp_$$import_x as y };

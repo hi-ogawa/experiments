@@ -33,7 +33,7 @@ declare module "estree" {
 	}
 }
 
-export async function transformWrapExports({
+async function transformWrapExports({
 	input,
 	wrap,
 }: { input: string; wrap: (expr: string, name: string) => string }) {
