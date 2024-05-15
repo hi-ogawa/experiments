@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import { transformClientReference, transformWrapExports } from "./plugin-utils";
 
 async function testTransform(input: string) {
-	const { output } = await transformWrapExports(input, "<file>");
+	const { output } = await transformWrapExports({
+		input,
+		wrap: (expr, name) => `$$wrap((${expr}), "<file>#${name}")`,
+	});
 	return output.toString();
 }
 
@@ -18,17 +21,18 @@ export class Cls {};
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
 			"
 			 const Arrow = () => {};
-			export default $$register(("hi"), "<file>#default");
+			export default $$wrap(("hi"), "<file>#default");
 			 function Fn() {};
 			 async function AsyncFn() {};
 			 class Cls {};
-			const $$tmp_Arrow = $$register(Arrow, "<file>#Arrow");
+			;
+			const $$tmp_Arrow = $$wrap((Arrow), "<file>#Arrow");
 			export { $$tmp_Arrow as Arrow };
-			const $$tmp_Fn = $$register(Fn, "<file>#Fn");
+			const $$tmp_Fn = $$wrap((Fn), "<file>#Fn");
 			export { $$tmp_Fn as Fn };
-			const $$tmp_AsyncFn = $$register(AsyncFn, "<file>#AsyncFn");
+			const $$tmp_AsyncFn = $$wrap((AsyncFn), "<file>#AsyncFn");
 			export { $$tmp_AsyncFn as AsyncFn };
-			const $$tmp_Cls = $$register(Cls, "<file>#Cls");
+			const $$tmp_Cls = $$wrap((Cls), "<file>#Cls");
 			export { $$tmp_Cls as Cls };
 			"
 		`);
@@ -37,14 +41,20 @@ export class Cls {};
 	test("default function", async () => {
 		const input = `export default function Fn() {}`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(
-			`"export default $$register((function Fn() {}), "<file>#default")"`,
+			`
+			"export default $$wrap((function Fn() {}), "<file>#default");
+			"
+		`,
 		);
 	});
 
 	test("default class", async () => {
 		const input = `export default class Cls {}`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(
-			`"export default $$register((class Cls {}), "<file>#default")"`,
+			`
+			"export default $$wrap((class Cls {}), "<file>#default");
+			"
+		`,
 		);
 	});
 
@@ -57,7 +67,8 @@ export { x }
 			"
 			const x = 0;
 
-			const $$tmp_x = $$register(x, "<file>#x");
+			;
+			const $$tmp_x = $$wrap((x), "<file>#x");
 			export { $$tmp_x as x };
 			"
 		`);
@@ -72,7 +83,8 @@ export { x as y }
 			"
 			const x = 0;
 
-			const $$tmp_x = $$register(x, "<file>#x");
+			;
+			const $$tmp_x = $$wrap((x), "<file>#y");
 			export { $$tmp_x as y };
 			"
 		`);
@@ -81,8 +93,9 @@ export { x as y }
 	test("re-export simple", async () => {
 		const input = `export { x } from "./dep"`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-			"import { x as $$import_x } from "./dep";
-			const $$tmp_$$import_x = $$register($$import_x, "<file>#$$import_x");
+			";
+			import { x as $$import_x } from "./dep";
+			const $$tmp_$$import_x = $$wrap(($$import_x), "<file>#x");
 			export { $$tmp_$$import_x as x };
 			"
 		`);
@@ -91,11 +104,12 @@ export { x as y }
 	test("re-export rename", async () => {
 		const input = `export { x as y } from "./dep"`;
 		expect(await testTransform(input)).toMatchInlineSnapshot(`
-  "import { x as $$import_x } from "./dep";
-  const $$tmp_$$import_x = $$register($$import_x, "<file>#$$import_x");
-  export { $$tmp_$$import_x as y };
-  "
-`);
+			";
+			import { x as $$import_x } from "./dep";
+			const $$tmp_$$import_x = $$wrap(($$import_x), "<file>#y");
+			export { $$tmp_$$import_x as y };
+			"
+		`);
 	});
 
 	test("re-export all simple", async () => {

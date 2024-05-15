@@ -130,23 +130,30 @@ export async function parseExports(input: string) {
 	return { entries };
 }
 
-export async function transformWrapExports(input: string, id: string) {
+export async function transformWrapExports({
+	input,
+	wrap,
+}: { input: string; wrap: (expr: string, name: string) => string }) {
 	const ast = await parseAstAsync(input);
 	const output = new MagicString(input);
 	const exportNames: string[] = [];
+	const toBeAppended: string[] = [];
 
 	function wrapNode(name: string, expr: estree.BaseNode) {
 		exportNames.push(name);
-		output.prependRight(expr.start, "$$register((");
-		output.prependLeft(expr.end, `), "${id}#${name}")`);
+		output.update(
+			expr.start,
+			expr.end,
+			wrap(input.slice(expr.start, expr.end), name),
+		);
 	}
 
 	function wrapExport(name: string, exportName = name) {
 		exportNames.push(exportName);
-		output.append(
-			`const $$tmp_${name} = $$register(${name}, "${id}#${name}");\n`,
+		toBeAppended.push(
+			`const $$tmp_${name} = ${wrap(name, exportName)}`,
+			`export { $$tmp_${name} as ${exportName} }`,
 		);
-		output.append(`export { $$tmp_${name} as ${exportName} };\n`);
 	}
 
 	for (const node of ast.body) {
@@ -182,8 +189,8 @@ export async function transformWrapExports(input: string, id: string) {
 					output.remove(node.start, node.end);
 					for (const spec of node.specifiers) {
 						const name = spec.local.name;
-						output.append(
-							`import { ${name} as $$import_${name} } from ${node.source.raw};\n`,
+						toBeAppended.push(
+							`import { ${name} as $$import_${name} } from ${node.source.raw}`,
 						);
 						wrapExport(`$$import_${name}`, spec.exported.name);
 					}
@@ -215,6 +222,8 @@ export async function transformWrapExports(input: string, id: string) {
 			wrapNode("default", node.declaration);
 		}
 	}
+
+	output.append(["", ...toBeAppended, ""].join(";\n"));
 
 	return { exportNames, output };
 }
