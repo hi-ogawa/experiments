@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { transformClientReference, transformWrapExports } from "./plugin-utils";
+import {
+	transformClientReference,
+	transformEmptyExports,
+	transformWrapExports,
+} from "./plugin-utils";
 
 async function testTransform(input: string) {
 	const { output } = await transformWrapExports({
@@ -125,4 +129,22 @@ export { x as y }
 			`[Error: unsupported]`,
 		);
 	});
+});
+
+test(transformEmptyExports, async () => {
+	const input = `
+export const Arrow = () => {};
+export default "hi";
+export function Fn() {};
+export async function AsyncFn() {};
+export class Cls {};
+`;
+	expect(await transformEmptyExports(input)).toMatchInlineSnapshot(`
+		"export const Arrow = undefined;
+		export default undefined;
+		export const Fn = undefined;
+		export const AsyncFn = undefined;
+		export const Cls = undefined;
+		"
+	`);
 });

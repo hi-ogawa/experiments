@@ -4,30 +4,25 @@ import { type Plugin, parseAstAsync } from "vite";
 import { MagicString } from "vue/compiler-sfc";
 
 export async function transformClientReference(input: string, id: string) {
-	const { entries } = await parseExports(input);
-	const output = new MagicString(input);
+	const { output } = await transformWrapExports({
+		input,
+		wrap: (expr, name) =>
+			`$$wrap((${expr}), ${JSON.stringify(id + "#" + name)})`,
+	});
 	output.prepend(
-		`import { registerClientReference as $$register } from "/src/serialize";\n`,
+		`import { registerClientReference as $$wrap } from "/src/serialize";\n`,
 	);
-	for (const e of entries) {
-		if (e.namedDecl) {
-			output.prependLeft(e.expr.start, `const ${e.name} = `);
-		}
-		output.prependRight(e.expr.start, "$$register((");
-		output.prependRight(e.expr.end, `), "${id}#${e.name}")`);
-	}
 	return output;
 }
 
 export async function transformEmptyExports(input: string) {
-	const { entries } = await parseExports(input);
-	return entries
-		.map((e) =>
-			e.name === "default"
-				? "export default undefined;"
-				: `export const ${e.name} = undefined;`,
-		)
-		.join("\n");
+	const { exportNames } = await transformWrapExports({ input, wrap: () => "" });
+	const stmts = exportNames.map((name) =>
+		name === "default"
+			? "export default undefined"
+			: `export const ${name} = undefined`,
+	);
+	return [...stmts, ""].join(";\n");
 }
 
 // extend types for rollup ast with node position
@@ -36,98 +31,6 @@ declare module "estree" {
 		start: number;
 		end: number;
 	}
-}
-
-export async function parseExports(input: string) {
-	const ast = await parseAstAsync(input);
-	const entries: {
-		name: string;
-		expr: estree.BaseNode;
-		stmt: estree.BaseNode;
-		namedDecl?: boolean;
-	}[] = [];
-
-	for (const node of ast.body) {
-		// named exports
-		if (node.type === "ExportNamedDeclaration") {
-			if (node.declaration) {
-				if (
-					node.declaration.type === "FunctionDeclaration" ||
-					node.declaration.type === "ClassDeclaration"
-				) {
-					/**
-					 * export function foo() {}
-					 */
-					entries.push({
-						name: node.declaration.id.name,
-						expr: node.declaration,
-						stmt: node,
-						namedDecl: true,
-					});
-				} else if (node.declaration.type === "VariableDeclaration") {
-					/**
-					 * export const foo = 1, bar = 2
-					 */
-					for (const decl of node.declaration.declarations) {
-						tinyassert(decl.id.type === "Identifier");
-						tinyassert(decl.init);
-						entries.push({
-							name: decl.id.name,
-							expr: decl.init,
-							stmt: node,
-						});
-					}
-				} else {
-					node.declaration satisfies never;
-				}
-			} else {
-				/**
-				 * export { foo, bar as car }
-				 * export { foo, bar as car } from './foo'
-				 */
-				if (node.source) {
-					throw new Error("unsupported");
-				}
-				// remove
-				node.start;
-				node.end;
-				// append
-				// registerName
-				// registerExpr
-				for (const spec of node.specifiers) {
-					spec.local.name;
-					spec.exported.name;
-					// append registerName
-					// registerName()
-					// const $$register_{name} = $$register(name, ...);
-					// export { $$register_{name} as name }
-				}
-				throw new Error("unsupported");
-			}
-		}
-
-		/**
-		 * export * from './foo'
-		 */
-		if (node.type === "ExportAllDeclaration") {
-			throw new Error("unsupported");
-		}
-
-		/**
-		 * export default function foo() {}
-		 * export default class A {}
-		 * export default () => {}
-		 */
-		if (node.type === "ExportDefaultDeclaration") {
-			entries.push({
-				name: "default",
-				expr: node.declaration,
-				stmt: node,
-			});
-		}
-	}
-
-	return { entries };
 }
 
 export async function transformWrapExports({
