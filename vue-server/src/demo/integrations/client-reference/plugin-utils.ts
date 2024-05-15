@@ -112,7 +112,8 @@ async function transformWrapExports(
 		 * export * from './foo'
 		 */
 		if (node.type === "ExportAllDeclaration") {
-			throw new Error("unsupported");
+			// vue sfc uses this to re-export setup script. for now we can ignore.
+			// https://github.com/vitejs/vite-plugin-vue/blob/30a97c1ddbdfb0e23b7dc14a1d2fb609668b9987/packages/plugin-vue/src/main.ts#L372
 		}
 
 		/**

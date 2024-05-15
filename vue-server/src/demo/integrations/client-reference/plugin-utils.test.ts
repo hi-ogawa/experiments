@@ -121,16 +121,20 @@ export { x as y }
 
 	test("re-export all simple", async () => {
 		const input = `export * from "./dep"`;
-		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
-			`[Error: unsupported]`,
-		);
+		expect(await testTransform(input)).toMatchInlineSnapshot(`
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			export * from "./dep";
+			"
+		`);
 	});
 
 	test("re-export all rename", async () => {
 		const input = `export * as all from "./dep"`;
-		expect(() => testTransform(input)).rejects.toMatchInlineSnapshot(
-			`[Error: unsupported]`,
-		);
+		expect(await testTransform(input)).toMatchInlineSnapshot(`
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			export * as all from "./dep";
+			"
+		`);
 	});
 });
 
