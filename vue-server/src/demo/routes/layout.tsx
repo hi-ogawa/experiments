@@ -1,5 +1,6 @@
 import { defineComponent } from "vue";
-import { GlobalProgress, Link } from "./_client";
+import { Link } from "../integrations/router/client";
+import { GlobalProgress } from "./_client";
 import { Hydrated } from "./_client-re-export";
 
 export default defineComponent(async (_props, { slots }) => {

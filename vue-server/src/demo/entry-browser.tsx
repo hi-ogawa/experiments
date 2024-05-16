@@ -3,6 +3,7 @@ import { tinyassert } from "@hiogawa/utils";
 import { createSSRApp, defineComponent, provide, readonly, ref } from "vue";
 import { type SerializeResult, deserialize } from "../serialize";
 import { createReferenceMap } from "./integrations/client-reference/runtime";
+import { listenHistory } from "./integrations/router/browser";
 
 async function main() {
 	if (window.location.search.includes("__nojs")) {
@@ -50,32 +51,6 @@ async function main() {
 			window.history.replaceState({}, "", window.location.href);
 		});
 	}
-}
-
-function listenHistory(onNavigation: () => void) {
-	window.addEventListener("pushstate", onNavigation);
-	window.addEventListener("popstate", onNavigation);
-
-	const oldPushState = window.history.pushState;
-	window.history.pushState = function (...args) {
-		const res = oldPushState.apply(this, args);
-		onNavigation();
-		return res;
-	};
-
-	const oldReplaceState = window.history.replaceState;
-	window.history.replaceState = function (...args) {
-		const res = oldReplaceState.apply(this, args);
-		onNavigation();
-		return res;
-	};
-
-	return () => {
-		window.removeEventListener("pushstate", onNavigation);
-		window.removeEventListener("popstate", onNavigation);
-		window.history.pushState = oldPushState;
-		window.history.replaceState = oldReplaceState;
-	};
 }
 
 // patch console to notify hydration error
