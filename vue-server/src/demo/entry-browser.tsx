@@ -3,7 +3,7 @@ import { tinyassert } from "@hiogawa/utils";
 import { createSSRApp, defineComponent, provide, readonly, ref } from "vue";
 import { type SerializeResult, deserialize } from "../serialize";
 import { createReferenceMap } from "./integrations/client-reference/runtime";
-import { listenHistory } from "./integrations/router/browser";
+import { listenBrowserHistory } from "./integrations/router/browser";
 
 async function main() {
 	if (window.location.search.includes("__nojs")) {
@@ -18,7 +18,7 @@ async function main() {
 		const isLoading = ref(false);
 		provide("isLoading", readonly(isLoading));
 
-		listenHistory(async () => {
+		listenBrowserHistory(async () => {
 			isLoading.value = true;
 			const url = new URL(window.location.href);
 			url.searchParams.set("__serialize", "");

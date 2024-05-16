@@ -1,4 +1,7 @@
-export function listenHistory(onNavigation: () => void) {
+// cf.
+// https://github.com/TanStack/router/blob/f6e9ab3b60ca42401923648649930db4ae97fc00/packages/history/src/index.ts#L301-L314
+
+export function listenBrowserHistory(onNavigation: () => void) {
 	window.addEventListener("pushstate", onNavigation);
 	window.addEventListener("popstate", onNavigation);
 
