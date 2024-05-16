@@ -1,5 +1,4 @@
 import { tinyassert } from "@hiogawa/utils";
-import type * as estree from "estree";
 import { type Plugin, parseAstAsync } from "vite";
 import { MagicString } from "vue/compiler-sfc";
 
@@ -40,15 +39,6 @@ async function transformWrapExports(
 	const output = new MagicString(input);
 	const exportNames: string[] = [];
 	const toBeAppended: string[] = [];
-
-	function wrapNode(name: string, expr: estree.BaseNode) {
-		exportNames.push(name);
-		output.update(
-			expr.start,
-			expr.end,
-			wrap(input.slice(expr.start, expr.end), name),
-		);
-	}
 
 	function wrapExport(name: string, exportName = name) {
 		exportNames.push(exportName);
@@ -118,11 +108,25 @@ async function transformWrapExports(
 
 		/**
 		 * export default function foo() {}
-		 * export default class A {}
+		 * export default class Foo {}
 		 * export default () => {}
 		 */
 		if (node.type === "ExportDefaultDeclaration") {
-			wrapNode("default", node.declaration);
+			let localName: string;
+			if (
+				(node.declaration.type === "FunctionDeclaration" ||
+					node.declaration.type === "ClassDeclaration") &&
+				node.declaration.id
+			) {
+				// preserve name scope for `function foo() {}` and `class Foo {}`
+				localName = node.declaration.id.name;
+				output.remove(node.start, node.declaration.start);
+			} else {
+				// otherwise introduce new variable
+				localName = "$$default";
+				output.update(node.start, node.declaration.start, "const $$default = ");
+			}
+			wrapExport(localName, "default");
 		}
 	}
 
