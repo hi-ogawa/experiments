@@ -1,6 +1,6 @@
 import { type HighlighterCore, getHighlighterCore } from "shiki/core";
 import { defineComponent, inject } from "vue";
-import { Form } from "../_client";
+import { Form } from "../../integrations/router/client";
 import DEFAULT_CODE from "../_client-sfc.vue?raw";
 
 let highlighter: HighlighterCore;
