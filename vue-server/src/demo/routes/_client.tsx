@@ -106,3 +106,7 @@ export const Hydrated = defineComponent(() => {
 	});
 	return () => <span>{`[mounted: ${mounted.value}]`}</span>;
 });
+
+export default function ClientDefault() {
+	return <span>Client default export</span>;
+}

@@ -22,13 +22,15 @@ export class Cls {};
 			"import { registerClientReference as $$wrap } from "/src/serialize";
 
 			 const Arrow = () => {};
-			export default $$wrap(("hi"), "<file>#default");
+			const $$default = "hi";
 			 function Fn() {};
 			 async function AsyncFn() {};
 			 class Cls {};
 			;
 			const $$tmp_Arrow = $$wrap((Arrow), "<file>#Arrow");
 			export { $$tmp_Arrow as Arrow };
+			const $$tmp_$$default = $$wrap(($$default), "<file>#default");
+			export { $$tmp_$$default as default };
 			const $$tmp_Fn = $$wrap((Fn), "<file>#Fn");
 			export { $$tmp_Fn as Fn };
 			const $$tmp_AsyncFn = $$wrap((AsyncFn), "<file>#AsyncFn");
@@ -44,7 +46,22 @@ export class Cls {};
 		expect(await testTransform(input)).toMatchInlineSnapshot(
 			`
 			"import { registerClientReference as $$wrap } from "/src/serialize";
-			export default $$wrap((function Fn() {}), "<file>#default");
+			function Fn() {};
+			const $$tmp_Fn = $$wrap((Fn), "<file>#default");
+			export { $$tmp_Fn as default };
+			"
+		`,
+		);
+	});
+
+	test("default anonymous function", async () => {
+		const input = `export default function () {}`;
+		expect(await testTransform(input)).toMatchInlineSnapshot(
+			`
+			"import { registerClientReference as $$wrap } from "/src/serialize";
+			const $$default = function () {};
+			const $$tmp_$$default = $$wrap(($$default), "<file>#default");
+			export { $$tmp_$$default as default };
 			"
 		`,
 		);
@@ -55,7 +72,9 @@ export class Cls {};
 		expect(await testTransform(input)).toMatchInlineSnapshot(
 			`
 			"import { registerClientReference as $$wrap } from "/src/serialize";
-			export default $$wrap((class Cls {}), "<file>#default");
+			class Cls {};
+			const $$tmp_Cls = $$wrap((Cls), "<file>#default");
+			export { $$tmp_Cls as default };
 			"
 		`,
 		);

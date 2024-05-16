@@ -1,5 +1,5 @@
 import { defineComponent } from "vue";
-import { ClientCounter, ClientNested } from "./_client";
+import ClientDefault, { ClientCounter, ClientNested } from "./_client";
 import ClientSfc from "./_client-sfc.vue";
 
 export default defineComponent(async () => {
@@ -10,6 +10,9 @@ export default defineComponent(async () => {
 			<h4>Client Component</h4>
 			<ClientCounter />
 			<ClientSfc />
+			<div style={{ margin: "0.5rem 0" }}>
+				<ClientDefault />
+			</div>
 			<h4>Nested Server/Client</h4>
 			<ServerNested>
 				{() => (
