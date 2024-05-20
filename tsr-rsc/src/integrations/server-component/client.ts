@@ -9,7 +9,9 @@ export function useFlightLoader() {
 }
 
 // wrap it to object, so we can use it as React.use promise map key
-type FlightData = { f: string }; // TODO: does tsr loader support stream?
+// TODO: does tsr loader support stream?
+export type FlightData = { f: string };
+
 const flightMap = new WeakMap<FlightData, Promise<unknown>>();
 
 function resolveFlightMap(data: FlightData) {
@@ -24,6 +26,7 @@ function resolveFlightMap(data: FlightData) {
 async function readFlightClient(data: FlightData) {
 	const stream = stringToStream(data.f);
 	if (import.meta.env.SSR) {
+		(globalThis as any).__webpack_require__ = () => {};
 		const { default: ReactClient } = await import(
 			"react-server-dom-webpack/client.edge"
 		);
@@ -31,6 +34,7 @@ async function readFlightClient(data: FlightData) {
 			ssrManifest: {},
 		});
 	} else {
+		(globalThis as any).__webpack_require__ = () => {};
 		const { default: ReactClient } = await import(
 			"react-server-dom-webpack/client.browser"
 		);

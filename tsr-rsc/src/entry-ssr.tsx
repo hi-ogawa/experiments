@@ -1,12 +1,21 @@
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
-import { $__global } from "./integrations/global";
 import { streamToString } from "./integrations/utils";
 import { createRouter } from "./router";
+import { flightLoader } from "./routes";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
+	if (url.pathname === "/__flight") {
+		const data = await flightLoader();
+		return new Response(JSON.stringify(data), {
+			headers: {
+				"content-type": "application/json",
+			},
+		});
+	}
+
 	const router = createRouter();
 
 	const memoryHistory = createMemoryHistory({
@@ -28,20 +37,4 @@ export async function handler(request: Request) {
 			"content-type": "text/html",
 		},
 	});
-}
-
-export async function $$flight(data: unknown) {
-	const reactServer = await importReactServer();
-	const stream = await reactServer.render(data);
-	return await streamToString(stream);
-}
-
-async function importReactServer(): Promise<typeof import("./entry-server")> {
-	let mod: any;
-	if (import.meta.env.DEV) {
-		mod = await $__global.reactServer.ssrLoadModule("/src/entry-server");
-	} else {
-		throw new Error("todo");
-	}
-	return mod;
 }

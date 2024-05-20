@@ -18,6 +18,7 @@ function RootComponent() {
 				<meta charSet="UTF-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<title>Vite App</title>
+				{/* TODO: hmr */}
 				{/* <script
 					type="module"
 					suppressHydrationWarning
@@ -32,8 +33,7 @@ function RootComponent() {
 					}}
 				/> */}
 				<script type="module" src="/@vite/client" />
-				{/* TODO: start with ssr only */}
-				{/* <script type="module" src="/src/entry-browser" /> */}
+				<script type="module" src="/src/entry-browser" />
 			</head>
 			<body>
 				<div className="p-2 flex gap-2 text-lg">
