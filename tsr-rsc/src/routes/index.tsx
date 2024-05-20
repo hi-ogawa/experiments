@@ -23,12 +23,24 @@ export const Route = createFileRoute("/")({
 		return flightLoader();
 	},
 	component: IndexComponent,
+	// TODO: flashes on client side navigation.
+	//       does tsr put suspense boundary somewhere
+	//       which prevents `React.use` from suspending the entire transition?
+	// TODO: can we await `createFromReadableStream` inside custom transformer
+	//       so that component can use what already resolved?
+	//       or we only need to make sure ssr hydration state is somehow revived properly?
+	pendingMs: 0,
+	pendingMinMs: 0,
+	preloadStaleTime: 0,
+	gcTime: 0,
 });
 
 function IndexComponent() {
 	// TODO: Route.loader type infererence?
 	const node = useFlightLoader() as React.ReactNode;
-	console.log("[useFlightLoader]", node);
+	React.useEffect(() => {
+		console.log("[useFlightLoader]", node);
+	}, [node]);
 
 	return (
 		<div className="p-2">
