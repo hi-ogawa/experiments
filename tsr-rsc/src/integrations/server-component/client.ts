@@ -31,6 +31,11 @@ async function readFlightClient(data: FlightData) {
 			ssrManifest: {},
 		});
 	} else {
-		throw new Error("todo");
+		const { default: ReactClient } = await import(
+			"react-server-dom-webpack/client.browser"
+		);
+		return ReactClient.createFromReadableStream(stream, {
+			callServer: undefined,
+		});
 	}
 }

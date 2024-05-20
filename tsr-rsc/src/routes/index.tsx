@@ -1,15 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React from "react";
-import { $$flight } from "../entry-ssr";
 import { useFlightLoader } from "../integrations/server-component/client";
 
 export const Route = createFileRoute("/")({
+	// TODO: whole loader should be extracted and executed on react server environment.
 	loader: async () => {
-		// TODO: whole function should be extracted and executed on react server environment.
-		// TODO: browser needs to fetch it via proxy
-		const f = await $$flight(<div>hello server component</div>);
-		console.log("[loader]", f);
-		return { f };
+		if (import.meta.env.SSR) {
+			const { $$flight } = await import("../entry-ssr");
+			const f = await $$flight(
+				<div>server random: {Math.random().toString(36).slice(2)}</div>,
+			);
+			console.log("[loader]", f);
+			return { f };
+		} else {
+			// TODO: browser needs to fetch it via proxy
+			throw new Error("browser");
+		}
 	},
 	component: IndexComponent,
 });
