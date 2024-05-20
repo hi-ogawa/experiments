@@ -8,10 +8,6 @@ export type PostType = {
 
 export const Route = createFileRoute("/posts")({
 	loader: async () => {
-		console.log("Fetching posts...");
-		await new Promise((r) =>
-			setTimeout(r, 300 + Math.round(Math.random() * 300)),
-		);
 		return fetch("https://jsonplaceholder.typicode.com/posts")
 			.then((d) => d.json() as Promise<PostType[]>)
 			.then((d) => d.slice(0, 10));

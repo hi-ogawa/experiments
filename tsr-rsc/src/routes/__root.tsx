@@ -32,8 +32,8 @@ function RootComponent() {
             `,
 					}}
 				/> */}
-				<script type="module" src="/@vite/client" />
-				<script type="module" src="/src/entry-browser" />
+				{/* <script type="module" src="/@vite/client" />
+				<script type="module" src="/src/entry-browser" /> */}
 			</head>
 			<body>
 				<div className="p-2 flex gap-2 text-lg">
