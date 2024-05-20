@@ -13,24 +13,31 @@ async function main() {
 	const initResult: SerializeResult = (globalThis as any).__serialized;
 	const referenceMap = await createReferenceMap(initResult.referenceIds);
 
+	async function fetchSerialize() {
+		const url = new URL(window.location.href);
+		url.searchParams.set("__serialize", "");
+		const res = await fetch(url);
+		tinyassert(res.ok);
+		const result: SerializeResult = await res.json();
+		Object.assign(referenceMap, await createReferenceMap(result.referenceIds));
+		return result;
+	}
+
 	const Root = defineComponent(() => {
 		const serialized = ref(initResult);
 		const isLoading = ref(false);
 		provide("isLoading", readonly(isLoading));
 
-		listenBrowserHistory(async () => {
+		const navManager = new AsyncTaskManager<SerializeResult>({
+			onSucess: (result) => {
+				serialized.value = result;
+				isLoading.value = false;
+			},
+		});
+
+		listenBrowserHistory(() => {
 			isLoading.value = true;
-			const url = new URL(window.location.href);
-			url.searchParams.set("__serialize", "");
-			const res = await fetch(url);
-			tinyassert(res.ok);
-			const result: SerializeResult = await res.json();
-			Object.assign(
-				referenceMap,
-				await createReferenceMap(result.referenceIds),
-			);
-			serialized.value = result;
-			isLoading.value = false;
+			navManager.push(fetchSerialize);
 		});
 
 		return () => deserialize(serialized.value.data, referenceMap) as any;
@@ -49,6 +56,27 @@ async function main() {
 		import.meta.hot.on("vue-server:update", (e) => {
 			console.log("[vue-server] hot update", e.file);
 			window.history.replaceState({}, "", window.location.href);
+		});
+	}
+}
+
+// interruptible navigation
+class AsyncTaskManager<T> {
+	private latest?: () => Promise<T>;
+
+	constructor(
+		private options: {
+			onSucess: (v: T) => void;
+		},
+	) {}
+
+	push(task: () => Promise<T>) {
+		this.latest = task;
+		task().then((v) => {
+			if (this.latest === task) {
+				this.latest = undefined;
+				this.options.onSucess(v);
+			}
 		});
 	}
 }
