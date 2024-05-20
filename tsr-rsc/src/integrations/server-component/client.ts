@@ -1,0 +1,36 @@
+import { useLoaderData } from "@tanstack/react-router";
+import React from "react";
+import { stringToStream } from "../utils";
+
+export function useFlightLoader() {
+	const data = useLoaderData({ strict: false }) as FlightData;
+	const resolved = React.use(resolveFlightMap(data));
+	return resolved;
+}
+
+// wrap it to object, so we can use it as React.use promise map key
+type FlightData = { f: string }; // TODO: does tsr loader support stream?
+const flightMap = new WeakMap<FlightData, Promise<unknown>>();
+
+function resolveFlightMap(data: FlightData) {
+	let found = flightMap.get(data);
+	if (!found) {
+		found = readFlightClient(data);
+		flightMap.set(data, found);
+	}
+	return found;
+}
+
+async function readFlightClient(data: FlightData) {
+	const stream = stringToStream(data.f);
+	if (import.meta.env.SSR) {
+		const { default: ReactClient } = await import(
+			"react-server-dom-webpack/client.edge"
+		);
+		return ReactClient.createFromReadableStream(stream, {
+			ssrManifest: {},
+		});
+	} else {
+		throw new Error("todo");
+	}
+}
