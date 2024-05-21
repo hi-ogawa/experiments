@@ -1,9 +1,8 @@
-import { tinyassert } from "@hiogawa/utils";
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
 import { stripRevivedFlightRecursive } from "./integrations/flight/client";
-import { handleFlight } from "./integrations/flight/ssr";
+import { handleFlightRequest } from "./integrations/flight/ssr";
 import { $__global } from "./integrations/global";
 import { streamToString } from "./integrations/utils";
 import { createRouter } from "./router";
@@ -11,15 +10,7 @@ import { createRouter } from "./router";
 export async function handler(request: Request) {
 	const url = new URL(request.url);
 	if (url.pathname === "/__flight") {
-		const reference = url.searchParams.get("reference");
-		tinyassert(reference);
-		const args = await request.json();
-		const data = await handleFlight(reference, args);
-		return new Response(JSON.stringify(data), {
-			headers: {
-				"content-type": "application/json",
-			},
-		});
+		return handleFlightRequest(request);
 	}
 
 	const router = createRouter();
