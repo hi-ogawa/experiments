@@ -5,13 +5,14 @@ import ReactDOM from "react-dom/client";
 import { reviveFlightRecursive } from "./integrations/flight/client";
 import { createRouter } from "./router";
 
-declare let __ssr_dehydrated_state__: any;
-
 async function main() {
 	const router = createRouter();
 
+	// TODO
 	// for now we hydrate manually since we need async to revive flight loader
-	const dehydratedState = await reviveFlightRecursive(__ssr_dehydrated_state__);
+	const dehydratedState = await reviveFlightRecursive(
+		(globalThis as any).__ssr_dehydrated_state__,
+	);
 
 	// patch transforer.parse to intercept dehydrate state
 	router.update({
