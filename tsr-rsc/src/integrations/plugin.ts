@@ -28,6 +28,7 @@ export function vitePluginReactServer(): PluginOption {
 						],
 					},
 				},
+				plugins: [],
 			});
 		},
 		async buildEnd() {
@@ -35,5 +36,23 @@ export function vitePluginReactServer(): PluginOption {
 		},
 	};
 
-	return [mainPlugin];
+	return [mainPlugin, vitePluginFlightLoaderClient()];
+}
+
+function vitePluginFlightLoaderClient(): PluginOption {
+	const useServerTransform: Plugin = {
+		name: vitePluginFlightLoaderClient.name + ":use-server-transform",
+		transform(code, id, _options) {
+			if (/^("use server"|'use server')/.test(code)) {
+				const matches = code.matchAll(/function (\w*)/g);
+				const names = [...matches].map((m) => m[1]);
+				id;
+				names;
+				const output = [``].join("\n");
+				return { code: output, map: null };
+			}
+		},
+	};
+
+	return [useServerTransform];
 }

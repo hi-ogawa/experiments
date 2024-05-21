@@ -8,12 +8,12 @@ export const Route = createFileRoute("/")({
 });
 
 function IndexComponent() {
-	const node = Route.useLoaderData().revived;
+	const node = Route.useLoaderData();
 
 	return (
 		<div className="p-2">
 			<h3>Welcome Home!</h3>
-			{node}
+			{node as any}
 		</div>
 	);
 }

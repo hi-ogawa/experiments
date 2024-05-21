@@ -14,23 +14,35 @@ export function createFlightLoader(reference: string) {
 			tinyassert(res.ok);
 			data = await res.json();
 		}
-		const revived = (await reviveFlightClient(data)) as any;
-		return { ...data, revived };
+		const revived = await reviveFlight(data);
+		// inject raw flight data for ssr + hydration
+		// TODO: for now, it requires object to be able to inject flight)
+		//       we can probably try custom context to hydrate flight on my own
+		tinyassert(revived && typeof revived === "object");
+		if (import.meta.env.SSR) {
+			Object.defineProperties(revived, {
+				[FLIGHT_KEY]: {
+					enumerable: false,
+					value: data[FLIGHT_KEY],
+				},
+			});
+		}
+		return revived;
 	};
 }
 
-export type FlightData<T = unknown> = {
-	__flight: true;
-	f: string;
-	revived?: T;
+export const FLIGHT_KEY = "__flight";
+
+export type FlightData = {
+	[FLIGHT_KEY]: string;
 };
 
 function isFlightData(v: unknown): v is FlightData {
-	return objectHas(v, "__flight") && v.__flight === true;
+	return objectHas(v, FLIGHT_KEY);
 }
 
-async function reviveFlightClient(data: FlightData) {
-	const stream = stringToStream(data.f);
+async function reviveFlight(data: FlightData) {
+	const stream = stringToStream(data[FLIGHT_KEY]);
 	if (import.meta.env.SSR) {
 		(globalThis as any).__webpack_require__ = () => {};
 		const { default: ReactClient } = await import(
@@ -50,20 +62,18 @@ async function reviveFlightClient(data: FlightData) {
 	}
 }
 
-export async function reviveFlightClientJson(data: unknown) {
+export async function reviveFlightRecursive(data: unknown) {
 	return applyReviverAsync(data, async (_k, v) => {
 		if (isFlightData(v)) {
-			const revived = await reviveFlightClient(v);
-			return { ...v, revived };
+			return reviveFlight(v);
 		}
 		return v;
 	});
 }
 
-export const stripFlightClientReplacer: Replacer = function (_k, v) {
+export const stripRevivedFlightRecursive: Replacer = function (_k, v) {
 	if (isFlightData(v)) {
-		const { revived, ...rest } = v;
-		return rest;
+		return { [FLIGHT_KEY]: v[FLIGHT_KEY] };
 	}
 	return v;
 };

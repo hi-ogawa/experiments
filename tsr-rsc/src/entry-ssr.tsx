@@ -2,7 +2,7 @@ import { tinyassert } from "@hiogawa/utils";
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
-import { stripFlightClientReplacer } from "./integrations/flight/client";
+import { stripRevivedFlightRecursive } from "./integrations/flight/client";
 import { handleFlight } from "./integrations/flight/ssr";
 import { $__global } from "./integrations/global";
 import { streamToString } from "./integrations/utils";
@@ -43,7 +43,7 @@ export async function handler(request: Request) {
 
 	const dehydratedState = { router: router.dehydrate() };
 	const dehydratedStateScript = escpaeScriptString(
-		JSON.stringify(dehydratedState, stripFlightClientReplacer),
+		JSON.stringify(dehydratedState, stripRevivedFlightRecursive),
 	);
 	html = html.replace(
 		`<head>`,

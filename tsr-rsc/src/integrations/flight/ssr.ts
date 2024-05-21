@@ -5,7 +5,7 @@ import type { FlightData } from "./client";
 export async function handleFlight(reference: string): Promise<FlightData> {
 	const reactServer = await importReactServer();
 	const stream = await reactServer.handler(reference);
-	return { __flight: true, f: await streamToString(stream) };
+	return { __flight: await streamToString(stream) };
 }
 
 export async function importReactServer(): Promise<typeof import("./server")> {

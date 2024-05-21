@@ -2,7 +2,7 @@ import { tinyassert } from "@hiogawa/utils";
 import { StartClient } from "@tanstack/start";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { reviveFlightClientJson } from "./integrations/flight/client";
+import { reviveFlightRecursive } from "./integrations/flight/client";
 import { createRouter } from "./router";
 
 declare let __ssr_dehydrated_state__: any;
@@ -11,9 +11,7 @@ async function main() {
 	const router = createRouter();
 
 	// for now we hydrate manually since we need async to revive flight loader
-	const dehydratedState = await reviveFlightClientJson(
-		__ssr_dehydrated_state__,
-	);
+	const dehydratedState = await reviveFlightRecursive(__ssr_dehydrated_state__);
 
 	// patch transforer.parse to intercept dehydrate state
 	router.update({
