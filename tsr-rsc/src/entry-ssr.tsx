@@ -1,16 +1,19 @@
+import { tinyassert } from "@hiogawa/utils";
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
 import { $__global } from "./integrations/global";
 import { stripFlightClientReplacer } from "./integrations/server-component/client";
+import { handleFlight } from "./integrations/server-component/ssr";
 import { streamToString } from "./integrations/utils";
 import { createRouter } from "./router";
-import { flightLoader } from "./routes";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
 	if (url.pathname === "/__flight") {
-		const data = await flightLoader();
+		const reference = url.searchParams.get("reference");
+		tinyassert(reference);
+		const data = await handleFlight(reference);
 		return new Response(JSON.stringify(data), {
 			headers: {
 				"content-type": "application/json",

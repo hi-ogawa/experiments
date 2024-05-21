@@ -1,38 +1,35 @@
-import { objectHas } from "@hiogawa/utils";
-import { useLoaderData } from "@tanstack/react-router";
-import React from "react";
+import { objectHas, tinyassert } from "@hiogawa/utils";
 import { stringToStream } from "../utils";
 
-export function useFlightLoader() {
-	const data = useLoaderData({ strict: false }) as FlightData;
-	const resolved = React.use(resolveFlightMap(data));
-	return resolved;
+export function createFlightLoader(reference: string) {
+	return async () => {
+		let data: FlightData;
+		if (import.meta.env.SSR) {
+			const { handleFlight } = await import("./ssr");
+			data = await handleFlight(reference);
+		} else {
+			const res = await fetch(
+				"/__flight?reference=" + encodeURIComponent(reference),
+			);
+			tinyassert(res.ok);
+			data = await res.json();
+		}
+		const revived = (await reviveFlightClient(data)) as any;
+		return { ...data, revived };
+	};
 }
 
-// wrap it to object, so we can use it as React.use promise map key
-// TODO: does tsr loader support stream?
 export type FlightData<T = unknown> = {
 	__flight: true;
 	f: string;
 	revived?: T;
 };
 
-export function isFlightData(v: unknown): v is FlightData {
+function isFlightData(v: unknown): v is FlightData {
 	return objectHas(v, "__flight") && v.__flight === true;
 }
 
-const flightMap = new WeakMap<FlightData, Promise<unknown>>();
-
-function resolveFlightMap(data: FlightData) {
-	let found = flightMap.get(data);
-	if (!found) {
-		found = reviveFlightClient(data);
-		flightMap.set(data, found);
-	}
-	return found;
-}
-
-export async function reviveFlightClient(data: FlightData) {
+async function reviveFlightClient(data: FlightData) {
 	const stream = stringToStream(data.f);
 	if (import.meta.env.SSR) {
 		(globalThis as any).__webpack_require__ = () => {};
