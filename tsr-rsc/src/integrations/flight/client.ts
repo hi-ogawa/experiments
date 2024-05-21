@@ -71,12 +71,14 @@ export async function reviveFlightRecursive(data: unknown) {
 	});
 }
 
-export const stripRevivedFlightRecursive: Replacer = function (_k, v) {
-	if (isFlightData(v)) {
-		return { [FLIGHT_KEY]: v[FLIGHT_KEY] };
-	}
-	return v;
-};
+export function stripRevivedFlightRecursive(data: unknown) {
+	return applyReplacer(data, (_k, v) => {
+		if (isFlightData(v)) {
+			return { [FLIGHT_KEY]: v[FLIGHT_KEY] };
+		}
+		return v;
+	});
+}
 
 // cf.
 // https://github.com/hi-ogawa/js-utils/blob/e38af9ce06108056b85ec553b0f090610950a599/packages/json-extra/src/index.ts
@@ -92,6 +94,27 @@ function applyReviverAsync(data: unknown, reviver: Reviver) {
 			}
 		}
 		return reviver("", v);
+	}
+	return recurse(data);
+}
+
+function applyReplacer(data: unknown, replacer: Replacer) {
+	function recurse(v: unknown) {
+		const vToJson =
+			v &&
+			typeof v === "object" &&
+			"toJSON" in v &&
+			typeof v.toJSON === "function"
+				? v.toJSON()
+				: v;
+		v = replacer.apply([v], [0, vToJson]);
+		if (v && typeof v === "object") {
+			v = Array.isArray(v) ? [...v] : { ...v };
+			for (const [k, e] of Object.entries(v as any)) {
+				(v as any)[k] = recurse(e);
+			}
+		}
+		return v;
 	}
 	return recurse(data);
 }

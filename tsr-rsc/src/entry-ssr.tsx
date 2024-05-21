@@ -43,7 +43,7 @@ export async function handler(request: Request) {
 
 	const dehydratedState = { router: router.dehydrate() };
 	const dehydratedStateScript = escpaeScriptString(
-		JSON.stringify(dehydratedState, stripRevivedFlightRecursive),
+		JSON.stringify(stripRevivedFlightRecursive(dehydratedState)),
 	);
 	html = html.replace(
 		`<head>`,
