@@ -1,6 +1,7 @@
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
+import { $__global } from "./integrations/global";
 import { stripFlightClientReplacer } from "./integrations/server-component/client";
 import { streamToString } from "./integrations/utils";
 import { createRouter } from "./router";
@@ -32,29 +33,35 @@ export async function handler(request: Request) {
 	const ssrStream = await ReactDOMServer.renderToReadableStream(
 		<StartServer router={router} />,
 	);
-	let html = await streamToString(ssrStream);
-	stripFlightClientReplacer;
+	const ssrHtml = await streamToString(ssrStream);
+
+	let html = await importIndexHtml();
+	html = html.replace("<body>", () => `<body><div id="root">${ssrHtml}</div>`);
 
 	const dehydratedState = { router: router.dehydrate() };
-	console.dir(JSON.stringify(dehydratedState, stripFlightClientReplacer), {
-		depth: 10,
-	});
-
-	html = html.replace(
-		"<head>",
-		() =>
-			`<head><script>window.__ssr_dehydrated_state__ = ${escpaeScriptString(
-				JSON.stringify(dehydratedState, stripFlightClientReplacer),
-			)}</script>\n`,
+	const dehydratedStateScript = escpaeScriptString(
+		JSON.stringify(dehydratedState, stripFlightClientReplacer),
 	);
-	// console.dir(router.dehydrate(), { depth: 10 });
-	// console.dir(router.dehydrate())
-	// console.log([router.dehydratedData, router.injectedHtml]);
+	html = html.replace(
+		`<head>`,
+		() =>
+			`<head><script>window.__ssr_dehydrated_state__ = ${dehydratedStateScript}</script>`,
+	);
+
 	return new Response(html, {
 		headers: {
 			"content-type": "text/html",
 		},
 	});
+}
+
+async function importIndexHtml() {
+	if (import.meta.env.DEV) {
+		const mod = await import("/index.html?raw");
+		return await $__global.ssrServer.transformIndexHtml("/", mod.default);
+	} else {
+		throw new Error("todo");
+	}
 }
 
 // https://github.com/remix-run/remix/blob/7f30f0bc976f0b97a020e81be33f90f68d4e527a/packages/remix-server-runtime/markup.ts#L7-L16

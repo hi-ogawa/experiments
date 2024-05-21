@@ -4,6 +4,9 @@ import { $__global } from "./global";
 export function vitePluginReactServer(): PluginOption {
 	const mainPlugin: Plugin = {
 		name: vitePluginReactServer.name,
+		configureServer(server) {
+			$__global.ssrServer = server;
+		},
 		async buildStart() {
 			$__global.reactServer = await createServer({
 				configFile: false,

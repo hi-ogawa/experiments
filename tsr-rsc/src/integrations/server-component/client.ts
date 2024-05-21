@@ -63,7 +63,7 @@ export async function reviveFlightClientJson(data: unknown) {
 	});
 }
 
-export const stripFlightClientReplacer: Replacer = function (k, v) {
+export const stripFlightClientReplacer: Replacer = function (_k, v) {
 	if (isFlightData(v)) {
 		const { revived, ...rest } = v;
 		return rest;

@@ -1,3 +1,4 @@
+import { tinyassert } from "@hiogawa/utils";
 import { StartClient } from "@tanstack/start";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -11,31 +12,29 @@ async function main() {
 
 	// HACK
 	// for now we hydrate manually since we need async to revive flight loader
-	// console.log(__ssr_dehydrated_state__);
-	// const deh1 = JSON.parse(__ssr_dehydrated_state__);
-	// console.log(deh1);
-	window.__TSR_DEHYDRATED__ = { data: JSON.stringify("unused") };
-	const revived = await reviveFlightClientJson(__ssr_dehydrated_state__);
-	console.log(revived);
+	const dehydratedState = await reviveFlightClientJson(
+		__ssr_dehydrated_state__,
+	);
 
-	// patch transforer.parse for custom dehydration
+	// patch transforer.parse to intercept dehydrate state
 	router.update({
 		transformer: {
 			parse(_str) {
-				return revived;
+				return dehydratedState;
 			},
-			stringify(obj) {
-				console.trace(obj);
-				return JSON.stringify(obj);
+			stringify(_obj) {
+				throw new Error("unused");
 			},
 		},
 	});
+	window.__TSR_DEHYDRATED__ = { data: "unused" };
 	router.hydrate();
 
-	1 &&
-		React.startTransition(() => {
-			ReactDOM.hydrateRoot(document, <StartClient router={router} />);
-		});
+	const el = document.getElementById("root");
+	tinyassert(el);
+	React.startTransition(() => {
+		ReactDOM.hydrateRoot(el, <StartClient router={router} />);
+	});
 }
 
 main();
