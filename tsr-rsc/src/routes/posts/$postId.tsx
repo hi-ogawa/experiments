@@ -2,20 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { PostType } from "../posts";
 
 export const Route = createFileRoute("/posts/$postId")({
-	loader: async ({ params }) => {
-		console.log(`Fetching post with id ${params.postId}...`);
-
-		await new Promise((r) => setTimeout(r, Math.round(Math.random() * 300)));
-
-		return fetch(
-			`https://jsonplaceholder.typicode.com/posts/${params.postId}`,
-		).then((r) => r.json() as Promise<PostType>);
-	},
-	component: PostComponent,
+	loader: ({ params }) => loader(params.postId),
+	component: Component,
 });
 
-function PostComponent() {
-	const post = Route.useLoaderData();
+async function loader(postId: string) {
+	"use server";
+
+	const res = await fetch(
+		`https://jsonplaceholder.typicode.com/posts/${postId}`,
+	);
+	const post: PostType = await res.json();
 
 	return (
 		<div className="space-y-2">
@@ -23,4 +20,8 @@ function PostComponent() {
 			<div className="text-sm">{post.body}</div>
 		</div>
 	);
+}
+
+function Component() {
+	return Route.useLoaderData();
 }
