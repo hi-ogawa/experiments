@@ -2,9 +2,9 @@ import { tinyassert } from "@hiogawa/utils";
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
+import { stripFlightClientReplacer } from "./integrations/flight/client";
+import { handleFlight } from "./integrations/flight/ssr";
 import { $__global } from "./integrations/global";
-import { stripFlightClientReplacer } from "./integrations/server-component/client";
-import { handleFlight } from "./integrations/server-component/ssr";
 import { streamToString } from "./integrations/utils";
 import { createRouter } from "./router";
 

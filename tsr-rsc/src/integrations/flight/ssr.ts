@@ -8,12 +8,12 @@ export async function handleFlight(reference: string): Promise<FlightData> {
 	return { __flight: true, f: await streamToString(stream) };
 }
 
-export async function importReactServer(): Promise<
-	typeof import("../../entry-server")
-> {
+export async function importReactServer(): Promise<typeof import("./server")> {
 	let mod: any;
 	if (import.meta.env.DEV) {
-		mod = await $__global.reactServer.ssrLoadModule("/src/entry-server");
+		mod = await $__global.reactServer.ssrLoadModule(
+			"/src/integrations/flight/server",
+		);
 	} else {
 		throw new Error("todo");
 	}

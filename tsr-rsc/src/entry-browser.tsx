@@ -2,7 +2,7 @@ import { tinyassert } from "@hiogawa/utils";
 import { StartClient } from "@tanstack/start";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { reviveFlightClientJson } from "./integrations/server-component/client";
+import { reviveFlightClientJson } from "./integrations/flight/client";
 import { createRouter } from "./router";
 
 declare let __ssr_dehydrated_state__: any;
@@ -10,7 +10,6 @@ declare let __ssr_dehydrated_state__: any;
 async function main() {
 	const router = createRouter();
 
-	// HACK
 	// for now we hydrate manually since we need async to revive flight loader
 	const dehydratedState = await reviveFlightClientJson(
 		__ssr_dehydrated_state__,

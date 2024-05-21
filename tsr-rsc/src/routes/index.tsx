@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createFlightLoader } from "../integrations/server-component/client";
+import { createFlightLoader } from "../integrations/flight/client";
 
 export const Route = createFileRoute("/")({
 	// TODO: support inline "use server"
