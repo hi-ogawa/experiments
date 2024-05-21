@@ -1,19 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createFlightLoader } from "../integrations/flight/client";
+
+// TODO: support inline "use server"
+import { loader } from "./index.server";
 
 export const Route = createFileRoute("/")({
-	// TODO: support inline "use server"
-	loader: createFlightLoader("/src/routes/index.server#Page"),
+	loader,
 	component: IndexComponent,
 });
 
 function IndexComponent() {
-	const node = Route.useLoaderData();
-
 	return (
 		<div className="p-2">
 			<h3>Welcome Home!</h3>
-			{node as any}
+			{Route.useLoaderData()}
 		</div>
 	);
 }

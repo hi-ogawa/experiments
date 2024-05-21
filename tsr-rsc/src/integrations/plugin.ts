@@ -46,9 +46,12 @@ function vitePluginFlightLoaderClient(): PluginOption {
 			if (/^("use server"|'use server')/.test(code)) {
 				const matches = code.matchAll(/function (\w*)/g);
 				const names = [...matches].map((m) => m[1]);
-				id;
-				names;
-				const output = [``].join("\n");
+				const output = [
+					`import { createFlightLoader as $$flight } from "/src/integrations/flight/client"`,
+					...names.map(
+						(name) => `export const ${name} = $$flight("${id + "#" + name}")`,
+					),
+				].join(";\n");
 				return { code: output, map: null };
 			}
 		},
