@@ -1,14 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { loader } from "./index.server";
 
 export const Route = createFileRoute("/")({
-	loader: () => loader(),
+	loader: () => Page(),
 	component: IndexComponent,
 });
 
-// TODO: inline "use server" directive
-_loader;
-async function _loader() {
+async function Page() {
 	"use server";
 	new Promise((resolve) => setTimeout(resolve, 300));
 	return <div>server random: {Math.random().toString(36).slice(2)}</div>;

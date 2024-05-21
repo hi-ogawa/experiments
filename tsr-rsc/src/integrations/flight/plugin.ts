@@ -15,28 +15,23 @@ declare module "estree" {
 export async function transformDirectiveProxy(input: string, id: string) {
 	const ast: estree.Program = await parseAstAsync(input);
 	const output = new MagicString(input);
-	const names: string[] = [];
 
 	// replace "use server" with "$$flight" proxy
 	walk(ast, {
-		enter(node) {
+		enter(node, parent) {
 			// TODO: only top level function for now
 			if (
+				parent?.type === "Program" &&
 				node.type === "FunctionDeclaration" &&
 				getFunctionDirective(node.body.body) === SERVER_DIRECTIVE
 			) {
 				const name = node.id.name;
-				names.push(name);
 				const newCode = `const ${name} = $$flight("${id + "#" + name}")`;
 				output.update(node.start, node.end, newCode);
 				this.remove();
 			}
 		},
 	});
-
-	if (names.length === 0) {
-		return;
-	}
 
 	transformDeadCodeElimination(ast, output);
 
@@ -48,11 +43,43 @@ export async function transformDirectiveProxy(input: string, id: string) {
 }
 
 export async function transformDirectiveExpose(input: string) {
-	// TODO: strip all exports
-	// TODO: lift "use server" funciton
-	// TODO: dead code elimination
 	const ast = await parseAstAsync(input);
-	ast;
+	const output = new MagicString(input);
+
+	// TODO: very rough...
+	walk(ast, {
+		enter(node, parent) {
+			// strip `export`
+			if (
+				parent?.type === "Program" &&
+				node.type === "ExportNamedDeclaration"
+			) {
+				output.remove(node.start, node.end);
+				this.remove();
+			}
+			// export "use server"
+			if (
+				parent?.type === "Program" &&
+				node.type === "FunctionDeclaration" &&
+				getFunctionDirective(node.body.body) === SERVER_DIRECTIVE
+			) {
+				output.appendLeft(node.start, "export ");
+				const newNode: estree.ExportNamedDeclaration = {
+					type: "ExportNamedDeclaration",
+					start: node.start,
+					end: node.end,
+					specifiers: [],
+					declaration: node,
+				};
+				this.replace(newNode);
+				this.skip();
+			}
+		},
+	});
+
+	transformDeadCodeElimination(ast, output);
+
+	return { output };
 }
 
 function transformDeadCodeElimination(

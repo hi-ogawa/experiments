@@ -46,7 +46,7 @@ export function vitePluginReactServer(): PluginOption {
 function vitePluginFlightLoaderClient(): PluginOption {
 	const useServerTransform: Plugin = {
 		name: vitePluginFlightLoaderClient.name + ":use-server-transform",
-		transform(code, id, _options) {
+		async transform(code, id, _options) {
 			// "use server" file
 			if (/^("use server"|'use server')/.test(code)) {
 				const matches = code.matchAll(/function (\w*)/g);
@@ -62,8 +62,11 @@ function vitePluginFlightLoaderClient(): PluginOption {
 			}
 			// "use server" function
 			if (/("use server"|'use server')/.test(code)) {
-				transformDirectiveProxy(code, id);
-				return;
+				const result = await transformDirectiveProxy(code, id);
+				return {
+					code: result.output.toString(),
+					map: result.output.generateMap(),
+				};
 			}
 		},
 	};
@@ -74,15 +77,18 @@ function vitePluginFlightLoaderClient(): PluginOption {
 function vitePluginFlightLoaderServer(): PluginOption {
 	const useServerTransform: Plugin = {
 		name: vitePluginFlightLoaderClient.name + ":use-server-transform",
-		transform(code, _id, _options) {
+		async transform(code, _id, _options) {
 			// "use server" file (no-op)
 			if (/^("use server"|'use server')/.test(code)) {
 				return;
 			}
 			// "use server" function
 			if (/("use server"|'use server')/.test(code)) {
-				transformDirectiveExpose(code);
-				return;
+				const result = await transformDirectiveExpose(code);
+				return {
+					code: result.output.toString(),
+					map: result.output.generateMap(),
+				};
 			}
 		},
 	};

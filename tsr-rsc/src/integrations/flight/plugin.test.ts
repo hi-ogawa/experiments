@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { transformDirectiveProxy } from "./plugin";
+import { transformDirectiveExpose, transformDirectiveProxy } from "./plugin";
 
 describe(transformDirectiveProxy, () => {
-	async function testTransform(input: string) {
+	async function testTransformProxy(input: string) {
 		const result = await transformDirectiveProxy(input, "<id>");
-		return result?.output.toString();
+		return result.output.toString();
+	}
+
+	async function testTransformExpose(input: string) {
+		const result = await transformDirectiveExpose(input);
+		return result.output.toString();
 	}
 
 	it("basic", async () => {
@@ -23,7 +28,7 @@ export const Route = createFileRoute("/")({
 });
 `;
 
-		expect(await testTransform(input)).toMatchInlineSnapshot(`
+		expect(await testTransformProxy(input)).toMatchInlineSnapshot(`
 			"import { createFlightLoader as $$flight } from "/src/integrations/flight/client";
 			import { createFileRoute } from "@tanstack/react-router";
 
@@ -34,6 +39,19 @@ export const Route = createFileRoute("/")({
 			  loader: () => Page(),
 			  component: () => "foo",
 			});
+			"
+		`);
+
+		expect(await testTransformExpose(input)).toMatchInlineSnapshot(`
+			"
+			import { dep } from "./dep";
+
+			export async function Page() {
+			  "use server";
+			  return dep;
+			}
+
+
 			"
 		`);
 	});
