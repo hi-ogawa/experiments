@@ -12,6 +12,10 @@ export const Route = createFileRoute("/posts")({
 	component: PostsComponent,
 });
 
+function PostsComponent() {
+	return Route.useLoaderData();
+}
+
 async function loader() {
 	"use server";
 
@@ -41,8 +45,4 @@ async function loader() {
 			<Outlet />
 		</div>
 	);
-}
-
-function PostsComponent() {
-	return Route.useLoaderData();
 }
