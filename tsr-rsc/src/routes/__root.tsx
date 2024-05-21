@@ -5,9 +5,8 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { DehydrateRouter } from "@tanstack/start";
-import type { RouterContext } from "../routerContext";
 
-export const Route = createRootRouteWithContext<RouterContext>()({
+export const Route = createRootRouteWithContext()({
 	component: RootComponent,
 });
 
@@ -66,7 +65,7 @@ function RootComponent() {
 				<hr />
 				<Outlet /> {/* Start rendering router matches */}
 				{false && <TanStackRouterDevtools position="bottom-right" />}
-				<DehydrateRouter />
+				{/* <DehydrateRouter /> */}
 			</body>
 		</html>
 	);

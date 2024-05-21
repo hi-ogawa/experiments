@@ -5,9 +5,7 @@ import { routeTree } from "./routeTree.gen";
 export function createRouter() {
 	return createReactRouter({
 		routeTree,
-		context: {
-			head: "",
-		},
+		context: {},
 		defaultPreload: "intent",
 	});
 }

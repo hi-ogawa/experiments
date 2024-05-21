@@ -6,7 +6,7 @@ export async function flightSsr(data: unknown): Promise<FlightData> {
 	const reactServer = await importReactServer();
 	const stream = await reactServer.render(data);
 	const f = await streamToString(stream);
-	return { f };
+	return { __flight: true, f };
 }
 
 async function importReactServer(): Promise<
