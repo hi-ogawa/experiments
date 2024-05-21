@@ -2,21 +2,25 @@ import { objectHas, tinyassert } from "@hiogawa/utils";
 import { stringToStream } from "../utils";
 
 export function createFlightLoader(reference: string) {
-	return async () => {
+	return async (...args: any[]) => {
 		let data: FlightData;
 		if (import.meta.env.SSR) {
 			const { handleFlight } = await import("./ssr");
-			data = await handleFlight(reference);
+			data = await handleFlight(reference, args);
 		} else {
 			const res = await fetch(
 				"/__flight?reference=" + encodeURIComponent(reference),
+				{
+					method: "POST",
+					body: JSON.stringify(args),
+				},
 			);
 			tinyassert(res.ok);
 			data = await res.json();
 		}
 		const revived = await reviveFlight(data);
 		// inject raw flight data for ssr + hydration
-		// TODO: for now, it requires object to be able to inject flight)
+		// TODO: for now, it requires object to be able to inject flight
 		//       we can probably try custom context to hydrate flight on my own
 		tinyassert(revived && typeof revived === "object");
 		if (import.meta.env.SSR) {

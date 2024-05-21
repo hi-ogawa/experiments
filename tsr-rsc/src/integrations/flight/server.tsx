@@ -1,9 +1,9 @@
 import ReactServer from "react-server-dom-webpack/server.edge";
 
-export async function handler(reference: string) {
+export async function handler(reference: string, args: any[]) {
 	const [id, name] = reference.split("#");
 	const mod = await import(/* @vite-ignore */ id);
-	const result = await mod[name]();
+	const result = await mod[name](...args);
 	return ReactServer.renderToReadableStream(result, createBundlerConfig());
 }
 

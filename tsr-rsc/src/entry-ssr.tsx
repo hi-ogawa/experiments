@@ -13,7 +13,8 @@ export async function handler(request: Request) {
 	if (url.pathname === "/__flight") {
 		const reference = url.searchParams.get("reference");
 		tinyassert(reference);
-		const data = await handleFlight(reference);
+		const args = await request.json();
+		const data = await handleFlight(reference, args);
 		return new Response(JSON.stringify(data), {
 			headers: {
 				"content-type": "application/json",

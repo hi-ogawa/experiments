@@ -2,9 +2,12 @@ import { $__global } from "../global";
 import { streamToString } from "../utils";
 import type { FlightData } from "./client";
 
-export async function handleFlight(reference: string): Promise<FlightData> {
+export async function handleFlight(
+	reference: string,
+	args: any[],
+): Promise<FlightData> {
 	const reactServer = await importReactServer();
-	const stream = await reactServer.handler(reference);
+	const stream = await reactServer.handler(reference, args);
 	return { __flight: await streamToString(stream) };
 }
 
