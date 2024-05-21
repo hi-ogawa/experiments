@@ -1,4 +1,9 @@
-import { type Plugin, type PluginOption, createServer } from "vite";
+import {
+	type Plugin,
+	type PluginOption,
+	createServer,
+	parseAstAsync,
+} from "vite";
 import {
 	transformDirectiveExpose,
 	transformDirectiveProxy,
@@ -32,7 +37,10 @@ export function vitePluginReactServer(): PluginOption {
 						],
 					},
 				},
-				plugins: [vitePluginFlightLoaderServer()],
+				plugins: [
+					vitePluginFlightLoaderServer(),
+					vitePluginClientComponentServer(),
+				],
 			});
 		},
 		async buildEnd() {
@@ -94,4 +102,70 @@ function vitePluginFlightLoaderServer(): PluginOption {
 	};
 
 	return [useServerTransform];
+}
+
+function vitePluginClientComponentServer(): PluginOption {
+	const useClientTransform: Plugin = {
+		name: vitePluginClientComponentServer.name + ":use-client-transform",
+		async transform(code, id, _options) {
+			if (/^("use client")|('use client')/.test(code)) {
+				const { names } = await transformUseClient(code);
+				let result = `import { registerClientReference as $$register } from "/src/integrations/flight/server";\n`;
+				for (const name of names) {
+					result += `export const ${name} = $$register("${id}", "${name}");\n`;
+				}
+				return { code: result, map: null };
+			}
+		},
+	};
+
+	return [useClientTransform];
+}
+
+async function transformUseClient(input: string) {
+	const ast = await parseAstAsync(input);
+	const names = new Set<string>();
+
+	for (const node of ast.body) {
+		if (node.type === "ExportNamedDeclaration") {
+			if (node.declaration) {
+				if (
+					node.declaration.type === "FunctionDeclaration" ||
+					node.declaration.type === "ClassDeclaration"
+				) {
+					/**
+					 * export function foo() {}
+					 */
+					names.add(node.declaration.id.name);
+				} else if (node.declaration.type === "VariableDeclaration") {
+					/**
+					 * export const foo = 1, bar = 2
+					 */
+					for (const decl of node.declaration.declarations) {
+						if (decl.id.type === "Identifier") {
+							names.add(decl.id.name);
+						}
+					}
+				}
+			} else {
+				if (node.source) {
+					/**
+					 * export { foo, bar as car } from './foo'
+					 */
+					for (const spec of node.specifiers) {
+						names.add(spec.exported.name);
+					}
+				} else {
+					/**
+					 * export { foo, bar as car }
+					 */
+					for (const spec of node.specifiers) {
+						names.add(spec.exported.name);
+					}
+				}
+			}
+		}
+	}
+
+	return { names };
 }

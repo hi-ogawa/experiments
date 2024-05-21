@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "../client-export";
 
 export const Route = createFileRoute("/")({
 	loader: () => loader(),
@@ -7,8 +8,16 @@ export const Route = createFileRoute("/")({
 
 async function loader() {
 	"use server";
-	new Promise((resolve) => setTimeout(resolve, 300));
-	return <div>server random: {Math.random().toString(36).slice(2)}</div>;
+	await new Promise((resolve) => setTimeout(resolve, 300));
+	return (
+		<div>
+			<div>server random: {Math.random().toString(36).slice(2)}</div>
+			<div>process.platform: {process.platform}</div>
+			<div>
+				<Link to="/posts">Client Link!</Link>
+			</div>
+		</div>
+	);
 }
 
 function IndexComponent() {

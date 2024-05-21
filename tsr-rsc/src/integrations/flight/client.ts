@@ -1,4 +1,4 @@
-import { objectHas, tinyassert } from "@hiogawa/utils";
+import { memoize, objectHas, tinyassert } from "@hiogawa/utils";
 import { stringToStream } from "../utils";
 
 export function createFlightLoader(reference: string) {
@@ -45,10 +45,14 @@ function isFlightData(v: unknown): v is FlightData {
 	return objectHas(v, FLIGHT_KEY);
 }
 
+// TODO: invalidate
+(globalThis as any).__webpack_require__ = memoize(
+	(id: string) => import(/* @vite-ignore */ id),
+);
+
 async function reviveFlight(data: FlightData) {
 	const stream = stringToStream(data[FLIGHT_KEY]);
 	if (import.meta.env.SSR) {
-		(globalThis as any).__webpack_require__ = () => {};
 		const { default: ReactClient } = await import(
 			"react-server-dom-webpack/client.edge"
 		);
@@ -56,7 +60,6 @@ async function reviveFlight(data: FlightData) {
 			ssrManifest: {},
 		});
 	} else {
-		(globalThis as any).__webpack_require__ = () => {};
 		const { default: ReactClient } = await import(
 			"react-server-dom-webpack/client.browser"
 		);
