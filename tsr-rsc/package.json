@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"test": "vitest",
 		"tsc": "tsc -b",
 		"tsc-dev": "pnpm tsc --watch --preserveWatchOutput",
 		"tsr-gen": "tsr generate",
@@ -25,12 +26,18 @@
 		"@hiogawa/utils-node": "^0.0.1",
 		"@hiogawa/vite-plugin-ssr-middleware": "^0.0.3",
 		"@tanstack/router-cli": "^1.32.10",
+		"@types/estree": "^1.0.5",
 		"@types/node": "^20.12.12",
 		"@types/react": "^18.3.2",
 		"@types/react-dom": "^18.3.0",
 		"@vitejs/plugin-react": "^4.2.1",
+		"estree-walker": "^3.0.3",
+		"magic-string": "^0.30.10",
+		"periscopic": "^4.0.2",
 		"typescript": "^5.4.5",
-		"vite": "^5.2.11"
+		"vite": "^5.2.11",
+		"vitest": "^1.6.0",
+		"zimmerframe": "^1.1.2"
 	},
 	"packageManager": "pnpm@8.15.8+sha512.d1a029e1a447ad90bc96cd58b0fad486d2993d531856396f7babf2d83eb1823bb83c5a3d0fc18f675b2d10321d49eb161fece36fe8134aa5823ecd215feed392"
 }

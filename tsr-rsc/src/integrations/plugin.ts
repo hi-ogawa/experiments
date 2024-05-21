@@ -1,4 +1,8 @@
 import { type Plugin, type PluginOption, createServer } from "vite";
+import {
+	transformDirectiveExpose,
+	transformDirectiveProxy,
+} from "./flight/plugin";
 import { $__global } from "./global";
 
 export function vitePluginReactServer(): PluginOption {
@@ -28,7 +32,7 @@ export function vitePluginReactServer(): PluginOption {
 						],
 					},
 				},
-				plugins: [],
+				plugins: [vitePluginFlightLoaderServer()],
 			});
 		},
 		async buildEnd() {
@@ -43,16 +47,42 @@ function vitePluginFlightLoaderClient(): PluginOption {
 	const useServerTransform: Plugin = {
 		name: vitePluginFlightLoaderClient.name + ":use-server-transform",
 		transform(code, id, _options) {
+			// "use server" file
 			if (/^("use server"|'use server')/.test(code)) {
 				const matches = code.matchAll(/function (\w*)/g);
 				const names = [...matches].map((m) => m[1]);
 				const output = [
 					`import { createFlightLoader as $$flight } from "/src/integrations/flight/client"`,
 					...names.map(
+						// TODO: default
 						(name) => `export const ${name} = $$flight("${id + "#" + name}")`,
 					),
 				].join(";\n");
 				return { code: output, map: null };
+			}
+			// "use server" function
+			if (/("use server"|'use server')/.test(code)) {
+				transformDirectiveProxy(code, id);
+				return;
+			}
+		},
+	};
+
+	return [useServerTransform];
+}
+
+function vitePluginFlightLoaderServer(): PluginOption {
+	const useServerTransform: Plugin = {
+		name: vitePluginFlightLoaderClient.name + ":use-server-transform",
+		transform(code, _id, _options) {
+			// "use server" file (no-op)
+			if (/^("use server"|'use server')/.test(code)) {
+				return;
+			}
+			// "use server" function
+			if (/("use server"|'use server')/.test(code)) {
+				transformDirectiveExpose(code);
+				return;
 			}
 		},
 	};
