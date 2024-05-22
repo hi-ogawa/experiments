@@ -78,6 +78,8 @@ export function vitePluginReactServer(): PluginOption {
 		},
 	};
 
+	// orchestrate 3 builds from single browser build
+	//   server -> browser -> ssr
 	const buildPlugin: Plugin = {
 		name: vitePluginReactServer.name + ":build",
 		apply: (_config, env) =>
