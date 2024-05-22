@@ -1,3 +1,4 @@
+import { resolve } from "path";
 import {
 	vitePluginLogger,
 	vitePluginSsrMiddleware,
@@ -13,6 +14,7 @@ export default defineConfig({
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
 			entry: "/src/adapters/node",
+			preview: resolve("dist/ssr/index.js"),
 		}),
 		vitePluginReactServer(),
 		false && react(),
@@ -20,5 +22,8 @@ export default defineConfig({
 	],
 	optimizeDeps: {
 		entries: [],
+	},
+	build: {
+		minify: false,
 	},
 });

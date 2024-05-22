@@ -63,6 +63,8 @@ export async function transformDirectiveExpose(input: string) {
 				node.type === "FunctionDeclaration" &&
 				getFunctionDirective(node.body.body) === SERVER_DIRECTIVE
 			) {
+				// strip "use server"
+				output.update(node.body.body[0].start, node.body.body[0].end, `;`);
 				output.appendLeft(node.start, "export ");
 				const newNode: estree.ExportNamedDeclaration = {
 					type: "ExportNamedDeclaration",

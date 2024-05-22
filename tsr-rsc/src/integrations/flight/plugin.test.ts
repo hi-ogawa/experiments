@@ -47,7 +47,7 @@ export const Route = createFileRoute("/")({
 			import { dep } from "./dep";
 
 			export async function Page() {
-			  "use server";
+			  ;
 			  return dep;
 			}
 

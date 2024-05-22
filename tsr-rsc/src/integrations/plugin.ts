@@ -1,6 +1,11 @@
+import { join, resolve } from "path";
+import { readFile, readdir } from "fs/promises";
 import {
+	type InlineConfig,
 	type Plugin,
 	type PluginOption,
+	build,
+	createLogger,
 	createServer,
 	parseAstAsync,
 } from "vite";
@@ -11,50 +16,104 @@ import {
 import { $__global } from "./global";
 
 export function vitePluginReactServer(): PluginOption {
-	const mainPlugin: Plugin = {
-		name: vitePluginReactServer.name,
+	const reactServerViteConfig: InlineConfig = {
+		customLogger: createLogger(undefined, {
+			prefix: "[react-server]",
+			allowClearScreen: false,
+		}),
+		clearScreen: false,
+		configFile: false,
+		cacheDir: "node_modules/.vite-react-server",
+		optimizeDeps: {
+			entries: [],
+		},
+		ssr: {
+			resolve: {
+				conditions: ["react-server"],
+			},
+			noExternal: true,
+			optimizeDeps: {
+				include: [
+					"react",
+					"react/jsx-runtime",
+					"react/jsx-dev-runtime",
+					"react-server-dom-webpack/server.edge",
+				],
+			},
+		},
+		plugins: [
+			vitePluginFlightLoaderServer(),
+			vitePluginClientComponentServer(),
+		],
+		build: {
+			ssr: true,
+			outDir: "dist/server",
+			rollupOptions: {
+				input: {
+					index: "/src/integrations/flight/server",
+				},
+			},
+		},
+	};
+
+	const globalPlugin: Plugin = {
+		name: vitePluginReactServer.name + ":global",
+		configResolved(config) {
+			$__global.config = config;
+			$__global.clientRefereneIds ??= new Set();
+		},
+	};
+
+	const devPlugin: Plugin = {
+		name: vitePluginReactServer.name + ":dev",
+		apply: "serve",
 		configureServer(server) {
 			$__global.ssrServer = server;
 		},
 		async buildStart() {
-			$__global.reactServer = await createServer({
-				configFile: false,
-				cacheDir: "node_modules/.vite-react-server",
-				optimizeDeps: {
-					entries: [],
-				},
-				ssr: {
-					resolve: {
-						conditions: ["react-server"],
-					},
-					noExternal: true,
-					optimizeDeps: {
-						include: [
-							"react",
-							"react/jsx-runtime",
-							"react/jsx-dev-runtime",
-							"react-server-dom-webpack/server.edge",
-						],
-					},
-				},
-				plugins: [
-					vitePluginFlightLoaderServer(),
-					vitePluginClientComponentServer(),
-				],
-			});
+			$__global.reactServer = await createServer(reactServerViteConfig);
 		},
 		async buildEnd() {
 			await $__global.reactServer?.close();
 		},
 	};
 
-	return [mainPlugin, vitePluginFlightLoaderClient()];
+	const buildPlugin: Plugin = {
+		name: vitePluginReactServer.name + ":build",
+		apply: (_config, env) =>
+			(env.command === "build" && !env.isSsrBuild) || !!env.isPreview,
+		config(_config, _env) {
+			return { build: { outDir: "dist/browser" } };
+		},
+		async buildStart() {
+			await build(reactServerViteConfig);
+		},
+		async writeBundle() {
+			await build({
+				build: {
+					ssr: true,
+					outDir: "dist/ssr",
+				},
+			});
+		},
+	};
+
+	return [
+		globalPlugin,
+		devPlugin,
+		buildPlugin,
+		vitePluginFlightLoaderClient(),
+		vitePluginClientComponentClient(),
+	];
 }
 
 function vitePluginFlightLoaderClient(): PluginOption {
 	const useServerTransform: Plugin = {
 		name: vitePluginFlightLoaderClient.name + ":use-server-transform",
 		async transform(code, id, _options) {
+			if (id.includes("/node_modules")) {
+				return;
+			}
 			// "use server" file
 			if (/^("use server"|'use server')/.test(code)) {
 				const matches = code.matchAll(/function (\w*)/g);
@@ -101,7 +160,45 @@ function vitePluginFlightLoaderServer(): PluginOption {
 		},
 	};
 
-	return [useServerTransform];
+	const buildPlugin = createVirtualPlugin("server-references", async () => {
+		// TODO: for now, just crawl files
+		const files = await readdir(resolve("src/routes"), {
+			recursive: true,
+			withFileTypes: true,
+		});
+		const ids: string[] = [];
+		for (const f of files) {
+			if (f.isFile()) {
+				const id = join(f.parentPath, f.name);
+				const data = await readFile(id, "utf-8");
+				if (data.includes("use server")) {
+					ids.push(id);
+				}
+			}
+		}
+		const code = [
+			`export default {`,
+			...[...ids].map((id) => `"${id}": () => import("${id}"),`),
+			`}`,
+			"",
+		].join("\n");
+		return { code, map: null };
+	});
+
+	return [useServerTransform, buildPlugin];
+}
+
+function vitePluginClientComponentClient(): PluginOption {
+	return createVirtualPlugin("client-references", () => {
+		const ids = $__global.clientRefereneIds;
+		const code = [
+			`export default {`,
+			...[...ids].map((id) => `"${id}": () => import("${id}"),`),
+			`}`,
+			"",
+		].join("\n");
+		return { code, map: null };
+	});
 }
 
 function vitePluginClientComponentServer(): PluginOption {
@@ -109,6 +206,7 @@ function vitePluginClientComponentServer(): PluginOption {
 		name: vitePluginClientComponentServer.name + ":use-client-transform",
 		async transform(code, id, _options) {
 			if (/^("use client")|('use client')/.test(code)) {
+				$__global.clientRefereneIds.add(id);
 				const { names } = await transformUseClient(code);
 				let result = `import { registerClientReference as $$register } from "/src/integrations/flight/server";\n`;
 				for (const name of names) {
@@ -168,4 +266,22 @@ async function transformUseClient(input: string) {
 	}
 
 	return { names };
+}
+
+function createVirtualPlugin(name: string, load: Plugin["load"]) {
+	name = "virtual:" + name;
+	return {
+		name,
+		resolveId(source, _importer, _options) {
+			if (source === name || source.startsWith(`${name}?`)) {
+				return `\0${source}`;
+			}
+			return;
+		},
+		load(id, options) {
+			if (id === `\0${name}` || id.startsWith(`\0${name}?`)) {
+				return (load as any).apply(this, [id, options]);
+			}
+		},
+	} satisfies Plugin;
 }

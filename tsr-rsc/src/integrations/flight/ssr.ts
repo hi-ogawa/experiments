@@ -32,7 +32,7 @@ export async function importReactServer(): Promise<typeof import("./server")> {
 			"/src/integrations/flight/server",
 		);
 	} else {
-		throw new Error("todo");
+		mod = await import("/dist/server/index.js" as string);
 	}
 	return mod;
 }

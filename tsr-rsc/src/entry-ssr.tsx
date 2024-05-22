@@ -55,7 +55,8 @@ async function importIndexHtml() {
 		const mod = await import("/index.html?raw");
 		return await $__global.ssrServer.transformIndexHtml("/", mod.default);
 	} else {
-		throw new Error("todo");
+		const mod = await import("/dist/browser/index.html?raw");
+		return mod.default;
 	}
 }
 
