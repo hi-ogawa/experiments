@@ -13,7 +13,12 @@ async function loader() {
 		<div>
 			<div>server random: {Math.random().toString(36).slice(2)}</div>
 			<div>
-				<Link to="/posts">Client Link!</Link>
+				<Link
+					to="/posts"
+					className="block py-1 text-blue-800 hover:text-blue-600"
+				>
+					Client Link!
+				</Link>
 			</div>
 		</div>
 	);

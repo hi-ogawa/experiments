@@ -1,4 +1,4 @@
-# server component on tanstrackt-router
+# React server component on Tanstack router
 
 https://tanstack-router-rsc-demo.hiro18181.workers.dev
 

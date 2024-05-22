@@ -1,3 +1,4 @@
+import "./styles.css";
 import { tinyassert } from "@hiogawa/utils";
 import { StartClient } from "@tanstack/start";
 import React from "react";

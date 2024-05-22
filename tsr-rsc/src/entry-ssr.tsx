@@ -42,7 +42,13 @@ export async function handler(request: Request) {
 		() =>
 			`<head><script>window.__ssr_dehydrated_state__ = ${dehydratedStateScript}</script>`,
 	);
-
+	if (import.meta.env.DEV) {
+		// fix FOUC
+		html = html.replace(
+			`<head>`,
+			() => `<head><link rel="stylesheet" href="/src/styles.css?direct" />`,
+		);
+	}
 	return new Response(html, {
 		headers: {
 			"content-type": "text/html",
