@@ -29,7 +29,7 @@ function createBundlerConfig() {
 }
 
 export function registerClientReference(id: string, name: string) {
-	// mostly reuse everything with { $$async: true }
+	// force { $$async: true }
 	const reference = ReactServer.registerClientReference({}, id, name);
 	return Object.defineProperties(
 		{},
