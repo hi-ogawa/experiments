@@ -12,7 +12,6 @@ async function loader() {
 	return (
 		<div>
 			<div>server random: {Math.random().toString(36).slice(2)}</div>
-			<div>process.platform: {process.platform}</div>
 			<div>
 				<Link to="/posts">Client Link!</Link>
 			</div>

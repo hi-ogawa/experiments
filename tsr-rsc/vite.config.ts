@@ -13,7 +13,7 @@ export default defineConfig({
 	plugins: [
 		vitePluginLogger(),
 		vitePluginSsrMiddleware({
-			entry: "/src/adapters/node",
+			entry: process.env["SERVER_ENTRY"] || "/src/adapters/node",
 			preview: resolve("dist/ssr/index.js"),
 		}),
 		vitePluginReactServer(),
