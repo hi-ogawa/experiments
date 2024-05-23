@@ -1,0 +1,6 @@
+name = "tanstack-router-rsc-demo"
+
+main = "dist/ssr/index.js"
+assets = "dist/browser"
+workers_dev = true
+compatibility_date = "2024-01-01"
