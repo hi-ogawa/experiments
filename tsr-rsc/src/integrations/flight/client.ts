@@ -55,7 +55,11 @@ async function importClientReference(id: string) {
 	}
 }
 
-(globalThis as any).__webpack_require__ = memoize(importClientReference);
+export const importPromiseCache = new Map();
+
+(globalThis as any).__webpack_require__ = memoize(importClientReference, {
+	cache: importPromiseCache,
+});
 
 async function reviveFlight(data: FlightData) {
 	const stream = stringToStream(data[FLIGHT_KEY]);

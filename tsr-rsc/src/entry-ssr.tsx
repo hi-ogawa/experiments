@@ -1,13 +1,20 @@
 import { createMemoryHistory } from "@tanstack/react-router";
 import { StartServer } from "@tanstack/start/server";
 import ReactDOMServer from "react-dom/server.edge";
-import { stripRevivedFlightRecursive } from "./integrations/flight/client";
+import {
+	importPromiseCache,
+	stripRevivedFlightRecursive,
+} from "./integrations/flight/client";
 import { handleFlightRequest } from "./integrations/flight/ssr";
 import { $__global } from "./integrations/global";
 import { streamToString } from "./integrations/utils";
 import { createRouter } from "./router";
 
 export async function handler(request: Request) {
+	if (import.meta.env.DEV) {
+		importPromiseCache.clear();
+	}
+
 	const url = new URL(request.url);
 	if (url.pathname === "/__flight") {
 		return handleFlightRequest(request);

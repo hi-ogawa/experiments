@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "../client-export";
 import { LoaderDataComponent } from "../helper";
+import { Counter } from "./-client";
 
 export const Route = createFileRoute("/")({
 	component: LoaderDataComponent,
@@ -21,6 +22,9 @@ async function loader() {
 				>
 					Client Link!
 				</Link>
+			</div>
+			<div>
+				<Counter />
 			</div>
 		</div>
 	);
