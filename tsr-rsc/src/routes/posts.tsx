@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link, Outlet } from "../client-export";
+import { LoaderDataComponent } from "../helper";
 
 export type PostType = {
 	id: string;
@@ -8,13 +9,9 @@ export type PostType = {
 };
 
 export const Route = createFileRoute("/posts")({
+	component: LoaderDataComponent,
 	loader: () => loader(),
-	component: PostsComponent,
 });
-
-function PostsComponent() {
-	return Route.useLoaderData();
-}
 
 async function loader() {
 	"use server";

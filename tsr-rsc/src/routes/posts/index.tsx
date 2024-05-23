@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LoaderDataComponent } from "../../helper";
 
 export const Route = createFileRoute("/posts/")({
-	component: PostsIndexComponent,
+	component: LoaderDataComponent,
+	loader: () => loader(),
 });
 
-function PostsIndexComponent() {
+function loader() {
+	"use server";
 	return <div>Select a post.</div>;
 }

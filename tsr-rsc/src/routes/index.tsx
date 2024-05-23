@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "../client-export";
+import { LoaderDataComponent } from "../helper";
 
 export const Route = createFileRoute("/")({
+	component: LoaderDataComponent,
 	loader: () => loader(),
-	component: IndexComponent,
 });
 
 async function loader() {
 	"use server";
 	await new Promise((resolve) => setTimeout(resolve, 300));
 	return (
-		<div>
+		<div className="p-2">
+			<h3>Welcome Home!</h3>
 			<div>server random: {Math.random().toString(36).slice(2)}</div>
 			<div>
 				<Link
@@ -20,15 +22,6 @@ async function loader() {
 					Client Link!
 				</Link>
 			</div>
-		</div>
-	);
-}
-
-function IndexComponent() {
-	return (
-		<div className="p-2">
-			<h3>Welcome Home!</h3>
-			{Route.useLoaderData()}
 		</div>
 	);
 }

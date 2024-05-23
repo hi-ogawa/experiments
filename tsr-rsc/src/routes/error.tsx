@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LoaderDataComponent } from "../helper";
 
 export const Route = createFileRoute("/error")({
-	component: ErrorComponent,
+	component: LoaderDataComponent,
 	loader: () => loader(),
 	errorComponent: ({ error }) => {
 		return (
@@ -28,8 +29,4 @@ async function loader() {
 	}
 
 	return <Page />;
-}
-
-function ErrorComponent() {
-	return Route.useLoaderData();
 }

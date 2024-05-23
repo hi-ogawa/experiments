@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { LoaderDataComponent } from "../../helper";
 import type { PostType } from "../posts";
 
 export const Route = createFileRoute("/posts/$postId")({
+	component: LoaderDataComponent,
 	loader: ({ params }) => loader(params.postId),
-	component: Component,
 });
 
 async function loader(postId: string) {
@@ -20,8 +21,4 @@ async function loader(postId: string) {
 			<div className="text-sm">{post.body}</div>
 		</div>
 	);
-}
-
-function Component() {
-	return Route.useLoaderData();
 }
