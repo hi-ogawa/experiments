@@ -1,5 +1,4 @@
-import { createMemoryHistory } from "@tanstack/react-router";
-import { StartServer } from "@tanstack/start/server";
+import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
 import ReactDOMServer from "react-dom/server.edge";
 import {
 	importPromiseCache,
@@ -33,7 +32,7 @@ export async function handler(request: Request) {
 	await router.load();
 
 	const ssrStream = await ReactDOMServer.renderToReadableStream(
-		<StartServer router={router} />,
+		<RouterProvider router={router} />,
 	);
 	const ssrHtml = await streamToString(ssrStream);
 
