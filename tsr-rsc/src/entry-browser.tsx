@@ -1,6 +1,6 @@
 import "./styles.css";
 import { tinyassert } from "@hiogawa/utils";
-import { StartClient } from "@tanstack/start";
+import { RouterProvider } from "@tanstack/react-router";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { reviveFlightRecursive } from "./integrations/flight/client";
@@ -32,7 +32,7 @@ async function main() {
 	const el = document.getElementById("root");
 	tinyassert(el);
 	React.startTransition(() => {
-		ReactDOMClient.hydrateRoot(el, <StartClient router={router} />);
+		ReactDOMClient.hydrateRoot(el, <RouterProvider router={router} />);
 	});
 }
 
