@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { transformDirectiveExpose, transformDirectiveProxy } from "./plugin";
+import { transformDeadCodeElimination2, transformDirectiveExpose, transformDirectiveProxy } from "./plugin";
+import { parseAstAsync } from "vite";
+import MagicString from "magic-string";
 
 describe(transformDirectiveProxy, () => {
 	async function testTransformProxy(input: string) {
@@ -55,4 +57,114 @@ export const Route = createFileRoute("/")({
 			"
 		`);
 	});
+
+	it("repro", async () => {
+		const input = `\
+import { createFileRoute } from "@tanstack/react-router";
+import { dep } from "./dep";
+import { nonDep } from "./non-dep";
+
+async function loader() {
+  "use server";
+  return dep;
+}
+
+function f() {
+	nonDep;
+}
+
+export const Route = createFileRoute("/")({
+  loader: () => loader(),
+  component: () => f(),
 });
+`;
+
+		expect(await testTransformProxy(input)).toMatchInlineSnapshot(`
+			"import { createFlightLoader as $$flight } from "/src/integrations/flight/client";
+			import { createFileRoute } from "@tanstack/react-router";
+
+			import { nonDep } from "./non-dep";
+
+			const loader = $$flight("<id>#loader")
+
+			function f() {
+				nonDep;
+			}
+
+			export const Route = createFileRoute("/")({
+			  loader: () => loader(),
+			  component: () => f(),
+			});
+			"
+		`);
+
+		expect(await testTransformExpose(input)).toMatchInlineSnapshot(`
+			"
+			import { dep } from "./dep";
+			import { nonDep } from "./non-dep";
+
+			export async function loader() {
+			  ;
+			  return dep;
+			}
+
+			function f() {
+				nonDep;
+			}
+
+
+			"
+		`);
+	})
+});
+
+describe(transformDeadCodeElimination2, () => {
+	async function testDeadCode(input: string) {
+		const ast = await parseAstAsync(input);
+		const output = new MagicString(input);
+		transformDeadCodeElimination2(ast, output);
+		return output.toString();
+	}
+
+	it("basic", async () => {
+		const input = `\
+import { createFileRoute } from "@tanstack/react-router";
+import { dep } from "./dep";
+import { nonDep } from "./non-dep";
+
+export async function loader() {
+  "use server";
+  return dep;
+}
+
+function f() {
+	nonDep;
+}
+
+const Route = createFileRoute("/")({
+  loader: () => loader(),
+  component: () => f(),
+});
+`;
+		expect(await testDeadCode(input)).toMatchInlineSnapshot(`
+			"import { createFileRoute } from "@tanstack/react-router";
+			import { dep } from "./dep";
+			import { nonDep } from "./non-dep";
+
+			export async function loader() {
+			  "use server";
+			  return dep;
+			}
+
+			function f() {
+				nonDep;
+			}
+
+			const Route = createFileRoute("/")({
+			  loader: () => loader(),
+			  component: () => f(),
+			});
+			"
+		`);
+	});
+})

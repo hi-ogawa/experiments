@@ -116,6 +116,40 @@ function transformDeadCodeElimination(
 	});
 }
 
+export function transformDeadCodeElimination2(
+	ast: estree.Program,
+	output: MagicString,
+) {
+	// TODO: iterate
+	const removeSet = new Set<estree.Node>();
+
+	// remove unused decl
+	const scopes = periscopic.analyze(ast);
+	scopes.globals;
+	scopes.map;
+	for (const [name, decl] of scopes.scope.declarations) {
+		if (!scopes.scope.references.has(name)) {
+			removeSet.add(decl);
+		}
+	}
+
+	// remove empty import declaration
+	walk(ast, {
+		enter(node) {
+			if (removeSet.has(node)) {
+				this.remove();
+			}
+		},
+		leave(node) {
+			if (node.type === "ImportDeclaration") {
+				if (node.specifiers.length === 0) {
+					output.remove(node.start, node.end);
+				}
+			}
+		},
+	});
+}
+
 function getFunctionDirective(body: estree.Statement[]): string | undefined {
 	const stmt = body[0];
 	if (
