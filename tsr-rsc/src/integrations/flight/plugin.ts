@@ -125,6 +125,7 @@ export function transformDeadCodeElimination2(
 
 	// remove unused decl
 	const scopes = periscopic.analyze(ast);
+	console.log(scopes);
 	scopes.globals;
 	scopes.map;
 	for (const [name, decl] of scopes.scope.declarations) {

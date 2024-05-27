@@ -1,7 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { transformDeadCodeElimination2, transformDirectiveExpose, transformDirectiveProxy } from "./plugin";
-import { parseAstAsync } from "vite";
 import MagicString from "magic-string";
+import { parseAstAsync } from "vite";
+import { describe, expect, it } from "vitest";
+import {
+	transformDeadCodeElimination2,
+	transformDirectiveExpose,
+	transformDirectiveProxy,
+} from "./plugin";
 
 describe(transformDirectiveProxy, () => {
 	async function testTransformProxy(input: string) {
@@ -115,7 +119,7 @@ export const Route = createFileRoute("/")({
 
 			"
 		`);
-	})
+	});
 });
 
 describe(transformDeadCodeElimination2, () => {
@@ -126,7 +130,7 @@ describe(transformDeadCodeElimination2, () => {
 		return output.toString();
 	}
 
-	it("basic", async () => {
+	it.only("basic", async () => {
 		const input = `\
 import { createFileRoute } from "@tanstack/react-router";
 import { dep } from "./dep";
@@ -136,35 +140,17 @@ export async function loader() {
   "use server";
   return dep;
 }
-
-function f() {
-	nonDep;
-}
-
-const Route = createFileRoute("/")({
-  loader: () => loader(),
-  component: () => f(),
-});
 `;
 		expect(await testDeadCode(input)).toMatchInlineSnapshot(`
-			"import { createFileRoute } from "@tanstack/react-router";
+			"
 			import { dep } from "./dep";
-			import { nonDep } from "./non-dep";
+
 
 			export async function loader() {
 			  "use server";
 			  return dep;
 			}
-
-			function f() {
-				nonDep;
-			}
-
-			const Route = createFileRoute("/")({
-			  loader: () => loader(),
-			  component: () => f(),
-			});
 			"
 		`);
 	});
-})
+});
