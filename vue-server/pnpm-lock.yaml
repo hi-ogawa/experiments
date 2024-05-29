@@ -24,6 +24,9 @@ importers:
       '@hattip/adapter-node':
         specifier: ^0.0.45
         version: 0.0.45
+      '@hiogawa/transforms':
+        specifier: 0.0.0-pre.8
+        version: 0.0.0-pre.8
       '@hiogawa/utils':
         specifier: 1.6.4-pre.2
         version: 1.6.4-pre.2
@@ -618,6 +621,9 @@ packages:
     resolution: {integrity: sha512-GYEQN5n2JUzjLl9hdMJ+0mbsfwvldRKMBdxx+l29SxmRhOwyWURDyaSfX7UEkEmmxjbg4YqEoWyYgaAtxeW7Jw==}
     hasBin: true
 
+  '@hiogawa/transforms@0.0.0-pre.8':
+    resolution: {integrity: sha512-2XN6MVM2DbQbMGEMA6Pck1xpkauJ5cESG5xTEAzIY1Zs8n2pA/zjNnRv16PnJM2h4lSdMVY++QQg60dV02xttg==}
+
   '@hiogawa/utils@1.6.4-pre.2':
     resolution: {integrity: sha512-t49f46YPtqOBHWdceDX1PKK8dhIemFzNCFx2KtfCVUx0W4rZ4TtAyVAKbh7mJmLh/yITr3gNb0SxkfNyOZy0hQ==}
 
@@ -1088,6 +1094,9 @@ packages:
     resolution: {integrity: sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==}
     engines: {node: '>=0.12.0'}
 
+  is-reference@3.0.2:
+    resolution: {integrity: sha512-v3rht/LgVcsdZa3O2Nqs+NMowLOxeOm7Ay9+/ARQ2F+qEoANRcqrjAZKGN0v8ymUetZGgkp26LTnGT7H0Qo9Pg==}
+
   is-stream@3.0.0:
     resolution: {integrity: sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -1221,6 +1230,9 @@ packages:
 
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
+
+  periscopic@4.0.2:
+    resolution: {integrity: sha512-sqpQDUy8vgB7ycLkendSKS6HnVz1Rneoc3Rc+ZBUCe2pbqlVuCC5vF52l0NJ1aiMg/r1qfYF9/myz8CZeI2rjA==}
 
   picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
@@ -1550,6 +1562,9 @@ packages:
   youch@3.3.3:
     resolution: {integrity: sha512-qSFXUk3UZBLfggAW3dJKg0BMblG5biqSF8M34E06o5CSsZtH92u9Hqmj2RzGiHDi64fhe83+4tENFP2DB6t6ZA==}
 
+  zimmerframe@1.1.2:
+    resolution: {integrity: sha512-rAbqEGa8ovJy4pyBxZM70hg4pE6gDgaQ0Sl9M3enG3I0d6H4XSAM3GeNGLKnsBpuijUow064sf7ww1nutC5/3w==}
+
   zod@3.23.6:
     resolution: {integrity: sha512-RTHJlZhsRbuA8Hmp/iNL7jnfc4nZishjsanDAfEY1QpDQZCahUp3xDzl+zfweE9BklxMUcgBgS1b7Lvie/ZVwA==}
 
@@ -1868,6 +1883,12 @@ snapshots:
       '@hattip/headers': 0.0.45
       cac: 6.7.14
       mime-types: 2.1.35
+
+  '@hiogawa/transforms@0.0.0-pre.8':
+    dependencies:
+      estree-walker: 3.0.3
+      magic-string: 0.30.10
+      periscopic: 4.0.2
 
   '@hiogawa/utils@1.6.4-pre.2': {}
 
@@ -2386,6 +2407,10 @@ snapshots:
 
   is-number@7.0.0: {}
 
+  is-reference@3.0.2:
+    dependencies:
+      '@types/estree': 1.0.5
+
   is-stream@3.0.0: {}
 
   is-wsl@3.1.0:
@@ -2511,6 +2536,12 @@ snapshots:
   pathval@1.1.1: {}
 
   perfect-debounce@1.0.0: {}
+
+  periscopic@4.0.2:
+    dependencies:
+      '@types/estree': 1.0.5
+      is-reference: 3.0.2
+      zimmerframe: 1.1.2
 
   picocolors@1.0.0: {}
 
@@ -2835,5 +2866,7 @@ snapshots:
       cookie: 0.5.0
       mustache: 4.2.0
       stacktracey: 2.1.8
+
+  zimmerframe@1.1.2: {}
 
   zod@3.23.6: {}
