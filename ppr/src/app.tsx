@@ -26,7 +26,7 @@ export function App() {
 	);
 }
 
-export function Layout() {
+function Layout() {
 	return (
 		<div style={{ border: "1px solid #00000030", padding: "1rem" }}>
 			<h1>Static Layout</h1>
@@ -50,7 +50,7 @@ export function Layout() {
 	);
 }
 
-export function Page() {
+function Page() {
 	usePromise(() => new Promise((r) => setTimeout(r, 1000)));
 
 	return (
