@@ -15,7 +15,7 @@ export default defineConfig((env) => ({
 			preview: path.resolve("./dist/server/index.js"),
 		}),
 		{
-			name: "build-ppr",
+			name: "ppr:build",
 			apply: "build",
 			async closeBundle() {
 				const entry: typeof import("./src/entry-server") = await import(
