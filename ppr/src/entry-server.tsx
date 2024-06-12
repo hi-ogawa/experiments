@@ -1,16 +1,17 @@
 import ReactDOMServer from "react-dom/server.edge";
 import { App } from "./app";
-import { Readable } from "node:stream";
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { ssrContextStorage } from "./context";
+import { webToNodeHandler } from "@hiogawa/utils-node";
 
-export default async function handler(
-	req: IncomingMessage,
-	res: ServerResponse,
-) {
-	const htmlStream = await ssrContextStorage.run({ req }, () =>
+export default webToNodeHandler(handler);
+
+export async function handler(request: Request) {
+	const htmlStream = await ssrContextStorage.run({ request }, () =>
 		ReactDOMServer.renderToReadableStream(<App />),
 	);
-	res.setHeader("content-type", "text/html");
-	Readable.fromWeb(htmlStream as any).pipe(res);
+	return new Response(htmlStream, {
+		headers: {
+			"content-type": "text/html;charset=utf-8",
+		},
+	});
 }

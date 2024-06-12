@@ -15,6 +15,9 @@ importers:
         specifier: 0.0.0-experimental-a26e3f403e-20240611
         version: 0.0.0-experimental-a26e3f403e-20240611(react@0.0.0-experimental-a26e3f403e-20240611)
     devDependencies:
+      '@hiogawa/utils-node':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@hiogawa/vite-plugin-ssr-middleware':
         specifier: ^0.0.3
         version: 0.0.3(vite@5.2.13(@types/node@20.14.2))
@@ -311,6 +314,9 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
+
+  '@hiogawa/utils-node@0.0.1':
+    resolution: {integrity: sha512-vEir6KhApTlPPT+0wX85wglFgZjxG/WZGjWGahSR7+ltNkpY0OpmxozbF5sLodYgXPObTK8cKgsQ4nzFLtZQ8g==}
 
   '@hiogawa/vite-plugin-ssr-middleware@0.0.3':
     resolution: {integrity: sha512-84bzaAuImty4s4vHjOk5MQMzmDs0W0GP43fOTFhsBfj/MSJCNJ68elmPNZWs57WkIEzcdB4haY/P8Nf4ZGH8Qw==}
@@ -633,6 +639,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.21.5':
     optional: true
+
+  '@hiogawa/utils-node@0.0.1': {}
 
   '@hiogawa/vite-plugin-ssr-middleware@0.0.3(vite@5.2.13(@types/node@20.14.2))':
     dependencies:
