@@ -24,12 +24,13 @@ export default defineConfig((env) => ({
 				const { prelude, postponed } = await entry.prerender(
 					new Request("https://ppr.local"),
 				);
-				const html = await streamToString(prelude);
-				await fs.promises.writeFile("dist/server/prelude.html", html);
-				await fs.promises.writeFile(
-					"dist/server/postponed.json",
-					JSON.stringify(postponed, null, 2),
+				const preludeHtml = await streamToString(prelude);
+				let code = await fs.promises.readFile("dist/server/index.js", "utf-8");
+				code = code.replace(
+					"__PPR_BUILD__",
+					JSON.stringify({ preludeHtml, postponed }),
 				);
+				await fs.promises.writeFile("dist/server/index.js", code);
 			},
 		},
 	],

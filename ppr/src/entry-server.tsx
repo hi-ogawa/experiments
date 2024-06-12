@@ -34,6 +34,27 @@ async function handler(request: Request) {
 		});
 	}
 
+	if (import.meta.env.PROD && url.searchParams.has("ppr")) {
+		// @ts-expect-error injected by plugin
+		const { preludeHtml, postponed } = __PPR_BUILD__;
+		const resumed = await ssrContextStorage.run(
+			{ request, mode: "resume" },
+			() => ReactDOMServer.resume(<App />, postponed),
+		);
+		const merged = resumed.pipeThrough(
+			new TransformStream({
+				start(controller) {
+					controller.enqueue(new TextEncoder().encode(preludeHtml));
+				},
+			}),
+		);
+		return new Response(merged, {
+			headers: {
+				"content-type": "text/html;charset=utf-8",
+			},
+		});
+	}
+
 	const htmlStream = await ssrContextStorage.run(
 		{ request, mode: "render" },
 		() => ReactDOMServer.renderToReadableStream(<App />),
