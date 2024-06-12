@@ -13,6 +13,7 @@ export async function handler(request: Request) {
 			{ request, mode: "prerender" },
 			() => ReactDOMStatic.prerender(<App />),
 		);
+		console.log({ postponed });
 		if (url.searchParams.has("resume") && postponed) {
 			const resumed = await ssrContextStorage.run(
 				{ request, mode: "resume" },

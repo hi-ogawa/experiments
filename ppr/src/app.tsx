@@ -84,7 +84,7 @@ function Sleep(props: { id: string; ms: number }) {
 }
 
 function Postpone(props: React.PropsWithChildren) {
-	const ctx = ssrContextStorage.getStore();
+	const ctx = ssrContextStorage.getStore()!;
 	if (ctx.mode === "prerender") {
 		// @ts-expect-error
 		React.unstable_postpone();
