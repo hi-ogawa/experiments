@@ -23,13 +23,13 @@ async function handler(request: Request) {
 			);
 			return new Response(concatStreams([prelude, resumed]), {
 				headers: {
-					"content-type": "text/html;charset=utf-8",
+					"content-type": "text/html",
 				},
 			});
 		}
 		return new Response(prelude, {
 			headers: {
-				"content-type": "text/html;charset=utf-8",
+				"content-type": "text/html",
 			},
 		});
 	}
@@ -50,7 +50,7 @@ async function handler(request: Request) {
 		);
 		return new Response(merged, {
 			headers: {
-				"content-type": "text/html;charset=utf-8",
+				"content-type": "text/html",
 			},
 		});
 	}
@@ -61,7 +61,7 @@ async function handler(request: Request) {
 	);
 	return new Response(htmlStream, {
 		headers: {
-			"content-type": "text/html;charset=utf-8",
+			"content-type": "text/html",
 		},
 	});
 }
