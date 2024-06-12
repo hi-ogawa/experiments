@@ -1,4 +1,5 @@
 import React from "react";
+import css from "./index.css?raw";
 
 export function App() {
 	return (
@@ -10,11 +11,9 @@ export function App() {
 					name="viewport"
 					content="width=device-width, height=device-height, initial-scale=1.0"
 				/>
+				<style>{css}</style>
 				{import.meta.env.DEV && (
-					<>
-						<link rel="stylesheet" href="/src/index.css?direct" />
-						<script type="module" src="/@vite/client"></script>
-					</>
+					<script type="module" src="/@vite/client"></script>
 				)}
 			</head>
 			<body>
