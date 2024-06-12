@@ -1,0 +1,25 @@
+{
+	"name": "@hiogawa/ppr-experiment",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build && vite build --ssr",
+		"preview": "vite preview",
+		"lint": "biome format --write .",
+		"vc-build": "pnpm build && node misc/vercel/build.js"
+	},
+	"dependencies": {
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1"
+	},
+	"devDependencies": {
+		"@hiogawa/vite-plugin-ssr-middleware": "^0.0.3",
+		"@types/react": "^18.3.3",
+		"@types/react-dom": "^18.3.0",
+		"esbuild": "^0.21.5",
+		"vercel": "^34.2.6",
+		"vite": "^5.2.13"
+	},
+	"packageManager": "pnpm@9.3.0+sha512.ee7b93e0c2bd11409c6424f92b866f31d3ea1bef5fbe47d3c7500cdc3c9668833d2e55681ad66df5b640c61fa9dc25d546efa54d76d7f8bf54b13614ac293631"
+}
