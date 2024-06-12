@@ -2,9 +2,6 @@ import ReactDOMServer from "react-dom/server.edge";
 import ReactDOMStatic from "react-dom/static.edge";
 import { App } from "./app";
 import { ssrContextStorage } from "./context";
-import { webToNodeHandler } from "@hiogawa/utils-node";
-
-export default webToNodeHandler(handler);
 
 // TODO: demo (add link for each case?)
 // - [x] full ssr
@@ -12,7 +9,7 @@ export default webToNodeHandler(handler);
 // - [x] prerender + resume
 // - [ ] resume with prebuilt prerender
 
-async function handler(request: Request) {
+export async function handler(request: Request) {
 	const url = new URL(request.url);
 	if (url.searchParams.has("prerender")) {
 		const { postponed, prelude } = await prerender(request);
