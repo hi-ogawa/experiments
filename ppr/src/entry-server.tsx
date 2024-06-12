@@ -13,14 +13,22 @@ export async function handler(request: Request) {
 			{ request, mode: "prerender" },
 			() => ReactDOMStatic.prerender(<App />),
 		);
-		console.log({ postponed });
 		if (url.searchParams.has("resume") && postponed) {
 			const resumed = await ssrContextStorage.run(
 				{ request, mode: "resume" },
 				() => ReactDOMServer.resume(<App />, postponed),
 			);
-			resumed;
-			return new Response(prelude, {
+			const merged = new ReadableStream<Uint8Array>({
+				async start(controller) {
+					for (const stream of [prelude, resumed]) {
+						for await (const c of stream as any) {
+							controller.enqueue(c);
+						}
+					}
+					controller.close();
+				},
+			});
+			return new Response(merged, {
 				headers: {
 					"content-type": "text/html;charset=utf-8",
 				},
