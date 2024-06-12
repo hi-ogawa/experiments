@@ -1,5 +1,6 @@
 import React from "react";
 import css from "./index.css?raw";
+import { usePromise } from "./context";
 
 export function App() {
 	return (
@@ -30,7 +31,17 @@ export function Layout() {
 		<div style={{ border: "1px solid #00000030", padding: "1rem" }}>
 			<h1>Static Layout</h1>
 			<pre>[rendered at {new Date().toISOString()}]</pre>
-			<div style={{ border: "1px solid #00000030", padding: "1rem" }}>
+			<div
+				style={{
+					border: "1px solid #00000030",
+					padding: "1rem",
+					height: "8rem",
+					width: "20rem",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
 				<React.Suspense fallback={<div>Loading...</div>}>
 					<Page />
 				</React.Suspense>
@@ -40,6 +51,8 @@ export function Layout() {
 }
 
 export function Page() {
+	usePromise(() => new Promise((r) => setTimeout(r, 1000)));
+
 	return (
 		<div>
 			<h2>Dynamic Page</h2>
