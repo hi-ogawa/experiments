@@ -3,24 +3,17 @@ import React from "react";
 
 type SsrContext = {
 	request: Request;
-	prerender?: boolean;
+	mode: "render" | "prerender" | "resume";
 };
 
 export const ssrContextStorage = new AsyncLocalStorage<SsrContext>();
 
-const pormiseMap = new WeakMap<object, Promise<any>>();
+const cache = new WeakMap<object, any>();
 
-export function usePromise<T>(f: () => Promise<T>): T {
-	const ctx = ssrContextStorage.getStore();
-	let promise = pormiseMap.get(ctx);
-	if (!promise) {
-		promise = f();
-		pormiseMap.set(ctx, promise);
+export function useCache() {
+	const { request } = ssrContextStorage.getStore();
+	if (!cache.has(request)) {
+		cache.set(request, {});
 	}
-	return React.use(promise);
-}
-
-export function usePostpone() {
-	// @ts-expect-error
-	React.unstable_postpone();
+	return cache.get(request);
 }
