@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && vite build --ssr",
+		"build": "vite build --ssr",
 		"preview": "vite preview",
 		"lint": "biome format --write .",
 		"vc-build": "pnpm build && node misc/vercel/build.js"
