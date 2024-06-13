@@ -8,10 +8,7 @@ export function App() {
 			<head>
 				<meta charSet="UTF-8" />
 				<title>React PPR</title>
-				<meta
-					name="viewport"
-					content="width=device-width, height=device-height, initial-scale=1.0"
-				/>
+				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 				<style>{css}</style>
 				{import.meta.env.DEV && (
 					<script type="module" src="/@vite/client"></script>
@@ -57,7 +54,9 @@ function Layout() {
 			}}
 		>
 			<h2>Static</h2>
-			<pre>[rendered at {new Date().toISOString()}]</pre>
+			<pre style={{ whiteSpace: "wrap" }}>
+				[rendered at {new Date().toISOString()}]
+			</pre>
 			<div
 				style={{
 					background: "#00ff0010",
@@ -104,7 +103,9 @@ function Sleep(props: { id: string; ms: number }) {
 	return (
 		<div>
 			<h2>Dynamic {props.id}</h2>
-			<pre>[rendered at {new Date().toISOString()}]</pre>
+			<pre style={{ whiteSpace: "wrap" }}>
+				[rendered at {new Date().toISOString()}]
+			</pre>
 		</div>
 	);
 }
