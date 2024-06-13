@@ -34,7 +34,7 @@ function Layout() {
 				padding: "1rem",
 			}}
 		>
-			<h1>Static</h1>
+			<h2>Static</h2>
 			<pre>[rendered at {new Date().toISOString()}]</pre>
 			<div
 				style={{
@@ -46,9 +46,9 @@ function Layout() {
 					alignContent: "center",
 				}}
 			>
-				<React.Suspense fallback={<div>Sleeping 2 sec ...</div>}>
+				<React.Suspense fallback={<div>Sleeping 1 sec ...</div>}>
 					<Postpone>
-						<Sleep id="2" ms={2000} />
+						<Sleep id="1" ms={1000} />
 					</Postpone>
 				</React.Suspense>
 			</div>
@@ -61,9 +61,9 @@ function Layout() {
 					alignContent: "center",
 				}}
 			>
-				<React.Suspense fallback={<div>Sleeping 1 sec ...</div>}>
+				<React.Suspense fallback={<div>Sleeping 2 sec ...</div>}>
 					<Postpone>
-						<Sleep id="1" ms={1000} />
+						<Sleep id="2" ms={2000} />
 					</Postpone>
 				</React.Suspense>
 			</div>
