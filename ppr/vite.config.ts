@@ -56,6 +56,9 @@ export default defineConfig((_env) => ({
 			},
 		},
 	],
+	optimizeDeps: {
+		noDiscovery: true,
+	},
 	build: {
 		outDir: "dist/server",
 	},
