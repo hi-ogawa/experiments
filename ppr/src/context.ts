@@ -7,6 +7,7 @@ type SsrContext = {
 
 export const ssrContextStorage = new AsyncLocalStorage<SsrContext>();
 
+// TODO: make React.cache like api?
 // per-request cache
 const cache = new WeakMap<object, any>();
 

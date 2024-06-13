@@ -19,6 +19,28 @@ export function App() {
 			</head>
 			<body>
 				<div id="root">
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+							gap: "0.5rem",
+							padding: "0.5rem",
+							marginBottom: "1rem",
+						}}
+					>
+						<a className="btn" href="/">
+							SSR
+						</a>
+						<a className="btn" href="/?ppr">
+							PPR
+						</a>
+						<a className="btn" href="/?prerender">
+							Prerender only
+						</a>
+						<a className="btn" href="/?prerender&resume">
+							Prerender + Resume
+						</a>
+					</div>
 					<Layout />
 				</div>
 			</body>
@@ -41,7 +63,7 @@ function Layout() {
 					background: "#00ff0010",
 					marginBottom: "1rem",
 					height: "8rem",
-					width: "20rem",
+					width: "100%",
 					display: "grid",
 					alignContent: "center",
 				}}
@@ -56,7 +78,7 @@ function Layout() {
 				style={{
 					background: "#ff000010",
 					height: "8rem",
-					width: "20rem",
+					width: "100%",
 					display: "grid",
 					alignContent: "center",
 				}}
