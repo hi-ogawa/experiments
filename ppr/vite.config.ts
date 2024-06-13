@@ -6,7 +6,7 @@ import {
 import { defineConfig } from "vite";
 import fs from "node:fs";
 
-export default defineConfig((env) => ({
+export default defineConfig((_env) => ({
 	clearScreen: false,
 	plugins: [
 		vitePluginLogger(),
@@ -57,7 +57,7 @@ export default defineConfig((env) => ({
 		},
 	],
 	build: {
-		outDir: env.isSsrBuild ? "dist/server" : "dist/client",
+		outDir: "dist/server",
 	},
 }));
 
