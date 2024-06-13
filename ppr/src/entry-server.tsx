@@ -3,12 +3,6 @@ import ReactDOMStatic from "react-dom/static.edge";
 import { App } from "./app";
 import { ssrContextStorage } from "./context";
 
-// TODO: demo (add link for each case?)
-// - [x] full ssr
-// - [x] prerender only
-// - [x] prerender + resume
-// - [ ] resume with prebuilt prerender
-
 export async function handler(request: Request) {
 	const url = new URL(request.url);
 	if (url.searchParams.has("prerender")) {
