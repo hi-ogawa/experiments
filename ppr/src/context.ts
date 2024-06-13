@@ -7,14 +7,13 @@ type SsrContext = {
 
 export const ssrContextStorage = new AsyncLocalStorage<SsrContext>();
 
-// TODO: make React.cache like api?
 // per-request cache
 const cache = new WeakMap<object, any>();
 
-export function useCache() {
+export function useCache<T>(key: string, f: () => T): T {
 	const { request } = ssrContextStorage.getStore()!;
 	if (!cache.has(request)) {
 		cache.set(request, {});
 	}
-	return cache.get(request);
+	return (cache.get(request)[key] ??= f());
 }

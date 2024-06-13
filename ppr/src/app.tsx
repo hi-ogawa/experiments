@@ -94,8 +94,12 @@ function Layout() {
 }
 
 function Sleep(props: { id: string; ms: number }) {
-	const cache = useCache();
-	React.use((cache[props.id] ??= new Promise((r) => setTimeout(r, props.ms))));
+	React.use(
+		useCache(
+			`sleep-${props.id}`,
+			() => new Promise((r) => setTimeout(r, props.ms)),
+		),
+	);
 
 	return (
 		<div>
