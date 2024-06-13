@@ -1,3 +1,5 @@
+/* based on https://github.com/vitejs/vite/blob/1e07003c65187c6ef7e3115f296908a5bd47aec8/packages/create-vite/template-react-ts/src/index.css */
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   color: #213547;
