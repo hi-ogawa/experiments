@@ -1,10 +1,10 @@
+import fs from "node:fs";
 import path from "node:path";
 import {
 	vitePluginLogger,
 	vitePluginSsrMiddleware,
 } from "@hiogawa/vite-plugin-ssr-middleware";
 import { defineConfig } from "vite";
-import fs from "node:fs";
 
 export default defineConfig((_env) => ({
 	clearScreen: false,
