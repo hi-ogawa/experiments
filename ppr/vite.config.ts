@@ -22,7 +22,7 @@ export default defineConfig((_env) => ({
 			},
 		},
 		vitePluginSsrMiddleware({
-			entry: "/src/adapters/node",
+			entry: process.env["SSR_ENTRY"] || "/src/adapters/node",
 			preview: path.resolve("./dist/server/index.js"),
 		}),
 		{

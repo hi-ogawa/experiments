@@ -6,7 +6,8 @@
 		"dev": "vite dev",
 		"build": "vite build --ssr",
 		"preview": "vite preview",
-		"lint": "biome format --write ."
+		"lint": "biome format --write .",
+		"vc-build": "SSR_ENTRY=/src/adapters/vercel-edge pnpm build && node misc/vercel/build.js"
 	},
 	"dependencies": {
 		"react": "0.0.0-experimental-a26e3f403e-20240611",

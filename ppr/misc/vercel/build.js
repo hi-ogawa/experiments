@@ -27,15 +27,13 @@ async function main() {
 	// bundle server
 	await esbuild.build({
 		entryPoints: ["dist/server/index.js"],
-		outfile: ".vercel/output/functions/index.func/index.mjs",
+		outfile: ".vercel/output/functions/index.func/index.js",
 		bundle: true,
 		format: "esm",
-		platform: "node",
+		platform: "browser",
+		external: ["node:async_hooks"],
 		define: {
 			"process.env.NODE_ENV": `"production"`,
-		},
-		banner: {
-			js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
 		},
 	});
 }
