@@ -31,7 +31,7 @@ export function App() {
 						<a className="btn" href="/">
 							SSR
 						</a>
-						<a className="btn" href="/?ppr">
+						<a className="btn" href="/?ppr" aria-disabled={import.meta.env.DEV}>
 							PPR
 						</a>
 						<a className="btn" href="/?prerender">

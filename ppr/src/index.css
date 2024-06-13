@@ -63,3 +63,9 @@ h1 {
 .btn:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+
+.btn[aria-disabled="true"] {
+  color: #666;
+  opacity: 0.6;
+  pointer-events: none;
+}
