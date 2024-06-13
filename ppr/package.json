@@ -9,6 +9,7 @@
 		"lint": "biome format --write .",
 		"cf-build": "SSR_ENTRY=/src/adapters/cf pnpm build && bash misc/cf/build.sh",
 		"cf-preview": "cd misc/cf && wrangler dev",
+		"cf-release": "cd misc/cf && wrangler deploy",
 		"vc-build": "SSR_ENTRY=/src/adapters/vercel-edge pnpm build && node misc/vercel/build.js"
 	},
 	"dependencies": {

@@ -18,6 +18,5 @@ npx esbuild ../../dist/server/index.js \
   --log-override:ignored-bare-import=silent \
   --external:node:async_hooks \
   --bundle \
-  --minify \
   --format=esm \
   --platform=browser
