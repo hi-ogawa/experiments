@@ -6,8 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build --ssr",
 		"preview": "vite preview",
-		"lint": "biome format --write .",
-		"vc-build": "pnpm build && node misc/vercel/build.js"
+		"lint": "biome format --write ."
 	},
 	"dependencies": {
 		"react": "0.0.0-experimental-a26e3f403e-20240611",
