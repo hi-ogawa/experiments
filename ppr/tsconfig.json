@@ -1,0 +1,16 @@
+{
+	"exclude": ["node_modules"],
+	"compilerOptions": {
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"verbatimModuleSyntax": true,
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
+		"target": "ESNext",
+		"lib": ["ESNext", "DOM", "DOM.Iterable", "ESNext.AsyncIterable"],
+		"types": ["vite/client", "react/experimental", "react-dom/experimental"],
+		"jsx": "react-jsx",
+		"noEmit": true
+	}
+}

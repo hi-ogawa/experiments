@@ -1,0 +1,61 @@
+/* based on https://github.com/vitejs/vite/blob/1e07003c65187c6ef7e3115f296908a5bd47aec8/packages/create-vite/template-react-ts/src/index.css */
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color: #213547;
+  background-color: #ffffff;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #747bff;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-height: 100vh;
+}
+
+h2 {
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+
+#root {
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.btn {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+.btn:hover {
+  border-color: #646cff;
+}
+
+.btn:focus,
+.btn:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.btn[aria-disabled="true"] {
+  color: #666;
+  opacity: 0.6;
+  pointer-events: none;
+}

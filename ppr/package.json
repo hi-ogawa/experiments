@@ -1,0 +1,38 @@
+{
+	"name": "@hiogawa/ppr-experiment",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build --ssr",
+		"preview": "vite preview",
+		"tsc": "tsc -b",
+		"tsc-dev": "pnpm tsc --watch --preserveWatchOutput",
+		"lint": "biome check --write .",
+		"lint-check": "biome check .",
+		"test-e2e": "playwright test",
+		"test-e2e-preview": "E2E_PREVIEW=1 playwright test",
+		"cf-build": "SSR_ENTRY=/src/adapters/cf pnpm build && bash misc/cf/build.sh",
+		"cf-preview": "cd misc/cf && wrangler dev",
+		"cf-release": "cd misc/cf && wrangler deploy",
+		"vc-build": "SSR_ENTRY=/src/adapters/vercel-edge pnpm build && node misc/vercel/build.js",
+		"vc-release": "vercel deploy --prebuilt"
+	},
+	"dependencies": {
+		"react": "0.0.0-experimental-a26e3f403e-20240611",
+		"react-dom": "0.0.0-experimental-a26e3f403e-20240611"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.8.1",
+		"@hiogawa/utils-node": "^0.0.1",
+		"@hiogawa/vite-plugin-ssr-middleware": "^0.0.3",
+		"@playwright/test": "^1.44.1",
+		"@types/node": "^20.14.2",
+		"@types/react": "^18.3.3",
+		"@types/react-dom": "^18.3.0",
+		"esbuild": "^0.21.5",
+		"typescript": "^5.4.5",
+		"vite": "^5.2.13"
+	},
+	"packageManager": "pnpm@9.3.0+sha512.ee7b93e0c2bd11409c6424f92b866f31d3ea1bef5fbe47d3c7500cdc3c9668833d2e55681ad66df5b640c61fa9dc25d546efa54d76d7f8bf54b13614ac293631"
+}
