@@ -4,8 +4,8 @@ Script for Vercel Build Output API (v3) based on https://github.com/hi-ogawa/rep
 
 ```sh
 # initial project setup
-vercel projects add ppr-experiment
-vercel link -p ppr-experiment
+vercel projects add ppr-experiment-hiroshi
+vercel link -p ppr-experiment-hiroshi
 
 # deploy
 vercel deploy
