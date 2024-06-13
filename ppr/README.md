@@ -1,10 +1,22 @@
 Minimal PPR (Partial prerendering) demo based on React experimental API
 
-- `React.postpone`
-- `ReactDOMStatic.prerender`
-- `ReactDOMServer.resume`
+- `postpone` from `react`
+- `prerender` from `react-dom/static.edge`
+- `resume` from `react-dom/server.edge`
 
-Deployed to
+```sh
+pnpm dev
+
+# local preview
+pnpm build
+pnpm preview
+
+# cloudflare
+pnpm cf-build
+pnpm cf-release
+```
+
+Deployment
 
 - https://ppr-experiment.hiro18181.workers.dev/?ppr
 - https://ppr-experiment-hiroshi.vercel.app/?ppr (not working)
