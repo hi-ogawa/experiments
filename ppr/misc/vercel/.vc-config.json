@@ -1,4 +1,4 @@
 {
-  "runtime": "edge",
-  "entrypoint": "index.js"
+	"runtime": "edge",
+	"entrypoint": "index.js"
 }
