@@ -14,7 +14,7 @@ export default defineConfig((_env) => ({
 			name: "no-compression",
 			configurePreviewServer(server) {
 				server.middlewares.use((req, _res, next) => {
-					// gzip seems to break html streaming
+					// compressions seems to break html streaming
 					// https://github.com/hi-ogawa/vite/blob/9f5c59f07aefb1756a37bcb1c0aff24d54288950/packages/vite/src/node/preview.ts#L178
 					delete req.headers["accept-encoding"];
 					next();
