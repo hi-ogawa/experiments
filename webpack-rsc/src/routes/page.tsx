@@ -1,10 +1,9 @@
 import React from "react";
 import reactLogo from "../assets/react.svg?inline";
 import webpackLogo from "../assets/webpack.svg?inline";
+import { Counter, Hydrated } from "./_client";
 
 export default function Page() {
-	// const [count, setCount] = React.useState(0);
-
 	return (
 		<div>
 			<div>
@@ -17,11 +16,11 @@ export default function Page() {
 			</div>
 			<h1>Webpack RSC</h1>
 			<pre>{React.version}</pre>
-			{/* <pre>[hydrated: {String(useHydrated())}]</pre> */}
+			<pre>
+				<Hydrated />
+			</pre>
 			<div className="card">
-				{/* <button onClick={() => setCount((count) => count + 1)}>
-					count is {count}
-				</button> */}
+				<Counter />
 				<p style={{ display: "none" }}>
 					Edit <code>src/App.tsx</code> and save to test HMR
 				</p>
@@ -37,11 +36,3 @@ export default function Page() {
 		</div>
 	);
 }
-
-// function useHydrated() {
-// 	return React.useSyncExternalStore(
-// 		React.useCallback(() => () => {}, []),
-// 		() => true,
-// 		() => false,
-// 	);
-// }
