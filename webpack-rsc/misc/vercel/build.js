@@ -13,10 +13,13 @@ async function main() {
 	);
 
 	// static
-	await cp("dist/client", ".vercel/output/static", { recursive: true });
+	await cp("dist/browser", ".vercel/output/static", { recursive: true });
 
 	// function
 	await mkdir(".vercel/output/functions/index.func", { recursive: true });
+	await cp("dist/server", ".vercel/output/functions/index.func", {
+		recursive: true,
+	});
 	await cp(
 		join(import.meta.dirname, ".vc-config.json"),
 		".vercel/output/functions/index.func/.vc-config.json",
@@ -24,10 +27,6 @@ async function main() {
 	await cp(
 		join(import.meta.dirname, "entry.mjs"),
 		".vercel/output/functions/index.func/entry.mjs",
-	);
-	await cp(
-		"dist/server/server.cjs",
-		".vercel/output/functions/index.func/server.cjs",
 	);
 }
 

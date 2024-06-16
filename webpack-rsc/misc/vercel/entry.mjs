@@ -1,3 +1,3 @@
 // re-export cjs handler
-import server from "./server.cjs";
+import server from "./index.cjs";
 export default server.handler;
