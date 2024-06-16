@@ -5,6 +5,8 @@ import type { StatsCompilation } from "webpack";
 import type { FlightData } from "./entry-server";
 import * as entryReactServer from "./entry-server-layer";
 
+declare let __webpack_chunk_load__: any;
+
 export async function handler(request: Request) {
 	const url = new URL(request.url);
 
@@ -22,13 +24,47 @@ export async function handler(request: Request) {
 
 	// ensure chunk here for now
 	// TODO: how to use `chunks`?
-	console.log(await import("./routes/_client"));
+	// const clientReferences = [() => import("./routes/_client")];
+	// console.log(clientReferences);
+	// console.log(await import("./routes/_client"));
+
+	// emit chunk
+	() => import("./routes/_client");
+	// ensure chunk is ready
+	console.log(await __webpack_chunk_load__("_ssr_src_routes__client_tsx"));
 
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
 		{
-			ssrManifest: {},
+			ssrManifest: {
+				moduleMap: new Proxy(
+					{},
+					{
+						get(_target, id, _receiver) {
+							return new Proxy(
+								{},
+								{
+									get(_target, name, _receiver) {
+										console.log("[ssr.moduleMap]", {
+											id,
+											name,
+										});
+										return {
+											// id,
+											id: "(ssr)/./src/routes/_client.tsx",
+											name,
+											chunks: [],
+											// preload
+											// chunks: ["_ssr_src_routes__client_tsx"],
+										};
+									},
+								},
+							);
+						},
+					},
+				),
+			},
 		},
 	);
 	const ssrRoot = (

@@ -5,6 +5,9 @@ import ReactServer from "react-server-dom-webpack/server.edge";
 
 export const Hydrated = ReactServer.registerClientReference(
 	{},
-	"(ssr)/./src/routes/_client.tsx",
+	// TODO: how to map same id on ssr and browser?
+	// (is it necessary to modify ssrManifest.moduleMap just for SSR?)
+	// "(ssr)/./src/routes/_client.tsx",
+	"./src/routes/_client.tsx",
 	"Hydrated",
 ) as React.ComponentType;

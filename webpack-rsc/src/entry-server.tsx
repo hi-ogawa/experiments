@@ -43,11 +43,13 @@ function createBundlerConfig() {
 		{
 			get(_target, p: string, _receiver) {
 				const [id, name] = p.split("#");
-				console.log("[bundlerConfig]", { p, id, name });
+				console.log("[server.bundlerConfig]", { p, id, name });
 				return {
 					id,
 					name,
 					chunks: [
+						// '_ssr_src_routes__client_tsx',
+						// "(ssr)/./src/routes/_client.tsx",
 						// '_ssr_src_routes__client_tsx'
 						// id
 					],

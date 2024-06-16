@@ -8,6 +8,15 @@ async function main() {
 		return;
 	}
 
+	// TODO: "assets/" prefix is breaking something?
+
+	// emit chunk
+	() => import("./routes/_client");
+	// ensure chunk is ready
+	// TODO: needs to ensure transitive chunks?
+	// @ts-ignore
+	console.log(await __webpack_chunk_load__("src_routes__client_tsx"));
+
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		(globalThis as any).__flightStream,
