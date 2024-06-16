@@ -1,5 +1,6 @@
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
+import { clientBrowserManifest } from "./routes/_client-meta-server";
 
 export type FlightData = React.ReactNode;
 
@@ -8,7 +9,7 @@ export async function handler(request: Request) {
 	const node = <Router request={request} />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		node,
-		createBundlerConfig(),
+		clientBrowserManifest,
 	);
 	return flightStream;
 }
@@ -35,26 +36,4 @@ async function Router(props: { request: Request }) {
 	node = <Layout>{node}</Layout>;
 
 	return node;
-}
-
-function createBundlerConfig() {
-	return new Proxy(
-		{},
-		{
-			get(_target, p: string, _receiver) {
-				const [id, name] = p.split("#");
-				console.log("[server.bundlerConfig]", { p, id, name });
-				return {
-					id,
-					name,
-					chunks: [
-						// '_ssr_src_routes__client_tsx',
-						// "(ssr)/./src/routes/_client.tsx",
-						// '_ssr_src_routes__client_tsx'
-						// id
-					],
-				};
-			},
-		},
-	);
 }
