@@ -10,6 +10,7 @@
 		"preview": "vite preview",
 		"test-e2e": "playwright test",
 		"test-e2e-preview": "E2E_PREVIEW=1 playwright test",
+		"tsc": "tsc -b",
 		"lint": "biome check --write .",
 		"lint-check": "biome check .",
 		"vc-build": "pnpm build && node misc/vercel/build.js",
