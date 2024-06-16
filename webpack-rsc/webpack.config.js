@@ -3,6 +3,7 @@
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { tinyassert } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
@@ -109,10 +110,13 @@ export default function (env, _argv) {
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
 
+					/** @type {import("webpack-dev-server")} */
+					let devServer;
+
 					/**
 					 * @type {import("webpack-dev-server").Configuration}
 					 */
-					const devServer = {
+					const devServerConfig = {
 						host: "localhost",
 						static: {
 							serveIndex: false,
@@ -123,7 +127,9 @@ export default function (env, _argv) {
 							serverSideRender: true,
 						},
 						// https://webpack.js.org/configuration/dev-server/#devserversetupmiddlewares
-						setupMiddlewares: (middlewares, _devServer) => {
+						setupMiddlewares: (middlewares, devServer_) => {
+							devServer = devServer_;
+
 							middlewares.push({
 								name: "dev-ssr",
 								// @ts-ignore
@@ -142,7 +148,7 @@ export default function (env, _argv) {
 							return middlewares;
 						},
 					};
-					compiler.options.devServer = devServer;
+					compiler.options.devServer = devServerConfig;
 
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(name, () => {
@@ -152,6 +158,14 @@ export default function (env, _argv) {
 								delete require.cache[key];
 							}
 						}
+
+						// custom event to full reload browser
+						tinyassert(devServer);
+						tinyassert(devServer.webSocketServer);
+						devServer.sendMessage(
+							devServer.webSocketServer.clients,
+							"custom:update-server",
+						);
 					});
 				},
 			},
