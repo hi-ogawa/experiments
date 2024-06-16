@@ -31,7 +31,7 @@ export async function handler(request: Request) {
 		<>
 			{node}
 			{/* send a copy of flight stream together with ssr */}
-			<StreamTransfer stream={flightStream2} />;
+			<StreamTransfer stream={flightStream2} />
 		</>
 	);
 

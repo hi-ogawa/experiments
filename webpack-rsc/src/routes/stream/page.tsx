@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Page() {
 	return (
-		<div id="root">
+		<div>
 			<h1>Stream</h1>
 			<div></div>
 			<React.Suspense fallback={<div>Sleeping 1 sec...</div>}>

@@ -10,7 +10,9 @@ export default function Layout(props: React.PropsWithChildren) {
 				<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 				<style>{css}</style>
 			</head>
-			<body>{props.children}</body>
+			<body>
+				<div id="root">{props.children}</div>
+			</body>
 		</html>
 	);
 }

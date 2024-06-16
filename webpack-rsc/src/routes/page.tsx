@@ -6,7 +6,7 @@ export default function Page() {
 	// const [count, setCount] = React.useState(0);
 
 	return (
-		<div id="root">
+		<div>
 			<div>
 				<a href="https://webpack.js.org" target="_blank">
 					<img src={webpackLogo} className="logo" alt="Vite logo" />
