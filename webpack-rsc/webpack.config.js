@@ -27,7 +27,7 @@ export default function (env, _argv) {
 	 * @satisfies {import("webpack").Configuration}
 	 */
 	const commonConfig = {
-		mode: "development",
+		mode: dev ? "development" : "production",
 		devtool: "source-map",
 		resolve: {
 			extensions: [".tsx", ".ts", "..."],
@@ -70,6 +70,9 @@ export default function (env, _argv) {
 				type: "commonjs-static",
 			},
 			clean: true,
+		},
+		optimization: {
+			minimize: false,
 		},
 		// TODO: https://webpack.js.org/configuration/externals
 		externals: {},
