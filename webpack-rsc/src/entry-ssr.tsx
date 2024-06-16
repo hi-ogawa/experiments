@@ -20,6 +20,10 @@ export async function handler(request: Request) {
 
 	const [flightStream1, flightStream2] = flightStream.tee();
 
+	// ensure chunk here for now
+	// TODO: how to use `chunks`?
+	console.log(await import("./routes/_client"));
+
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
