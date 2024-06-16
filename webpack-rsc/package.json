@@ -8,6 +8,8 @@
 		"dev-webpack": "node --watch-path webpack.config.js --watch-preserve-output node_modules/webpack/bin/webpack.js serve",
 		"build": "webpack && cp -r public/. dist/browser",
 		"preview": "vite preview",
+		"test-e2e": "playwright test",
+		"test-e2e-preview": "E2E_PREVIEW=1 playwright test",
 		"lint": "biome check --write .",
 		"lint-check": "biome check .",
 		"vc-build": "pnpm build && node misc/vercel/build.js",
@@ -23,6 +25,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.8.1",
 		"@hiogawa/utils-node": "^0.0.1",
+		"@playwright/test": "^1.44.1",
 		"@types/node": "^20.14.2",
 		"@types/react": "^18.3.3",
 		"@types/react-dom": "^18.3.0",
