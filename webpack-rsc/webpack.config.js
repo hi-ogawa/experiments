@@ -95,6 +95,11 @@ export default function (env, _argv) {
 					},
 				},
 				...commonConfig.module.rules,
+				// {
+				// 	issuerLayer: "server",
+				// 	test: /\.[tj]sx?$/,
+				// 	use: path.resolve("./src/lib/loader-server-use-client.js"),
+				// },
 			],
 		},
 		plugins: [
