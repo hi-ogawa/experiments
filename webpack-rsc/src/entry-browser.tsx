@@ -9,7 +9,7 @@ async function main() {
 	}
 
 	// emit chunk (manually for now)
-	() => import("./routes/_client");
+	() => import(/* webpackMode: 'eager' */ "./routes/_client");
 
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
