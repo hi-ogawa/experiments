@@ -5,6 +5,7 @@ import { defineConfig } from "vite";
 // borrow vite preview server
 
 export default defineConfig({
+	appType: "custom",
 	plugins: [
 		{
 			name: "preview-middleware",
