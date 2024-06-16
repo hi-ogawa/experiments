@@ -27,18 +27,28 @@ export async function handler(request: Request) {
 			ssrManifest: {},
 		},
 	);
-
-	function SsrRoot() {
-		return (
-			<>
-				{node}
-				{/* send a copy of flight stream together with ssr */}
-				<StreamTransfer stream={flightStream2} />;
-			</>
-		);
-	}
+	const ssrRoot = (
+		<>
+			{node}
+			{/* send a copy of flight stream together with ssr */}
+			<StreamTransfer stream={flightStream2} />;
+		</>
+	);
 
 	// react dom ssr (react node -> html)
+	const bootstrapScripts = await getClientAssets();
+	const htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
+		bootstrapScripts,
+	});
+
+	return new Response(htmlStream, {
+		headers: {
+			"content-type": "text/html;charset=utf-8",
+		},
+	});
+}
+
+async function getClientAssets() {
 	let bootstrapScripts: string[] = [];
 	if (__define.DEV) {
 		bootstrapScripts = ["/assets/index.js"];
@@ -50,15 +60,7 @@ export async function handler(request: Request) {
 			(file) => `/assets/${file}`,
 		);
 	}
-	const htmlStream = await ReactDOMServer.renderToReadableStream(<SsrRoot />, {
-		bootstrapScripts,
-	});
-
-	return new Response(htmlStream, {
-		headers: {
-			"content-type": "text/html;charset=utf-8",
-		},
-	});
+	return bootstrapScripts;
 }
 
 // based on https://github.com/remix-run/react-router/blob/09b52e491e3927e30e707abe67abdd8e9b9de946/packages/react-router/lib/dom/ssr/single-fetch.tsx#L49
