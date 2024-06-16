@@ -60,7 +60,7 @@ export default function (env, _argv) {
 		name: "server",
 		target: "node20",
 		entry: {
-			server: "./src/entry-ssr-layer",
+			index: "./src/entry-ssr-layer",
 		},
 		output: {
 			path: path.resolve("./dist/server"),
@@ -107,7 +107,7 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const name = "dev-ssr";
 					const serverDir = path.resolve("./dist/server");
-					const serverPath = path.resolve("./dist/server/server.cjs");
+					const serverPath = path.join(serverDir, "index.cjs");
 
 					/**
 					 * @type {import("webpack-dev-server").Configuration}

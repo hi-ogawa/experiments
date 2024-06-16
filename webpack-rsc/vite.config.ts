@@ -15,7 +15,7 @@ export default defineConfig({
 					next();
 				});
 
-				const mod = await import(path.resolve("./dist/server/server.cjs"));
+				const mod = await import(path.resolve("./dist/server/index.cjs"));
 				return () => {
 					server.middlewares.use(webToNodeHandler(mod.handler));
 				};
