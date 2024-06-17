@@ -1,6 +1,5 @@
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
-import { clientBrowserManifest } from "./routes/_client-meta-server";
 
 export type FlightData = React.ReactNode;
 
@@ -9,9 +8,31 @@ export async function handler(request: Request) {
 	const node = <Router request={request} />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		node,
-		clientBrowserManifest,
+		await getBundlerConfig(),
 	);
 	return flightStream;
+}
+
+async function getBundlerConfig() {
+	if (1) {
+		// manual manifest for now
+		return {
+			"./src/routes/_client.tsx#Hydrated": {
+				id: "./src/routes/_client.tsx",
+				name: "Hydrated",
+				// eager chunk for now
+				chunks: [],
+				// chunks: ["src_routes__client_tsx"],
+			},
+			"./src/routes/_client.tsx#Counter": {
+				id: "./src/routes/_client.tsx",
+				name: "Counter",
+				chunks: [],
+				// chunks: ["src_routes__client_tsx"],
+			},
+		};
+	}
+	return import(/* webpackIgnore: true */ "./__bundler_config.js" as string);
 }
 
 const routes = {

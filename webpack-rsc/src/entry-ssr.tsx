@@ -4,7 +4,6 @@ import ReactClient from "react-server-dom-webpack/client.edge";
 import type { StatsCompilation } from "webpack";
 import type { FlightData } from "./entry-server";
 import * as entryReactServer from "./entry-server-layer";
-import { clientSsrManifest } from "./routes/_client-meta-ssr";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
@@ -28,7 +27,7 @@ export async function handler(request: Request) {
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
 		{
-			ssrManifest: clientSsrManifest,
+			ssrManifest: await getSsrManifest(),
 		},
 	);
 	const ssrRoot = (
@@ -50,6 +49,31 @@ export async function handler(request: Request) {
 			"content-type": "text/html;charset=utf-8",
 		},
 	});
+}
+
+async function getSsrManifest() {
+	if (1) {
+		// manual manifest for now
+		return {
+			moduleMap: {
+				"./src/routes/_client.tsx": {
+					Hydrated: {
+						id: "(ssr)/./src/routes/_client.tsx",
+						name: "Hydrated",
+						chunks: [],
+						// chunks: ["_ssr_src_routes__client_tsx"],
+					},
+					Counter: {
+						id: "(ssr)/./src/routes/_client.tsx",
+						name: "Counter",
+						chunks: [],
+						// chunks: ["_ssr_src_routes__client_tsx"],
+					},
+				},
+			},
+		};
+	}
+	return import(/* webpackIgnore: true */ "./__ssr_manifest.js" as string);
 }
 
 async function getClientAssets() {
