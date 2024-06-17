@@ -17,14 +17,14 @@ async function getBundlerConfig() {
 	if (1) {
 		// manual manifest for now
 		return {
-			"./src/routes/_client.tsx#Hydrated": {
+			"src/routes/_client.tsx#Hydrated": {
 				id: "./src/routes/_client.tsx",
 				name: "Hydrated",
 				// eager chunk for now
 				chunks: [],
 				// chunks: ["src_routes__client_tsx"],
 			},
-			"./src/routes/_client.tsx#Counter": {
+			"src/routes/_client.tsx#Counter": {
 				id: "./src/routes/_client.tsx",
 				name: "Counter",
 				chunks: [],

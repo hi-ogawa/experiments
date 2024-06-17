@@ -1,3 +1,6 @@
+import path from "node:path";
+import { tinyassert } from "@hiogawa/utils";
+
 /**
  * @typedef {{ clientReferences: Set<string> }} LoaderOptions
  */
@@ -17,10 +20,12 @@ export default async function loader(input) {
 	}
 
 	clientReferences.add(this.resourcePath);
+	tinyassert(this._compiler?.context);
+	const root = this._compiler.context;
+	const id = path.relative(root, this.resourcePath); // TODO: obfuscate id
+
 	const matches = input.matchAll(/export function (\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);
-	// TODO: how to get id?
-	const id = "./src/routes/_client.tsx";
 	let output = `import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge";\n`;
 	for (const name of exportNames) {
 		output +=
