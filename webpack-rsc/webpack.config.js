@@ -22,6 +22,11 @@ export default function (env, _argv) {
 	/** @type {Set<string>} */
 	const clientReferences = new Set();
 
+	const LAYER = {
+		ssr: "ssr",
+		server: "server",
+	};
+
 	/**
 	 * @satisfies {import("webpack").Configuration}
 	 */
@@ -79,21 +84,21 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					layer: "server",
+					layer: LAYER.server,
 					resource: /\/entry-server-layer\./,
 				},
 				{
-					layer: "ssr",
+					layer: LAYER.ssr,
 					resource: /\/entry-ssr-layer\./,
 				},
 				{
-					issuerLayer: "server",
+					issuerLayer: LAYER.server,
 					resolve: {
 						conditionNames: ["react-server", "..."],
 					},
 				},
 				{
-					issuerLayer: "server",
+					issuerLayer: LAYER.server,
 					// TODO: should skip "esbuild-loader" for plain js?
 					test: /\.[tj]sx?$/,
 					use: [
@@ -116,21 +121,45 @@ export default function (env, _argv) {
 				name: "client-reference:server",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
+
+					// inject discovered client references to ssr entries
+					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
+					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
-						// inject discovered client references to ssr entries
-						// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
-						// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 						for (const id of clientReferences) {
 							const dep = webpack.EntryPlugin.createDependency(id, {});
 							await new Promise((resolve, reject) => {
 								compilation.addEntry(
 									compiler.context,
 									dep,
-									{ layer: "ssr" },
+									{ layer: LAYER.ssr },
 									(err) => (err ? reject(err) : resolve(null)),
 								);
 							});
 						}
+					});
+
+					// generate client manifest
+					compiler.hooks.thisCompilation.tap(NAME, (compilation) => {
+						compilation.hooks.processAssets.tap(
+							{
+								name: NAME,
+								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+							},
+							() => {
+								const entries = filterModules(compilation, clientReferences);
+								const map = Object.fromEntries(
+									entries
+										.filter((e) => e.module.layer === LAYER.ssr)
+										.map((e) => [e.id, e.module.resource]),
+								);
+								const code = `export default ${JSON.stringify(map, null, 2)}`;
+								compilation.emitAsset(
+									"__client_reference_ssr.js",
+									new webpack.sources.RawSource(code),
+								);
+							},
+						);
 					});
 				},
 			},
@@ -227,6 +256,7 @@ export default function (env, _argv) {
 				"__define.DEV": dev,
 			}),
 			{
+				// TODO: refactor with "client-reference:server"
 				name: "client-reference:browser",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
@@ -245,18 +275,12 @@ export default function (env, _argv) {
 
 					// generate client manifest
 					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
-						// not sure what's public API...
-						// https://webpack.js.org/api/compilation-object/
-						for (const mod of compilation.modules) {
-							if (
-								mod instanceof webpack.NormalModule &&
-								clientReferences.has(mod.resource)
-							) {
-								const moduleId = compilation.chunkGraph.getModuleId(mod);
-								console.log(mod.resource);
-								console.log(moduleId);
-							}
-						}
+						const entries = filterModules(compilation, clientReferences);
+						const map = Object.fromEntries(
+							entries.map((e) => [e.id, e.module.resource]),
+						);
+						const code = `export default ${JSON.stringify(map, null, 2)}`;
+						writeFileSync("./dist/server/__client_reference_browser.js", code);
 					});
 				},
 			},
@@ -275,4 +299,24 @@ export default function (env, _argv) {
 	};
 
 	return [serverConfig, browserConfig];
+}
+
+/**
+ *
+ * @param {import("webpack").Compilation} compilation
+ * @param {Set<string>} selected
+ */
+function filterModules(compilation, selected) {
+	/** @type {{ id: string | number, module: import("webpack").NormalModule}[]} */
+	let entries = [];
+	for (const module of compilation.modules) {
+		if (
+			module instanceof webpack.NormalModule &&
+			selected.has(module.resource)
+		) {
+			const id = compilation.chunkGraph.getModuleId(module);
+			entries.push({ id, module });
+		}
+	}
+	return entries;
 }
