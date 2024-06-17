@@ -1,32 +1,72 @@
-import { cp, mkdir, rm } from "node:fs/promises";
+// @ts-check
+
+import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+
+const buildDir = join(import.meta.dirname, "../../dist");
+const outDir = join(import.meta.dirname, ".vercel/output");
 
 async function main() {
 	// clean
-	await rm(".vercel/output", { recursive: true, force: true });
-	await mkdir(".vercel/output", { recursive: true });
+	await rm(outDir, { recursive: true, force: true });
+	await mkdir(outDir, { recursive: true });
 
 	// config
-	await cp(
-		join(import.meta.dirname, "config.json"),
-		".vercel/output/config.json",
+	await writeFile(
+		join(outDir, "config.json"),
+		JSON.stringify(
+			{
+				version: 3,
+				trailingSlash: false,
+				routes: [
+					{
+						src: "^/assets/(.*)$",
+						headers: {
+							"cache-control": "public, immutable, max-age=31536000",
+						},
+					},
+					{
+						handle: "filesystem",
+					},
+					{
+						src: ".*",
+						dest: "/",
+					},
+				],
+			},
+			null,
+			2,
+		),
 	);
 
 	// static
-	await cp("dist/browser", ".vercel/output/static", { recursive: true });
-
-	// function
-	await mkdir(".vercel/output/functions/index.func", { recursive: true });
-	await cp("dist/server", ".vercel/output/functions/index.func", {
+	await mkdir(join(outDir, "static"), { recursive: true });
+	await cp(join(buildDir, "browser"), join(outDir, "static"), {
 		recursive: true,
 	});
-	await cp(
-		join(import.meta.dirname, ".vc-config.json"),
-		".vercel/output/functions/index.func/.vc-config.json",
+
+	// function
+	await mkdir(join(outDir, "functions/index.func"), { recursive: true });
+	await cp(join(buildDir, "server"), join(outDir, "functions/index.func"), {
+		recursive: true,
+	});
+	await writeFile(
+		join(outDir, "functions/index.func/.vc-config.json"),
+		JSON.stringify(
+			{
+				runtime: "edge",
+				entrypoint: "__entry.js",
+			},
+			null,
+			2,
+		),
 	);
-	await cp(
-		join(import.meta.dirname, "entry.mjs"),
-		".vercel/output/functions/index.func/entry.mjs",
+	await writeFile(
+		join(outDir, "functions/index.func/__entry.js"),
+		`\
+import server from "./index.cjs";
+export default server.handler;
+`,
 	);
 }
 
