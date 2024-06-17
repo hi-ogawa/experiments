@@ -1,7 +1,7 @@
 import React from "react";
 import reactLogo from "../assets/react.svg?inline";
 import webpackLogo from "../assets/webpack.svg?inline";
-import { Counter, Hydrated } from "./_client-meta-server";
+import { Counter, Hydrated } from "./_client";
 
 export default function Page() {
 	return (

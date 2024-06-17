@@ -1,20 +1,5 @@
 // writing manually for starter
 
-// register reference
-import ReactServer from "react-server-dom-webpack/server.edge";
-
-export const Hydrated = ReactServer.registerClientReference(
-	{},
-	"./src/routes/_client.tsx",
-	"Hydrated",
-) as React.ComponentType;
-
-export const Counter = ReactServer.registerClientReference(
-	{},
-	"./src/routes/_client.tsx",
-	"Counter",
-) as React.ComponentType;
-
 // mapping for browser
 export const clientBrowserManifest = {
 	"./src/routes/_client.tsx#Hydrated": {

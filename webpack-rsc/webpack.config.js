@@ -1,5 +1,3 @@
-// @ts-check
-
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -94,12 +92,16 @@ export default function (env, _argv) {
 						conditionNames: ["react-server", "..."],
 					},
 				},
+				{
+					issuerLayer: "server",
+					// TODO: should skip "esbuild-loader" for plain js?
+					test: /\.[tj]sx?$/,
+					use: [
+						path.resolve("./src/lib/loader-server-use-client.js"),
+						"esbuild-loader",
+					],
+				},
 				...commonConfig.module.rules,
-				// {
-				// 	issuerLayer: "server",
-				// 	test: /\.[tj]sx?$/,
-				// 	use: path.resolve("./src/lib/loader-server-use-client.js"),
-				// },
 			],
 		},
 		plugins: [
