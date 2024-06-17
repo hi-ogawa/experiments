@@ -172,6 +172,15 @@ export default function (env, _argv) {
 							"custom:update-server",
 						);
 					});
+
+					// TODO:
+					// - (loader) find client reference
+					// - (finishMake) inject found references as chunks to ssr layer
+					// - (?)
+
+					compiler.hooks.finishMake.tap(name, (compilation) => {
+						compilation.moduleGraph;
+					})
 				},
 			},
 		],
