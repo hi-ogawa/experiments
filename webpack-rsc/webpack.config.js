@@ -22,6 +22,9 @@ const require = createRequire(import.meta.url);
 export default function (env, _argv) {
 	const dev = !env.WEBPACK_BUILD;
 
+	/** @type {Set<string>} */
+	const clientReferences = new Set();
+
 	/**
 	 * @satisfies {import("webpack").Configuration}
 	 */
@@ -97,7 +100,10 @@ export default function (env, _argv) {
 					// TODO: should skip "esbuild-loader" for plain js?
 					test: /\.[tj]sx?$/,
 					use: [
-						path.resolve("./src/lib/loader-server-use-client.js"),
+						{
+							loader: path.resolve("./src/lib/loader-server-use-client.js"),
+							options: { clientReferences },
+						},
 						"esbuild-loader",
 					],
 				},
@@ -175,13 +181,23 @@ export default function (env, _argv) {
 						);
 					});
 
-					// TODO:
-					// - (loader) find client reference
-					// - (finishMake) inject found references as chunks to ssr layer
-					// - (?)
-
-					compiler.hooks.finishMake.tap(name, (compilation) => {
-						compilation.moduleGraph;
+					compiler.hooks.finishMake.tapPromise(name, async (compilation) => {
+						// inject discovered client references to ssr entries
+						// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
+						// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
+						for (const id of clientReferences) {
+							const dep = webpack.EntryPlugin.createDependency(id, {});
+							await new Promise((resolve, reject) => {
+								compilation.addEntry(
+									compiler.context,
+									dep,
+									{
+										layer: "ssr",
+									},
+									(err) => (err ? reject(err) : resolve(null)),
+								);
+							});
+						}
 					});
 				},
 			},
@@ -210,10 +226,14 @@ export default function (env, _argv) {
 				"__define.SSR": "false",
 				"__define.DEV": dev,
 			}),
+			{
+				name: "client-manifest",
+				apply(_compiler) {},
+			},
 			!dev && {
 				name: "client-stats",
-				apply(compilation) {
-					compilation.hooks.done.tap("client-stats", (stats) => {
+				apply(compiler) {
+					compiler.hooks.done.tap("client-stats", (stats) => {
 						const statsJson = stats.toJson({ all: false, assets: true });
 						const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
 						writeFileSync("./dist/server/__client_stats.js", code);

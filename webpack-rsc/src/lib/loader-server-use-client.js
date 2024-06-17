@@ -1,13 +1,22 @@
 /**
- * @type {import("webpack").LoaderDefinitionFunction<{}, {}>}
+ * @typedef {{ clientReferences: Set<string> }} LoaderOptions
+ */
+
+/**
+ * @type {import("webpack").LoaderDefinitionFunction<LoaderOptions, {}>}
  */
 export default async function loader(input) {
 	const callback = this.async();
+	const { clientReferences } = this.getOptions();
+	clientReferences.delete(this.resourcePath);
+
 	// "use strict" injected by other loaders?
 	if (!/^("use client"|'use client')/m.test(input)) {
 		callback(null, input);
 		return;
 	}
+
+	clientReferences.add(this.resourcePath);
 	const matches = input.matchAll(/export function (\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);
 	// TODO: how to get id?

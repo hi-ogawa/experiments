@@ -20,9 +20,6 @@ export async function handler(request: Request) {
 
 	const [flightStream1, flightStream2] = flightStream.tee();
 
-	// emit chunk (manually for now)
-	() => import(/* webpackMode: 'eager' */ "./routes/_client");
-
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
