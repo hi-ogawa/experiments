@@ -8,12 +8,12 @@ export async function handler(request: Request) {
 	const node = <Router request={request} />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		node,
-		await getBundlerConfig(),
+		await getClientManifest(),
 	);
 	return flightStream;
 }
 
-async function getBundlerConfig() {
+async function getClientManifest() {
 	if (1) {
 		// manual manifest for now
 		return {
@@ -33,7 +33,7 @@ async function getBundlerConfig() {
 		};
 	}
 	// TODO
-	return import(/* webpackIgnore: true */ "./__bundler_config.js" as string);
+	return import(/* webpackIgnore: true */ "./__client_manifest.js" as string);
 }
 
 const routes = {

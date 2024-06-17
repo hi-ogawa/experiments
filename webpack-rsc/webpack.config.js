@@ -11,9 +11,6 @@ import webpack from "webpack";
 // `require` cjs server code for dev ssr
 const require = createRequire(import.meta.url);
 
-// https://webpack.js.org/configuration/configuration-types/
-// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/apps/aws-app/webpack.config.js
-
 /**
  * @param {{ WEBPACK_SERVE?: boolean, WEBPACK_BUILD?: boolean }} env
  * @param {unknown} _argv
@@ -232,8 +229,9 @@ export default function (env, _argv) {
 			{
 				name: "client-reference:browser",
 				apply(compiler) {
-					// TODO: lazy load client references on browser
 					const NAME = /** @type {any} */ (this).name;
+
+					// inject client reference entries (TODO: lazy dep)
 					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
 						for (const id of clientReferences) {
 							const dep = webpack.EntryPlugin.createDependency(id, {});
@@ -242,6 +240,22 @@ export default function (env, _argv) {
 									err ? reject(err) : resolve(null),
 								);
 							});
+						}
+					});
+
+					// generate client manifest
+					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
+						// not sure what's public API...
+						// https://webpack.js.org/api/compilation-object/
+						for (const mod of compilation.modules) {
+							if (
+								mod instanceof webpack.NormalModule &&
+								clientReferences.has(mod.resource)
+							) {
+								const moduleId = compilation.chunkGraph.getModuleId(mod);
+								console.log(mod.resource);
+								console.log(moduleId);
+							}
 						}
 					});
 				},

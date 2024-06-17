@@ -24,7 +24,7 @@ export async function handler(request: Request) {
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
 		{
-			ssrManifest: await getSsrManifest(),
+			ssrManifest: await getSsrClientManifest(),
 		},
 	);
 	const ssrRoot = (
@@ -48,7 +48,7 @@ export async function handler(request: Request) {
 	});
 }
 
-async function getSsrManifest() {
+async function getSsrClientManifest() {
 	if (1) {
 		// manual manifest for now
 		return {
@@ -71,7 +71,9 @@ async function getSsrManifest() {
 		};
 	}
 	// TODO
-	return import(/* webpackIgnore: true */ "./__ssr_manifest.js" as string);
+	return import(
+		/* webpackIgnore: true */ "./__ssr_client_manifest.js" as string
+	);
 }
 
 async function getClientAssets() {
