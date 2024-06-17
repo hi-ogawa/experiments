@@ -180,7 +180,7 @@ export default function (env, _argv) {
 
 					compiler.hooks.finishMake.tap(name, (compilation) => {
 						compilation.moduleGraph;
-					})
+					});
 				},
 			},
 		],
