@@ -25,7 +25,6 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.8.1",
-		"@hiogawa/transforms": "^0.0.0",
 		"@hiogawa/utils-node": "^0.0.1",
 		"@playwright/test": "^1.44.1",
 		"@types/node": "^20.14.2",

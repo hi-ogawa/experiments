@@ -1,28 +1,25 @@
-import { getExportNames, hasDirective } from "@hiogawa/transforms";
-import { parseAstAsync } from "vite";
-
 /**
  * @type {import("webpack").LoaderDefinitionFunction<{}, {}>}
  */
-export default async function loader(source) {
+export default async function loader(input) {
 	const callback = this.async();
-	const ast = await parseAstAsync(source);
-	if (!hasDirective(ast.body, "use client")) {
-		callback(null, source);
+	// "use strict" injected by other loaders?
+	if (!/^("use client"|'use client')/m.test(input)) {
+		callback(null, input);
 		return;
 	}
-	const { exportNames } = getExportNames(ast, {});
+	const matches = input.matchAll(/export function (\w+)\(/g);
+	const exportNames = [...matches].map((m) => m[1]);
 	// TODO: how to get id?
 	const id = "./src/routes/_client.tsx";
-	const output = [
-		`import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge"`,
-		...exportNames.map((name) =>
+	let output = `import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge";\n`;
+	for (const name of exportNames) {
+		output +=
 			exportExpr(
 				name,
 				`$$register(() => {}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
-			),
-		),
-	].join(";\n");
+			) + ";\n";
+	}
 	callback(null, output);
 }
 
