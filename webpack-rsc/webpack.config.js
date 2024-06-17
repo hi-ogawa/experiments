@@ -115,11 +115,33 @@ export default function (env, _argv) {
 				"__define.SSR": "true",
 				"__define.DEV": dev,
 			}),
+			{
+				name: "client-reference:server",
+				apply(compiler) {
+					const NAME = /** @type {any} */ (this).name;
+					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
+						// inject discovered client references to ssr entries
+						// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
+						// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
+						for (const id of clientReferences) {
+							const dep = webpack.EntryPlugin.createDependency(id, {});
+							await new Promise((resolve, reject) => {
+								compilation.addEntry(
+									compiler.context,
+									dep,
+									{ layer: "ssr" },
+									(err) => (err ? reject(err) : resolve(null)),
+								);
+							});
+						}
+					});
+				},
+			},
 			// https://webpack.js.org/contribute/writing-a-plugin/#example
 			dev && {
 				name: "dev-ssr",
 				apply(compiler) {
-					const name = "dev-ssr";
+					const NAME = /** @type {any} */ (this).name;
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
 
@@ -164,7 +186,7 @@ export default function (env, _argv) {
 					compiler.options.devServer = devServerConfig;
 
 					// https://webpack.js.org/api/compiler-hooks/
-					compiler.hooks.invalid.tap(name, () => {
+					compiler.hooks.invalid.tap(NAME, () => {
 						// invalidate all server cjs
 						for (const key in require.cache) {
 							if (key.startsWith(serverDir)) {
@@ -179,25 +201,6 @@ export default function (env, _argv) {
 							devServer.webSocketServer.clients,
 							"custom:update-server",
 						);
-					});
-
-					compiler.hooks.finishMake.tapPromise(name, async (compilation) => {
-						// inject discovered client references to ssr entries
-						// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
-						// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
-						for (const id of clientReferences) {
-							const dep = webpack.EntryPlugin.createDependency(id, {});
-							await new Promise((resolve, reject) => {
-								compilation.addEntry(
-									compiler.context,
-									dep,
-									{
-										layer: "ssr",
-									},
-									(err) => (err ? reject(err) : resolve(null)),
-								);
-							});
-						}
 					});
 				},
 			},
@@ -227,13 +230,27 @@ export default function (env, _argv) {
 				"__define.DEV": dev,
 			}),
 			{
-				name: "client-manifest",
-				apply(_compiler) {},
+				name: "client-reference:browser",
+				apply(compiler) {
+					// TODO: lazy load client references on browser
+					const NAME = /** @type {any} */ (this).name;
+					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
+						for (const id of clientReferences) {
+							const dep = webpack.EntryPlugin.createDependency(id, {});
+							await new Promise((resolve, reject) => {
+								compilation.addEntry(compiler.context, dep, {}, (err) =>
+									err ? reject(err) : resolve(null),
+								);
+							});
+						}
+					});
+				},
 			},
 			!dev && {
 				name: "client-stats",
 				apply(compiler) {
-					compiler.hooks.done.tap("client-stats", (stats) => {
+					const NAME = /** @type {any} */ (this).name;
+					compiler.hooks.done.tap(NAME, (stats) => {
 						const statsJson = stats.toJson({ all: false, assets: true });
 						const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
 						writeFileSync("./dist/server/__client_stats.js", code);
