@@ -32,6 +32,7 @@ async function getBundlerConfig() {
 			},
 		};
 	}
+	// TODO
 	return import(/* webpackIgnore: true */ "./__bundler_config.js" as string);
 }
 

@@ -70,6 +70,7 @@ async function getSsrManifest() {
 			},
 		};
 	}
+	// TODO
 	return import(/* webpackIgnore: true */ "./__ssr_manifest.js" as string);
 }
 
