@@ -252,7 +252,7 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					test: require.resolve("react-server-dom-webpack/client.browser"),
+					test: path.resolve("./src/entry-browser.tsx"),
 					use: {
 						loader: path.resolve(
 							"./src/lib/loader-inject-client-references.js",
