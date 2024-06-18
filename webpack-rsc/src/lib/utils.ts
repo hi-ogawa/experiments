@@ -55,7 +55,6 @@ export async function getClientManifest() {
 		{},
 		{
 			get(_target, browserId, _receiver) {
-				``;
 				tinyassert(typeof browserId === "string");
 				const resource = inverseBrowserRefs[browserId];
 				tinyassert(resource, `invalid ssr client reference '${browserId}'`);
