@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
+import { setupBrowserRouter } from "./lib/router/browser";
 
 async function main() {
 	if (window.location.search.includes("__nojs")) {
@@ -14,9 +15,25 @@ async function main() {
 		{ callServer: () => {} },
 	);
 
+	function BrowserRoot() {
+		React.useEffect(
+			() =>
+				setupBrowserRouter(() => {
+					window.location.href;
+				}),
+			[],
+		);
+		return <>{node}</>;
+	}
+
 	// react dom browser (react node -> html)
 	React.startTransition(() => {
-		ReactDOMClient.hydrateRoot(document, node);
+		ReactDOMClient.hydrateRoot(
+			document,
+			<React.StrictMode>
+				<BrowserRoot />
+			</React.StrictMode>,
+		);
 	});
 
 	if (__define.DEV) {
