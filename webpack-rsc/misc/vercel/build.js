@@ -71,10 +71,6 @@ export default server.handler;
 		minify: true,
 		format: "esm",
 		platform: "browser",
-		external: ["node:async_hooks"],
-		define: {
-			"process.env.NODE_ENV": `"production"`,
-		},
 		logOverride: {
 			"ignored-bare-import": "silent",
 		},
