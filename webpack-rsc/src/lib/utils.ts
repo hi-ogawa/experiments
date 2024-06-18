@@ -33,15 +33,7 @@ export async function getClientManifest() {
 				return {
 					id: entry.id,
 					name,
-					// chunks: entry.chunks,
-
-					// [OK]
-					chunks: ["src_routes__client_tsx"],
-					// [NOT OK] chunk renaming is not working...?
-					// chunks: [
-					// 	"./src/routes/_client.tsx",
-					// 	"src_routes__client_tsx.js"
-					// ],
+					chunks: entry.chunks,
 				} satisfies ImportManifestEntry;
 			},
 		},
@@ -68,7 +60,7 @@ export async function getClientManifest() {
 							return {
 								id: entry.id,
 								name,
-								chunks: entry.chunks,
+								chunks: [],
 							} satisfies ImportManifestEntry;
 						},
 					},

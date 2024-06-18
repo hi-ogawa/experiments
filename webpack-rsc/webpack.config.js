@@ -274,8 +274,36 @@ export default function (env, _argv) {
 					const NAME = /** @type {any} */ (this).name;
 
 					// generate client manifest
+					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L193
 					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
-						const data = processReferences(compilation, clientReferences);
+						/** @type {import("./src/lib/utils").ReferenceMap} */
+						const data = {};
+
+						for (const mod of compilation.modules) {
+							if (
+								mod instanceof webpack.NormalModule &&
+								clientReferences.has(mod.resource)
+							) {
+								const moduleId = compilation.chunkGraph.getModuleId(mod);
+								/** @type {(string | number)[]} */
+								const chunks = [];
+								for (const chunk of compilation.chunkGraph.getModuleChunksIterable(
+									mod,
+								)) {
+									if (chunk.id === null) {
+										continue;
+									}
+									for (const file of chunk.files) {
+										chunks.push(chunk.id, file);
+									}
+								}
+								data[mod.resource] = {
+									id: moduleId,
+									chunks,
+								};
+							}
+						}
+
 						const code = `export default ${JSON.stringify(data, null, 2)}`;
 						writeFileSync("./dist/server/__client_reference_browser.js", code);
 					});
@@ -318,8 +346,6 @@ function processReferences(compilation, selected) {
 	for (const mod of compilation.modules) {
 		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {
 			const id = compilation.chunkGraph.getModuleId(mod);
-			// TODO: chunks
-			// result[mod.resource] = { id, chunks: [id] };
 			result[mod.resource] = { id, chunks: [] };
 		}
 	}
