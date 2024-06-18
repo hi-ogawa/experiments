@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { tinyassert } from "@hiogawa/utils";
+import { createManualPromise, tinyassert } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
@@ -126,15 +126,9 @@ export default function (env, _argv) {
 					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
 					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
-						for (const id of clientReferences) {
-							const dep = webpack.EntryPlugin.createDependency(id, {});
-							await new Promise((resolve, reject) => {
-								compilation.addInclude(
-									compiler.context,
-									dep,
-									{ layer: LAYER.ssr },
-									(err) => (err ? reject(err) : resolve(null)),
-								);
+						for (const reference of clientReferences) {
+							await includeReference(compilation, reference, {
+								layer: LAYER.ssr,
 							});
 						}
 					});
@@ -258,13 +252,8 @@ export default function (env, _argv) {
 
 					// inject client reference entries (TODO: lazy chunk)
 					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
-						for (const id of clientReferences) {
-							const dep = webpack.EntryPlugin.createDependency(id, {});
-							await new Promise((resolve, reject) => {
-								compilation.addInclude(compiler.context, dep, {}, (err) =>
-									err ? reject(err) : resolve(null),
-								);
-							});
+						for (const reference of clientReferences) {
+							await includeReference(compilation, reference, {});
 						}
 					});
 
@@ -312,4 +301,35 @@ function processReferences(compilation, selected) {
 		}
 	}
 	return result;
+}
+
+/**
+ *
+ * @param {import("webpack").Compilation} compilation
+ * @param {string} id
+ * @param {webpack.EntryOptions} options
+ */
+function includeReference(compilation, id, options) {
+	const dep = webpack.EntryPlugin.createDependency(id, {});
+	const promise = createManualPromise();
+	compilation.addInclude(
+		compilation.compiler.context,
+		dep,
+		options,
+		(err, module) => {
+			// force exports on build
+			// cf. https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-server-plugin.ts#L124-L126
+			if (
+				module &&
+				compilation.moduleGraph
+					.getExportsInfo(module)
+					.setUsedInUnknownWay(undefined)
+			) {
+				promise.resolve(null);
+				return;
+			}
+			promise.reject(err ?? new Error("failed include reference"));
+		},
+	);
+	return promise;
 }

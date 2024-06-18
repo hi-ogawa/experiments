@@ -33,8 +33,7 @@ export async function getClientManifest() {
 				return {
 					id: entry.id,
 					name,
-					// TODO
-					chunks: [entry.id],
+					chunks: entry.chunks,
 				} satisfies ImportManifestEntry;
 			},
 		},
@@ -61,7 +60,7 @@ export async function getClientManifest() {
 							return {
 								id: entry.id,
 								name,
-								chunks: [entry.id],
+								chunks: entry.chunks,
 							} satisfies ImportManifestEntry;
 						},
 					},
