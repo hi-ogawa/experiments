@@ -1,7 +1,8 @@
 import React from "react";
 import reactLogo from "../assets/react.svg?inline";
 import webpackLogo from "../assets/webpack.svg?inline";
-import { Counter, Hydrated } from "./_client";
+// import { Counter, Hydrated } from "./_client";
+import { Hydrated } from "./_client";
 
 export default function Page() {
 	return (
@@ -20,7 +21,7 @@ export default function Page() {
 				<Hydrated />
 			</pre>
 			<div className="card">
-				<Counter />
+				{/* <Counter /> */}
 				<p style={{ display: "none" }}>
 					Edit <code>src/App.tsx</code> and save to test HMR
 				</p>

@@ -174,6 +174,7 @@ export default function (env, _argv) {
 					 * @type {import("webpack-dev-server").Configuration}
 					 */
 					const devServerConfig = {
+						// hot: false,
 						host: "localhost",
 						static: {
 							serveIndex: false,
@@ -242,8 +243,8 @@ export default function (env, _argv) {
 		},
 		output: {
 			// https://webpack.js.org/guides/public-path/
-			publicPath: "/assets/",
-			path: path.resolve("./dist/browser/assets"),
+			// publicPath: "/assets/",
+			path: path.resolve("./dist/browser"),
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
@@ -259,8 +260,13 @@ export default function (env, _argv) {
 
 					// inject client reference entries (TODO: lazy chunk)
 					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
+						let i = 0;
 						for (const reference of clientReferences) {
-							await includeReference(compilation, reference, {});
+							const name = `client_${i++}_${path.basename(reference).replace(/\W/g, "_")}`;
+							// await includeReference(compilation, reference, {
+							// 	name,
+							// 	asyncChunks: true,
+							// });
 						}
 					});
 
@@ -310,6 +316,7 @@ function processReferences(compilation, selected) {
 		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {
 			const id = compilation.chunkGraph.getModuleId(mod);
 			// TODO: chunks
+			// result[mod.resource] = { id, chunks: [id] };
 			result[mod.resource] = { id, chunks: [] };
 		}
 	}

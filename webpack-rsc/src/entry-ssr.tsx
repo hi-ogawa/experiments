@@ -51,7 +51,8 @@ export async function handler(request: Request) {
 async function getClientAssets() {
 	let bootstrapScripts: string[] = [];
 	if (__define.DEV) {
-		bootstrapScripts = ["/assets/index.js"];
+		// bootstrapScripts = ["/assets/index.js"];
+		bootstrapScripts = ["/index.js"];
 	} else {
 		const clientStats: { default: StatsCompilation } = await import(
 			/* webpackIgnore: true */ "./__client_stats.js" as string

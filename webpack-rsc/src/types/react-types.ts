@@ -18,5 +18,5 @@ export type ModuleMap = {
 
 export interface SsrManifest {
 	moduleMap: ModuleMap;
-	moduleLoading?: unknown;
+	moduleLoading: null;
 }
