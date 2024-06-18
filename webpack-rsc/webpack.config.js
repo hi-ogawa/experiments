@@ -8,6 +8,8 @@ import webpack from "webpack";
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
 
+const require = createRequire(import.meta.url);
+
 /**
  * @param {{ WEBPACK_BUILD?: boolean }} env
  * @param {unknown} _argv
@@ -164,9 +166,6 @@ export default function (env, _argv) {
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
 
-					// `require` cjs server code for dev ssr
-					const require = createRequire(import.meta.url);
-
 					/** @type {import("webpack-dev-server")} */
 					let devServer;
 
@@ -248,6 +247,22 @@ export default function (env, _argv) {
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
+		module: {
+			rules: [
+				{
+					test: require.resolve("react-server-dom-webpack/client.browser"),
+					use: {
+						loader: path.resolve(
+							"./src/lib/loader-inject-client-references.js",
+						),
+						options: {
+							clientReferences,
+						},
+					},
+				},
+				...commonConfig.module.rules,
+			],
+		},
 		plugins: [
 			new webpack.DefinePlugin({
 				"__define.SSR": "false",
@@ -258,15 +273,101 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
+					// something like injecting dynamic import to browser entry?
+					// TODO: can we use loader to inject something from transform?
+					// https://github.com/facebook/react/blob/ddcecbbebf6af3fa32a323c0591dad1f63587aeb/packages/react-server-dom-webpack/src/ReactFlightWebpackPlugin.js
+					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L85-L93
+					class ClientReferenceDependency extends webpack.dependencies
+						.ModuleDependency {
+						get type() {
+							return "client-reference";
+						}
+					}
+
+					compiler.hooks.thisCompilation.tap(
+						NAME,
+						(compilation, { normalModuleFactory }) => {
+							compilation.dependencyFactories.set(
+								ClientReferenceDependency,
+								normalModuleFactory,
+							);
+							compilation.dependencyTemplates.set(
+								ClientReferenceDependency,
+								new webpack.dependencies.NullDependency.Template(),
+							);
+						},
+					);
+
+					// https://github.com/webpack/webpack/blob/34e2561addb0f65a7a6fb0ce7ae1aea4cd1d599f/lib/DynamicEntryPlugin.js
+					// webpack.DynamicEntryPlugin
+
 					// inject client reference entries (TODO: lazy chunk)
-					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
+					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
+						// new webpack.DynamicEntryPlugin(compiler.context, async () => ({
+						// })).apply(compiler);
+
+						// compilation.dependencyFactories.set(
+						// 	ClientReferenceDependency,
+						// 	webpack.normalModuleFactory,
+						// );
+
+						// compilation.dependencyTemplates.set(
+						// 	ClientReferenceDependency,
+						// 	new NullDependency.Template(),
+						// );
+
+						// compilation.moduleGraph
+						// console.log([...compilation.modules].map(mod => mod.identifier()));
+
+						// console.log([...compilation.modules].map(mod => mod instanceof webpack.NormalModule && mod.resource));
+						// console.log([...compilation.modules].map(mod => mod instanceof webpack.NormalModule && !mod.parent && mod.resource));
+						// compiler.
+						// console.log([...compilation.entries.values()][0]);
+						// console.log([...compilation.modules].filter(mod => mod instanceof webpack.NormalModule && !mod.resource.includes("/node_modules/")));
+						// compilation.chunkGraph.isEntryModule
+						const entryMod = [...compilation.modules].find(
+							(mod) =>
+								mod instanceof webpack.NormalModule &&
+								mod.rawRequest === "./src/entry-browser",
+						);
+						// const entryMod = [...compilation.modules].find(mod => compilation.chunkGraph.isEntryModule(mod));
+						// const entryMod = [...compilation.modules].find(mod => mod.isEntryModule());
+						tinyassert(entryMod);
+						// console.log({ entryMod });
+						// for (const mod of compilation.modules) {
+						// 	mod.isEntryModule()
+						// 	if (mod instanceof webpack.NormalModule) {
+						// 		mod.isEntryModule
+						// 	}
+						// }
+
 						let i = 0;
 						for (const reference of clientReferences) {
 							const name = `client_${i++}_${path.basename(reference).replace(/\W/g, "_")}`;
+							// includeReference(compilation, reference, { name, layer: LAYER.browser, asyncChunks: true });
+							// const options = webpack.EntryOptionPlugin.entryDescriptionToOptions(compiler, name, {
+							// 	import: [reference]
+							// });
+							// webpack.EntryPlugin.createDependency(reference, { import: [] })
+							// compilation.addEntry;
 							// await includeReference(compilation, reference, {
 							// 	name,
+							// 	publicPath: "/assets/",
 							// 	asyncChunks: true,
 							// });
+
+							const block = new webpack.AsyncDependenciesBlock(
+								{ name },
+								undefined,
+								reference,
+							);
+							// block.addDependency(new webpack.dependencies.HarmonyImportDependency(reference, 0));
+							block.addDependency(new ClientReferenceDependency(reference));
+							entryMod.addBlock(block);
+							// name;
+							// console.log(entryMod);
+							// compilation.entries
+							// console.log("[compilation]", compilation.entries);
 						}
 					});
 

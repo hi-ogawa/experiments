@@ -8,10 +8,6 @@ async function main() {
 		return;
 	}
 
-	() => import("./routes/_client");
-	// console.log(await __webpack_chunk_load__("src_routes__client_tsx"));
-	// console.log(__webpack_chunk_load__("./src/routes/_client.tsx"));
-
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		(globalThis as any).__flightStream,
