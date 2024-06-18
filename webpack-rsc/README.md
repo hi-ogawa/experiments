@@ -1,4 +1,6 @@
-Webpack RSC
+# Webpack RSC
+
+Minimal RSC demo on Webpack
 
 - https://webpack-rsc-hiroshi.vercel.app
 - https://webpack-rsc-hiroshi.pages.dev
