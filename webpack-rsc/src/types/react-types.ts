@@ -18,5 +18,6 @@ export type ModuleMap = {
 
 export interface SsrManifest {
 	moduleMap: ModuleMap;
+	// TODO
 	moduleLoading: null;
 }
