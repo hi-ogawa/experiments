@@ -1,4 +1,3 @@
-// TODO
-// "layer" doesn't kick in for the entry itself?
-// for now, wrapping each layer to re-export the acutal modules seems to help.
+// need to re-export from issuerLayer
+// https://webpack.js.org/configuration/module/#ruleissuerlayer
 export { handler } from "./entry-server";

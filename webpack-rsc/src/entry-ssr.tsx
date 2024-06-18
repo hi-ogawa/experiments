@@ -4,6 +4,7 @@ import ReactClient from "react-server-dom-webpack/client.edge";
 import type { StatsCompilation } from "webpack";
 import type { FlightData } from "./entry-server";
 import * as entryReactServer from "./entry-server-layer";
+import { getClientManifest } from "./lib/utils";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
@@ -21,11 +22,10 @@ export async function handler(request: Request) {
 	const [flightStream1, flightStream2] = flightStream.tee();
 
 	// react client (flight -> react node)
+	const { ssrManifest } = await getClientManifest();
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
-		{
-			ssrManifest: {},
-		},
+		{ ssrManifest },
 	);
 	const ssrRoot = (
 		<>

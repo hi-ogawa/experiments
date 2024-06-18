@@ -4,6 +4,10 @@ import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
 
 async function main() {
+	if (window.location.search.includes("__nojs")) {
+		return;
+	}
+
 	// react client (flight -> react node)
 	const node = await ReactClient.createFromReadableStream<FlightData>(
 		(globalThis as any).__flightStream,

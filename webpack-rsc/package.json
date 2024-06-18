@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "webpack serve",
-		"dev-webpack": "node --watch-path webpack.config.js --watch-preserve-output node_modules/webpack/bin/webpack.js serve",
+		"dev-webpack": "node --watch-path=webpack.config.js --watch-path=./src/lib --watch-preserve-output node_modules/webpack/bin/webpack.js serve",
 		"build": "webpack && cp -r public/. dist/browser",
 		"preview": "vite preview",
 		"test-e2e": "playwright test",

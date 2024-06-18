@@ -1,9 +1,7 @@
-// @ts-check
-
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { tinyassert } from "@hiogawa/utils";
+import { createManualPromise, tinyassert } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
@@ -13,9 +11,6 @@ import webpack from "webpack";
 // `require` cjs server code for dev ssr
 const require = createRequire(import.meta.url);
 
-// https://webpack.js.org/configuration/configuration-types/
-// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/apps/aws-app/webpack.config.js
-
 /**
  * @param {{ WEBPACK_SERVE?: boolean, WEBPACK_BUILD?: boolean }} env
  * @param {unknown} _argv
@@ -23,6 +18,14 @@ const require = createRequire(import.meta.url);
  */
 export default function (env, _argv) {
 	const dev = !env.WEBPACK_BUILD;
+
+	/** @type {Set<string>} */
+	const clientReferences = new Set();
+
+	const LAYER = {
+		ssr: "ssr",
+		server: "server",
+	};
 
 	/**
 	 * @satisfies {import("webpack").Configuration}
@@ -81,18 +84,30 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					layer: "server",
+					layer: LAYER.server,
 					resource: /\/entry-server-layer\./,
 				},
 				{
-					layer: "ssr",
+					layer: LAYER.ssr,
 					resource: /\/entry-ssr-layer\./,
 				},
 				{
-					issuerLayer: "server",
+					issuerLayer: LAYER.server,
 					resolve: {
 						conditionNames: ["react-server", "..."],
 					},
+				},
+				{
+					issuerLayer: LAYER.server,
+					// TODO: should skip "esbuild-loader" for plain js?
+					test: /\.[tj]sx?$/,
+					use: [
+						{
+							loader: path.resolve("./src/lib/loader-server-use-client.js"),
+							options: { clientReferences },
+						},
+						"esbuild-loader",
+					],
 				},
 				...commonConfig.module.rules,
 			],
@@ -102,11 +117,46 @@ export default function (env, _argv) {
 				"__define.SSR": "true",
 				"__define.DEV": dev,
 			}),
+			{
+				name: "client-reference:server",
+				apply(compiler) {
+					const NAME = /** @type {any} */ (this).name;
+
+					// inject discovered client references to ssr entries
+					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
+					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
+					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
+						for (const reference of clientReferences) {
+							await includeReference(compilation, reference, {
+								layer: LAYER.ssr,
+							});
+						}
+					});
+
+					// generate client manifest
+					compiler.hooks.thisCompilation.tap(NAME, (compilation) => {
+						compilation.hooks.processAssets.tap(
+							{
+								name: NAME,
+								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+							},
+							() => {
+								const data = processReferences(compilation, clientReferences);
+								const code = `export default ${JSON.stringify(data, null, 2)}`;
+								compilation.emitAsset(
+									"__client_reference_ssr.js",
+									new webpack.sources.RawSource(code),
+								);
+							},
+						);
+					});
+				},
+			},
 			// https://webpack.js.org/contribute/writing-a-plugin/#example
 			dev && {
 				name: "dev-ssr",
 				apply(compiler) {
-					const name = "dev-ssr";
+					const NAME = /** @type {any} */ (this).name;
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
 
@@ -151,7 +201,7 @@ export default function (env, _argv) {
 					compiler.options.devServer = devServerConfig;
 
 					// https://webpack.js.org/api/compiler-hooks/
-					compiler.hooks.invalid.tap(name, () => {
+					compiler.hooks.invalid.tap(NAME, () => {
 						// invalidate all server cjs
 						for (const key in require.cache) {
 							if (key.startsWith(serverDir)) {
@@ -194,10 +244,31 @@ export default function (env, _argv) {
 				"__define.SSR": "false",
 				"__define.DEV": dev,
 			}),
+			{
+				name: "client-reference:browser",
+				apply(compiler) {
+					const NAME = /** @type {any} */ (this).name;
+
+					// inject client reference entries (TODO: lazy chunk)
+					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
+						for (const reference of clientReferences) {
+							await includeReference(compilation, reference, {});
+						}
+					});
+
+					// generate client manifest
+					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
+						const data = processReferences(compilation, clientReferences);
+						const code = `export default ${JSON.stringify(data, null, 2)}`;
+						writeFileSync("./dist/server/__client_reference_browser.js", code);
+					});
+				},
+			},
 			!dev && {
 				name: "client-stats",
-				apply(compilation) {
-					compilation.hooks.done.tap("client-stats", (stats) => {
+				apply(compiler) {
+					const NAME = /** @type {any} */ (this).name;
+					compiler.hooks.done.tap(NAME, (stats) => {
 						const statsJson = stats.toJson({ all: false, assets: true });
 						const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
 						writeFileSync("./dist/server/__client_stats.js", code);
@@ -208,4 +279,53 @@ export default function (env, _argv) {
 	};
 
 	return [serverConfig, browserConfig];
+}
+
+/**
+ *
+ * @param {import("webpack").Compilation} compilation
+ * @param {Set<string>} selected
+ */
+function processReferences(compilation, selected) {
+	/** @type {import("./src/lib/utils").ReferenceMap} */
+	const result = {};
+	for (const mod of compilation.modules) {
+		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {
+			const id = compilation.chunkGraph.getModuleId(mod);
+			// TODO: chunks
+			result[mod.resource] = { id, chunks: [] };
+		}
+	}
+	return result;
+}
+
+/**
+ *
+ * @param {import("webpack").Compilation} compilation
+ * @param {string} id
+ * @param {webpack.EntryOptions} options
+ */
+function includeReference(compilation, id, options) {
+	const dep = webpack.EntryPlugin.createDependency(id, {});
+	const promise = createManualPromise();
+	compilation.addInclude(
+		compilation.compiler.context,
+		dep,
+		options,
+		(err, mod) => {
+			// force exports on build
+			// cf. https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-server-plugin.ts#L124-L126
+			if (
+				mod &&
+				compilation.moduleGraph
+					.getExportsInfo(mod)
+					.setUsedInUnknownWay(undefined)
+			) {
+				promise.resolve(null);
+				return;
+			}
+			promise.reject(err ?? new Error("failed include reference"));
+		},
+	);
+	return promise;
 }
