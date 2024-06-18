@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { cpSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createManualPromise, tinyassert } from "@hiogawa/utils";
@@ -272,6 +272,15 @@ export default function (env, _argv) {
 						const statsJson = stats.toJson({ all: false, assets: true });
 						const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
 						writeFileSync("./dist/server/__client_stats.js", code);
+					});
+				},
+			},
+			!dev && {
+				name: "copy-public",
+				apply(compiler) {
+					const NAME = /** @type {any} */ (this).name;
+					compiler.hooks.done.tap(NAME, () => {
+						cpSync("public", "dist/browser", { recursive: true });
 					});
 				},
 			},

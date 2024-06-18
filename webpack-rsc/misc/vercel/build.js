@@ -1,7 +1,6 @@
-// @ts-check
-
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import * as esbuild from "esbuild";
 
 const buildDir = join(import.meta.dirname, "../../dist");
 const outDir = join(import.meta.dirname, ".vercel/output");
@@ -47,27 +46,35 @@ async function main() {
 
 	// function
 	await mkdir(join(outDir, "functions/index.func"), { recursive: true });
-	await cp(join(buildDir, "server"), join(outDir, "functions/index.func"), {
-		recursive: true,
-	});
 	await writeFile(
 		join(outDir, "functions/index.func/.vc-config.json"),
 		JSON.stringify(
 			{
 				runtime: "edge",
-				entrypoint: "__entry.mjs",
+				entrypoint: "index.js",
 			},
 			null,
 			2,
 		),
 	);
 	await writeFile(
-		join(outDir, "functions/index.func/__entry.mjs"),
+		join(buildDir, "server/__vercel_edge.js"),
 		`\
 import server from "./index.cjs";
 export default server.handler;
 `,
 	);
+	await esbuild.build({
+		entryPoints: [join(buildDir, "server/__vercel_edge.js")],
+		outfile: join(outDir, "functions/index.func/index.js"),
+		bundle: true,
+		minify: true,
+		format: "esm",
+		platform: "browser",
+		logOverride: {
+			"ignored-bare-import": "silent",
+		},
+	});
 }
 
 main();

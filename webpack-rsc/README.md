@@ -1,11 +1,16 @@
-Webpack RSC
+# Webpack RSC
 
-https://webpack-rsc-hiroshi.vercel.app
+Minimal RSC demo on Webpack
+
+- https://webpack-rsc-hiroshi.vercel.app
+- https://webpack-rsc-hiroshi.pages.dev
+
+## todo
 
 - [x] layer and conditions
 - [x] flight server
 - [x] ssr
 - [x] browser
-- [ ] client reference
+- [x] client reference
 - [ ] server hmr
 - [ ] client hmr
