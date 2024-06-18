@@ -90,12 +90,12 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
+					test: path.resolve("./src/entry-server-layer.tsx"),
 					layer: LAYER.server,
-					resource: /\/entry-server-layer\./,
 				},
 				{
+					test: path.resolve("./src/entry-ssr-layer.tsx"),
 					layer: LAYER.ssr,
-					resource: /\/entry-ssr-layer\./,
 				},
 				{
 					issuerLayer: LAYER.server,
