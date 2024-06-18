@@ -55,14 +55,14 @@ async function main() {
 		JSON.stringify(
 			{
 				runtime: "edge",
-				entrypoint: "__entry.js",
+				entrypoint: "__entry.mjs",
 			},
 			null,
 			2,
 		),
 	);
 	await writeFile(
-		join(outDir, "functions/index.func/__entry.js"),
+		join(outDir, "functions/index.func/__entry.mjs"),
 		`\
 import server from "./index.cjs";
 export default server.handler;

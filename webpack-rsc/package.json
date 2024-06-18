@@ -14,8 +14,8 @@
 		"lint": "biome check --write .",
 		"lint-check": "biome check .",
 		"vc-build": "pnpm build && node misc/vercel/build.js",
-		"vc-release": "vercel deploy --prebuilt --prod",
-		"vc-release-staging": "vercel deploy --prebuilt"
+		"vc-release": "vercel deploy --prebuilt --prod misc/vercel",
+		"vc-release-staging": "vercel deploy --prebuilt misc/vercel"
 	},
 	"dependencies": {
 		"@hiogawa/utils": "^1.7.0",
