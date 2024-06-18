@@ -1,0 +1,8 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.8.1/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git"
+	},
+	"linter": { "enabled": false }
+}
