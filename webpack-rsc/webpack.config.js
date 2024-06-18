@@ -24,6 +24,13 @@ export default function (env, _argv) {
 		server: "server",
 	};
 
+	const esbuildLoader = {
+		loader: "esbuild-loader",
+		options: {
+			target: "es2020",
+		},
+	};
+
 	/**
 	 * @satisfies {import("webpack").Configuration}
 	 */
@@ -37,7 +44,7 @@ export default function (env, _argv) {
 			rules: [
 				{
 					test: /\.tsx?$/,
-					use: "esbuild-loader",
+					use: esbuildLoader,
 				},
 				// https://webpack.js.org/guides/asset-modules/#source-assets
 				// https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
@@ -59,7 +66,7 @@ export default function (env, _argv) {
 	const serverConfig = {
 		...commonConfig,
 		name: "server",
-		target: "node20",
+		target: "node",
 		entry: {
 			index: "./src/entry-ssr-layer",
 		},
@@ -103,7 +110,7 @@ export default function (env, _argv) {
 							loader: path.resolve("./src/lib/loader-server-use-client.js"),
 							options: { clientReferences },
 						},
-						"esbuild-loader",
+						esbuildLoader,
 					],
 				},
 				...commonConfig.module.rules,
@@ -228,6 +235,7 @@ export default function (env, _argv) {
 	const browserConfig = {
 		...commonConfig,
 		name: "browser",
+		target: "web",
 		dependencies: ["server"],
 		entry: {
 			index: "./src/entry-browser",
