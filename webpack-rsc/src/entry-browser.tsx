@@ -13,11 +13,10 @@ async function main() {
 		(globalThis as any).__flightStream,
 		{ callServer: () => {} },
 	);
-	const browserRoot = <>{node}</>;
 
 	// react dom browser (react node -> html)
 	React.startTransition(() => {
-		ReactDOMClient.hydrateRoot(document, browserRoot);
+		ReactDOMClient.hydrateRoot(document, node);
 	});
 
 	if (__define.DEV) {

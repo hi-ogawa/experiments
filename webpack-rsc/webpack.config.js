@@ -256,7 +256,7 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					// inject client reference entries (TODO: lazy dep)
+					// inject client reference entries (TODO: lazy chunk)
 					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
 						for (const id of clientReferences) {
 							const dep = webpack.EntryPlugin.createDependency(id, {});
