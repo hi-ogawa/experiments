@@ -243,8 +243,8 @@ export default function (env, _argv) {
 		},
 		output: {
 			// https://webpack.js.org/guides/public-path/
-			// publicPath: "/assets/",
-			path: path.resolve("./dist/browser"),
+			publicPath: "/assets/",
+			path: path.resolve("./dist/browser/assets"),
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
