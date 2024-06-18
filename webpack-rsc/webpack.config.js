@@ -278,7 +278,7 @@ export default function (env, _argv) {
 					// generate client manifest
 					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L193
 					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
-						/** @type {import("./src/lib/utils").ReferenceMap} */
+						/** @type {import("./src/lib/client-manifest").ReferenceMap} */
 						const data = {};
 
 						for (const mod of compilation.modules) {
@@ -345,7 +345,7 @@ export default function (env, _argv) {
  * @param {Set<string>} selected
  */
 function processReferences(compilation, selected) {
-	/** @type {import("./src/lib/utils").ReferenceMap} */
+	/** @type {import("./src/lib/client-manifest").ReferenceMap} */
 	const result = {};
 	for (const mod of compilation.modules) {
 		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {

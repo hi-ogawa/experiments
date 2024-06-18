@@ -12,6 +12,8 @@ Minimal RSC demo on Webpack
 - [x] ssr
 - [x] browser
 - [x] client reference
+- [ ] fs routes
+- [ ] client side navigation
 - [ ] server reference
 - [ ] styles
 - [ ] server hmr
