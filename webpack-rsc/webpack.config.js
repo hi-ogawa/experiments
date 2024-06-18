@@ -319,11 +319,11 @@ function processReferences(compilation, selected) {
 /**
  *
  * @param {import("webpack").Compilation} compilation
- * @param {string} id
+ * @param {string} resource
  * @param {webpack.EntryOptions} options
  */
-function includeReference(compilation, id, options) {
-	const dep = webpack.EntryPlugin.createDependency(id, {});
+function includeReference(compilation, resource, options) {
+	const dep = webpack.EntryPlugin.createDependency(resource, {});
 	const promise = createManualPromise();
 	compilation.addInclude(
 		compilation.compiler.context,
