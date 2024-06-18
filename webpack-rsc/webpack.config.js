@@ -1,7 +1,7 @@
 import { cpSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { createManualPromise, tinyassert } from "@hiogawa/utils";
+import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
@@ -209,6 +209,9 @@ export default function (env, _argv) {
 
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(NAME, () => {
+						// when to invalidate client references?
+						clientReferences;
+
 						// invalidate all server cjs
 						for (const key in require.cache) {
 							if (key.startsWith(serverDir)) {
@@ -284,22 +287,24 @@ export default function (env, _argv) {
 								mod instanceof webpack.NormalModule &&
 								clientReferences.has(mod.resource)
 							) {
-								const moduleId = compilation.chunkGraph.getModuleId(mod);
-								/** @type {(string | number)[]} */
-								const chunks = [];
-								for (const chunk of compilation.chunkGraph.getModuleChunksIterable(
-									mod,
-								)) {
-									if (chunk.id === null) {
-										continue;
-									}
-									for (const file of chunk.files) {
-										chunks.push(chunk.id, file);
+								const mods = collectModuleDeps(compilation, mod);
+								const chunks = uniq(
+									[...mods].flatMap((mod) => [
+										...compilation.chunkGraph.getModuleChunksIterable(mod),
+									]),
+								);
+								/** @type {import("./src/types/react-types").ModuleId[]} */
+								const chunkIds = [];
+								for (const chunk of chunks) {
+									if (chunk.id !== null) {
+										for (const file of chunk.files) {
+											chunkIds.push(chunk.id, file);
+										}
 									}
 								}
 								data[mod.resource] = {
-									id: moduleId,
-									chunks,
+									id: compilation.chunkGraph.getModuleId(mod),
+									chunks: chunkIds,
 								};
 							}
 						}
@@ -381,4 +386,37 @@ function includeReference(compilation, resource, options) {
 		},
 	);
 	return promise;
+}
+
+/**
+ *
+ * @param {import("webpack").Compilation} compilation
+ * @param {import("webpack").Module} mod
+ */
+function collectModuleDeps(compilation, mod) {
+	/** @type {Set<import("webpack").Module>} */
+	const visited = new Set();
+
+	/**
+	 *
+	 * @param {import("webpack").Module} mod
+	 */
+	function recurse(mod) {
+		if (visited.has(mod)) {
+			return;
+		}
+		visited.add(mod);
+		const outMods = compilation.moduleGraph.getOutgoingConnectionsByModule(mod);
+		if (outMods) {
+			for (const outMod of outMods.keys()) {
+				if (outMod) {
+					recurse(outMod);
+				}
+			}
+		}
+	}
+
+	recurse(mod);
+
+	return visited;
 }
