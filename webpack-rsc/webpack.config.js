@@ -173,7 +173,6 @@ export default function (env, _argv) {
 					 * @type {import("webpack-dev-server").Configuration}
 					 */
 					const devServerConfig = {
-						// hot: false,
 						host: "localhost",
 						static: {
 							serveIndex: false,
@@ -209,7 +208,7 @@ export default function (env, _argv) {
 
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(NAME, () => {
-						// when to invalidate client references?
+						// TODO: when to invalidate client references?
 						clientReferences;
 
 						// invalidate all server cjs
