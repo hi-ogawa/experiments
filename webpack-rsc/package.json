@@ -1,5 +1,5 @@
 {
-	"name": "webpack-react-rsc",
+	"name": "@hiogawa/demo-webpack-rsc",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",

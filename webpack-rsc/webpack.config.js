@@ -8,11 +8,8 @@ import webpack from "webpack";
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
 
-// `require` cjs server code for dev ssr
-const require = createRequire(import.meta.url);
-
 /**
- * @param {{ WEBPACK_SERVE?: boolean, WEBPACK_BUILD?: boolean }} env
+ * @param {{ WEBPACK_BUILD?: boolean }} env
  * @param {unknown} _argv
  * @returns {import("webpack").Configuration[]}
  */
@@ -25,6 +22,13 @@ export default function (env, _argv) {
 	const LAYER = {
 		ssr: "ssr",
 		server: "server",
+	};
+
+	const esbuildLoader = {
+		loader: "esbuild-loader",
+		options: {
+			target: "es2020",
+		},
 	};
 
 	/**
@@ -40,7 +44,7 @@ export default function (env, _argv) {
 			rules: [
 				{
 					test: /\.tsx?$/,
-					use: "esbuild-loader",
+					use: esbuildLoader,
 				},
 				// https://webpack.js.org/guides/asset-modules/#source-assets
 				// https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
@@ -62,7 +66,7 @@ export default function (env, _argv) {
 	const serverConfig = {
 		...commonConfig,
 		name: "server",
-		target: "node20",
+		target: "node",
 		entry: {
 			index: "./src/entry-ssr-layer",
 		},
@@ -99,14 +103,14 @@ export default function (env, _argv) {
 				},
 				{
 					issuerLayer: LAYER.server,
-					// TODO: should skip "esbuild-loader" for plain js?
-					test: /\.[tj]sx?$/,
+					// TODO: handle external js package too
+					test: /\.tsx?$/,
 					use: [
 						{
 							loader: path.resolve("./src/lib/loader-server-use-client.js"),
 							options: { clientReferences },
 						},
-						"esbuild-loader",
+						esbuildLoader,
 					],
 				},
 				...commonConfig.module.rules,
@@ -159,6 +163,9 @@ export default function (env, _argv) {
 					const NAME = /** @type {any} */ (this).name;
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
+
+					// `require` cjs server code for dev ssr
+					const require = createRequire(import.meta.url);
 
 					/** @type {import("webpack-dev-server")} */
 					let devServer;
@@ -228,6 +235,7 @@ export default function (env, _argv) {
 	const browserConfig = {
 		...commonConfig,
 		name: "browser",
+		target: "web",
 		dependencies: ["server"],
 		entry: {
 			index: "./src/entry-browser",
@@ -311,11 +319,11 @@ function processReferences(compilation, selected) {
 /**
  *
  * @param {import("webpack").Compilation} compilation
- * @param {string} id
+ * @param {string} resource
  * @param {webpack.EntryOptions} options
  */
-function includeReference(compilation, id, options) {
-	const dep = webpack.EntryPlugin.createDependency(id, {});
+function includeReference(compilation, resource, options) {
+	const dep = webpack.EntryPlugin.createDependency(resource, {});
 	const promise = createManualPromise();
 	compilation.addInclude(
 		compilation.compiler.context,
