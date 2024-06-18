@@ -289,14 +289,11 @@ export default function (env, _argv) {
 function processReferences(compilation, selected) {
 	/** @type {import("./src/lib/utils").ReferenceMap} */
 	const result = {};
-	for (const module of compilation.modules) {
-		if (
-			module instanceof webpack.NormalModule &&
-			selected.has(module.resource)
-		) {
-			const id = compilation.chunkGraph.getModuleId(module);
+	for (const mod of compilation.modules) {
+		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {
+			const id = compilation.chunkGraph.getModuleId(mod);
 			// TODO: chunks
-			result[module.resource] = { id, chunks: [] };
+			result[mod.resource] = { id, chunks: [] };
 		}
 	}
 	return result;
@@ -315,13 +312,13 @@ function includeReference(compilation, id, options) {
 		compilation.compiler.context,
 		dep,
 		options,
-		(err, module) => {
+		(err, mod) => {
 			// force exports on build
 			// cf. https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-server-plugin.ts#L124-L126
 			if (
-				module &&
+				mod &&
 				compilation.moduleGraph
-					.getExportsInfo(module)
+					.getExportsInfo(mod)
 					.setUsedInUnknownWay(undefined)
 			) {
 				promise.resolve(null);
