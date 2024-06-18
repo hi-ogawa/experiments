@@ -1,39 +1,19 @@
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
+import { getClientManifest } from "./lib/utils";
 
 export type FlightData = React.ReactNode;
 
 export async function handler(request: Request) {
+	const { browserManifest } = await getClientManifest();
+
 	// react server (react node -> flight)
 	const node = <Router request={request} />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		node,
-		await getClientManifest(),
+		browserManifest,
 	);
 	return flightStream;
-}
-
-async function getClientManifest() {
-	if (1) {
-		// manual manifest for now
-		return {
-			"src/routes/_client.tsx#Hydrated": {
-				id: "./src/routes/_client.tsx",
-				name: "Hydrated",
-				// eager chunk for now
-				chunks: [],
-				// chunks: ["src_routes__client_tsx"],
-			},
-			"src/routes/_client.tsx#Counter": {
-				id: "./src/routes/_client.tsx",
-				name: "Counter",
-				chunks: [],
-				// chunks: ["src_routes__client_tsx"],
-			},
-		};
-	}
-	// TODO
-	return import(/* webpackIgnore: true */ "./__client_manifest.js" as string);
 }
 
 const routes = {

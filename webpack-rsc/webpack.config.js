@@ -147,13 +147,8 @@ export default function (env, _argv) {
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
 							() => {
-								const entries = filterModules(compilation, clientReferences);
-								const map = Object.fromEntries(
-									entries
-										.filter((e) => e.module.layer === LAYER.ssr)
-										.map((e) => [e.id, e.module.resource]),
-								);
-								const code = `export default ${JSON.stringify(map, null, 2)}`;
+								const data = processReferences(compilation, clientReferences);
+								const code = `export default ${JSON.stringify(data, null, 2)}`;
 								compilation.emitAsset(
 									"__client_reference_ssr.js",
 									new webpack.sources.RawSource(code),
@@ -275,11 +270,8 @@ export default function (env, _argv) {
 
 					// generate client manifest
 					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
-						const entries = filterModules(compilation, clientReferences);
-						const map = Object.fromEntries(
-							entries.map((e) => [e.id, e.module.resource]),
-						);
-						const code = `export default ${JSON.stringify(map, null, 2)}`;
+						const data = processReferences(compilation, clientReferences);
+						const code = `export default ${JSON.stringify(data, null, 2)}`;
 						writeFileSync("./dist/server/__client_reference_browser.js", code);
 					});
 				},
@@ -306,17 +298,17 @@ export default function (env, _argv) {
  * @param {import("webpack").Compilation} compilation
  * @param {Set<string>} selected
  */
-function filterModules(compilation, selected) {
-	/** @type {{ id: string | number, module: import("webpack").NormalModule}[]} */
-	let entries = [];
+function processReferences(compilation, selected) {
+	/** @type {import("./src/lib/utils").ReferenceMap} */
+	const result = {};
 	for (const module of compilation.modules) {
 		if (
 			module instanceof webpack.NormalModule &&
 			selected.has(module.resource)
 		) {
 			const id = compilation.chunkGraph.getModuleId(module);
-			entries.push({ id, module });
+			result[module.resource] = { id: String(id) };
 		}
 	}
-	return entries;
+	return result;
 }
