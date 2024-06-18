@@ -245,7 +245,6 @@ export default function (env, _argv) {
 				"__define.DEV": dev,
 			}),
 			{
-				// TODO: refactor with "client-reference:server"
 				name: "client-reference:browser",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
