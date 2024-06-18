@@ -1,12 +1,14 @@
 import { cpSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { createManualPromise, tinyassert } from "@hiogawa/utils";
+import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
+
+const require = createRequire(import.meta.url);
 
 /**
  * @param {{ WEBPACK_BUILD?: boolean }} env
@@ -164,9 +166,6 @@ export default function (env, _argv) {
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
 
-					// `require` cjs server code for dev ssr
-					const require = createRequire(import.meta.url);
-
 					/** @type {import("webpack-dev-server")} */
 					let devServer;
 
@@ -209,6 +208,9 @@ export default function (env, _argv) {
 
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(NAME, () => {
+						// TODO: when to invalidate client references?
+						clientReferences;
+
 						// invalidate all server cjs
 						for (const key in require.cache) {
 							if (key.startsWith(serverDir)) {
@@ -247,6 +249,22 @@ export default function (env, _argv) {
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
+		module: {
+			rules: [
+				{
+					test: require.resolve("react-server-dom-webpack/client.browser"),
+					use: {
+						loader: path.resolve(
+							"./src/lib/loader-inject-client-references.js",
+						),
+						options: {
+							clientReferences,
+						},
+					},
+				},
+				...commonConfig.module.rules,
+			],
+		},
 		plugins: [
 			new webpack.DefinePlugin({
 				"__define.SSR": "false",
@@ -257,16 +275,39 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					// inject client reference entries (TODO: lazy chunk)
-					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
-						for (const reference of clientReferences) {
-							await includeReference(compilation, reference, {});
-						}
-					});
-
 					// generate client manifest
+					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L193
 					compiler.hooks.afterCompile.tapPromise(NAME, async (compilation) => {
-						const data = processReferences(compilation, clientReferences);
+						/** @type {import("./src/lib/utils").ReferenceMap} */
+						const data = {};
+
+						for (const mod of compilation.modules) {
+							if (
+								mod instanceof webpack.NormalModule &&
+								clientReferences.has(mod.resource)
+							) {
+								const mods = collectModuleDeps(compilation, mod);
+								const chunks = uniq(
+									[...mods].flatMap((mod) => [
+										...compilation.chunkGraph.getModuleChunksIterable(mod),
+									]),
+								);
+								/** @type {import("./src/types/react-types").ModuleId[]} */
+								const chunkIds = [];
+								for (const chunk of chunks) {
+									if (chunk.id !== null) {
+										for (const file of chunk.files) {
+											chunkIds.push(chunk.id, file);
+										}
+									}
+								}
+								data[mod.resource] = {
+									id: compilation.chunkGraph.getModuleId(mod),
+									chunks: chunkIds,
+								};
+							}
+						}
+
 						const code = `export default ${JSON.stringify(data, null, 2)}`;
 						writeFileSync("./dist/server/__client_reference_browser.js", code);
 					});
@@ -309,7 +350,6 @@ function processReferences(compilation, selected) {
 	for (const mod of compilation.modules) {
 		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {
 			const id = compilation.chunkGraph.getModuleId(mod);
-			// TODO: chunks
 			result[mod.resource] = { id, chunks: [] };
 		}
 	}
@@ -345,4 +385,37 @@ function includeReference(compilation, resource, options) {
 		},
 	);
 	return promise;
+}
+
+/**
+ *
+ * @param {import("webpack").Compilation} compilation
+ * @param {import("webpack").Module} mod
+ */
+function collectModuleDeps(compilation, mod) {
+	/** @type {Set<import("webpack").Module>} */
+	const visited = new Set();
+
+	/**
+	 *
+	 * @param {import("webpack").Module} mod
+	 */
+	function recurse(mod) {
+		if (visited.has(mod)) {
+			return;
+		}
+		visited.add(mod);
+		const outMods = compilation.moduleGraph.getOutgoingConnectionsByModule(mod);
+		if (outMods) {
+			for (const outMod of outMods.keys()) {
+				if (outMod) {
+					recurse(outMod);
+				}
+			}
+		}
+	}
+
+	recurse(mod);
+
+	return visited;
 }

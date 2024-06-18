@@ -60,7 +60,7 @@ export async function getClientManifest() {
 							return {
 								id: entry.id,
 								name,
-								chunks: entry.chunks,
+								chunks: [],
 							} satisfies ImportManifestEntry;
 						},
 					},
@@ -70,6 +70,7 @@ export async function getClientManifest() {
 	);
 	const ssrManifest: SsrManifest = {
 		moduleMap: ssrModuleMap,
+		moduleLoading: null,
 	};
 
 	return { browserManifest, ssrManifest };
