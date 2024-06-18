@@ -8,11 +8,8 @@ import webpack from "webpack";
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
 
-// `require` cjs server code for dev ssr
-const require = createRequire(import.meta.url);
-
 /**
- * @param {{ WEBPACK_SERVE?: boolean, WEBPACK_BUILD?: boolean }} env
+ * @param {{ WEBPACK_BUILD?: boolean }} env
  * @param {unknown} _argv
  * @returns {import("webpack").Configuration[]}
  */
@@ -99,8 +96,8 @@ export default function (env, _argv) {
 				},
 				{
 					issuerLayer: LAYER.server,
-					// TODO: should skip "esbuild-loader" for plain js?
-					test: /\.[tj]sx?$/,
+					// TODO: handle external js package too
+					test: /\.tsx?$/,
 					use: [
 						{
 							loader: path.resolve("./src/lib/loader-server-use-client.js"),
@@ -159,6 +156,9 @@ export default function (env, _argv) {
 					const NAME = /** @type {any} */ (this).name;
 					const serverDir = path.resolve("./dist/server");
 					const serverPath = path.join(serverDir, "index.cjs");
+
+					// `require` cjs server code for dev ssr
+					const require = createRequire(import.meta.url);
 
 					/** @type {import("webpack-dev-server")} */
 					let devServer;
