@@ -2,15 +2,15 @@ import { tinyassert } from "@hiogawa/utils";
 import type {
 	BundlerConfig,
 	ImportManifestEntry,
+	ModuleId,
 	ModuleMap,
 	SsrManifest,
 } from "../types/react-types";
 
 export type ReferenceMap = {
 	[resource: string]: {
-		id: string;
-		// TODO
-		chunks?: string[];
+		id: ModuleId;
+		chunks: ModuleId[];
 	};
 };
 
@@ -34,7 +34,7 @@ export async function getClientManifest() {
 					id: entry.id,
 					name,
 					// TODO
-					chunks: [],
+					chunks: [entry.id],
 				} satisfies ImportManifestEntry;
 			},
 		},
@@ -61,7 +61,7 @@ export async function getClientManifest() {
 							return {
 								id: entry.id,
 								name,
-								chunks: [],
+								chunks: [entry.id],
 							} satisfies ImportManifestEntry;
 						},
 					},

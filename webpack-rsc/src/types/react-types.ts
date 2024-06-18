@@ -1,7 +1,9 @@
+export type ModuleId = string | number;
+
 export interface ImportManifestEntry {
-	id: string;
+	id: ModuleId;
 	name: string;
-	chunks: string[];
+	chunks: ModuleId[];
 }
 
 export interface BundlerConfig {

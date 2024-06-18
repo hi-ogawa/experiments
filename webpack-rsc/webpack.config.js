@@ -129,7 +129,7 @@ export default function (env, _argv) {
 						for (const id of clientReferences) {
 							const dep = webpack.EntryPlugin.createDependency(id, {});
 							await new Promise((resolve, reject) => {
-								compilation.addEntry(
+								compilation.addInclude(
 									compiler.context,
 									dep,
 									{ layer: LAYER.ssr },
@@ -261,7 +261,7 @@ export default function (env, _argv) {
 						for (const id of clientReferences) {
 							const dep = webpack.EntryPlugin.createDependency(id, {});
 							await new Promise((resolve, reject) => {
-								compilation.addEntry(compiler.context, dep, {}, (err) =>
+								compilation.addInclude(compiler.context, dep, {}, (err) =>
 									err ? reject(err) : resolve(null),
 								);
 							});
@@ -307,7 +307,8 @@ function processReferences(compilation, selected) {
 			selected.has(module.resource)
 		) {
 			const id = compilation.chunkGraph.getModuleId(module);
-			result[module.resource] = { id: String(id) };
+			// TODO: chunks
+			result[module.resource] = { id, chunks: [] };
 		}
 	}
 	return result;
