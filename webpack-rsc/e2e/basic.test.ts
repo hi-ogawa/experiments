@@ -46,3 +46,24 @@ async function testNavigation(page: Page) {
 	await page.waitForURL("/");
 	await page.getByRole("heading", { name: "Webpack RSC" }).click();
 }
+
+test("error @js", async ({ page }) => {
+	await page.goto("/");
+	await waitForHydration(page);
+	await testError(page);
+	await page.getByRole("button", { name: "count is 0" }).click();
+	await page.getByRole("button", { name: "count is 1" }).click();
+});
+
+testNoJs("error @nojs", async ({ page }) => {
+	await page.goto("/");
+	await testError(page);
+});
+
+async function testError(page: Page) {
+	await page.getByRole("link", { name: "Error" }).click();
+	await page.waitForURL("/error");
+	await page.getByRole("heading", { name: "Something went wrong" }).click();
+	await page.getByRole("link", { name: "Home" }).click();
+	await page.waitForURL("/");
+}

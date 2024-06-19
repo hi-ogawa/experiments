@@ -23,6 +23,7 @@ export default function Layout(props: React.PropsWithChildren) {
 					Menu:
 					<a href="/">Home</a>
 					<a href="/stream">Stream</a>
+					<a href="/error">Error</a>
 				</div>
 				<div id="root" style={{ display: "flex", placeContent: "center" }}>
 					{props.children}
