@@ -25,7 +25,9 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  flex-direction: column;
+  padding: 1rem 0;
+  gap: 1rem 0;
   min-width: 320px;
   min-height: 100vh;
 }

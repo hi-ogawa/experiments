@@ -11,7 +11,21 @@ export default function Layout(props: React.PropsWithChildren) {
 				<style>{css}</style>
 			</head>
 			<body>
-				<div id="root">{props.children}</div>
+				<div
+					style={{
+						display: "flex",
+						gap: "1rem",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					Menu:
+					<a href="/">Home</a>
+					<a href="/stream">Stream</a>
+				</div>
+				<div id="root" style={{ display: "flex", placeContent: "center" }}>
+					{props.children}
+				</div>
 			</body>
 		</html>
 	);
