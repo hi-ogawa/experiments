@@ -20,8 +20,6 @@ export async function actionHandler(request: Request): Promise<ActionResult> {
 		const entry = serverManifest[$$id];
 		// @ts-expect-error
 		const mod = __webpack_require__(entry.id);
-		// TODO: export tree shaken...
-		console.log({ $$id, entry, mod });
 		boundAction = () => mod[entry.name](...args);
 	} else {
 		// progressive enhancement
