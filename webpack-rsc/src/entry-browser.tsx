@@ -2,10 +2,13 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
+import { ErrorBoundary } from "./lib/error-boundary";
 import { setupBrowserRouter } from "./lib/router/browser";
+import GlobalErrorPage from "./routes/global-error";
 
 async function main() {
-	if (window.location.search.includes("__nojs")) {
+	const url = new URL(window.location.href);
+	if (url.searchParams.has("__nojs")) {
 		return;
 	}
 
@@ -15,7 +18,7 @@ async function main() {
 
 	// react client (flight -> react node)
 	const initialFlight = ReactClient.createFromReadableStream<FlightData>(
-		(globalThis as any).__flightStream,
+		(self as any).__flightStream,
 		{ callServer },
 	);
 
@@ -42,15 +45,24 @@ async function main() {
 		return <>{React.use(flight)}</>;
 	}
 
+	let browserRoot = (
+		<ErrorBoundary Fallback={GlobalErrorPage}>
+			<BrowserRoot />
+		</ErrorBoundary>
+	);
+	if (!url.searchParams.has("__nostrict")) {
+		browserRoot = <React.StrictMode>{browserRoot}</React.StrictMode>;
+	}
+
 	// react dom browser (react node -> html)
-	React.startTransition(() => {
-		ReactDOMClient.hydrateRoot(
-			document,
-			<React.StrictMode>
-				<BrowserRoot />
-			</React.StrictMode>,
-		);
-	});
+	if ((self as any).__nossr) {
+		// render client only on ssr error
+		ReactDOMClient.createRoot(document).render(browserRoot);
+	} else {
+		React.startTransition(() => {
+			ReactDOMClient.hydrateRoot(document, browserRoot);
+		});
+	}
 
 	if (__define.DEV) {
 		// @ts-expect-error
@@ -69,3 +81,9 @@ async function main() {
 }
 
 main();
+
+declare module "react-dom/client" {
+	interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_CREATE_ROOT_CONTAINERS {
+		Document: Document;
+	}
+}

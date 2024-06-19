@@ -5,6 +5,7 @@ import * as entryReactServer from "./entry-server-layer";
 import { getClientAssets } from "./lib/client-assets";
 import { getClientManifest } from "./lib/client-manifest";
 import { injectFlightStream } from "./lib/ssr-stream";
+import GlobalErrorPage from "./routes/global-error";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
@@ -29,10 +30,26 @@ export async function handler(request: Request) {
 	);
 
 	// react dom ssr (react node -> html)
+	let status = 200;
+	let htmlStream: ReadableStream<Uint8Array>;
 	const bootstrapScripts = await getClientAssets();
-	const htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
-		bootstrapScripts,
-	});
+	try {
+		htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
+			bootstrapScripts,
+		});
+	} catch (e) {
+		// two-pass render for ssr error
+		status = 500;
+		const errorRoot = (
+			<>
+				<GlobalErrorPage />
+				<script dangerouslySetInnerHTML={{ __html: "self.__nossr = true" }} />
+			</>
+		);
+		htmlStream = await ReactDOMServer.renderToReadableStream(errorRoot, {
+			bootstrapScripts,
+		});
+	}
 
 	const htmlStreamFinal = htmlStream
 		.pipeThrough(new TextDecoderStream())
@@ -41,6 +58,7 @@ export async function handler(request: Request) {
 		.pipeThrough(new TextEncoderStream());
 
 	return new Response(htmlStreamFinal, {
+		status,
 		headers: {
 			"content-type": "text/html;charset=utf-8",
 		},
