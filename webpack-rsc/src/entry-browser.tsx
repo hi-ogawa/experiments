@@ -9,21 +9,37 @@ async function main() {
 		return;
 	}
 
+	const callServer = () => {
+		throw new Error("wip server action");
+	};
+
 	// react client (flight -> react node)
-	const node = await ReactClient.createFromReadableStream<FlightData>(
+	const initialFlight = ReactClient.createFromReadableStream<FlightData>(
 		(globalThis as any).__flightStream,
-		{ callServer: () => {} },
+		{ callServer },
 	);
 
 	function BrowserRoot() {
+		const [flight, setFlight] =
+			React.useState<Promise<FlightData>>(initialFlight);
+
 		React.useEffect(
 			() =>
 				setupBrowserRouter(() => {
-					window.location.href;
+					React.startTransition(() => {
+						const url = new URL(window.location.href);
+						url.searchParams.set("__f", "");
+						setFlight(
+							ReactClient.createFromFetch<FlightData>(fetch(url), {
+								callServer,
+							}),
+						);
+					});
 				}),
 			[],
 		);
-		return <>{node}</>;
+
+		return <>{React.use(flight)}</>;
 	}
 
 	// react dom browser (react node -> html)
