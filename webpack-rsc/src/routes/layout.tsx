@@ -1,5 +1,5 @@
 import type React from "react";
-import css from "../index.css?raw";
+import css from "./_style.css?raw";
 
 export default function Layout(props: React.PropsWithChildren) {
 	return (
