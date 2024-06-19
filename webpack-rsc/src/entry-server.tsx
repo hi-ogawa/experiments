@@ -1,6 +1,8 @@
+import { tinyassert } from "@hiogawa/utils";
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
 import { getClientManifest } from "./lib/client-manifest";
+import Layout from "./routes/layout";
 
 export type FlightData = React.ReactNode;
 
@@ -16,30 +18,41 @@ export async function handler(request: Request) {
 	return flightStream;
 }
 
-// TODO: fs routes
+// fs routes
 // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
 // https://webpack.js.org/api/module-methods/#webpackinclude
 
-const routes = {
-	"/": () => import(/* webpackMode: 'eager' */ "./routes/page"),
-	"/stream": () => import(/* webpackMode: 'eager' */ "./routes/stream/page"),
-};
-
 async function Router(props: { request: Request }) {
 	const url = new URL(props.request.url);
-
-	let node = <div>Not Found</div>;
-
-	const route = routes[url.pathname as "/"];
-	if (!!route) {
-		const { default: Page } = await route();
-		node = <Page />;
-	}
-
-	const { default: Layout } = await import(
-		/* webpackMode: 'eager' */ "./routes/layout"
+	return (
+		<Layout>
+			<Route pathname={url.pathname} />
+		</Layout>
 	);
-	node = <Layout>{node}</Layout>;
+}
 
-	return node;
+async function Route(props: { pathname: string }) {
+	// TODO: not found?
+	const mod = await importRoute(props.pathname);
+	tinyassert(typeof mod.default === "function", "invalid route export");
+	return <mod.default />;
+}
+
+function importRoute(pathname: string) {
+	// "/"    => "page"
+	// "/x"   => "x/page"
+	// "/x/"  => "x/page"
+	// "/x/y" => "x/y/page"
+	const normalized =
+		pathname
+			// ensure trailing /
+			.replace(/\/*$/, "/")
+			// strip prefix /
+			.replace(/^\//, "") + "page";
+
+	return import(
+		/* webpackMode: 'eager' */
+		/* webpackInclude: /\/page\.[jt]sx?$/ */
+		`./routes/${normalized}`
+	);
 }
