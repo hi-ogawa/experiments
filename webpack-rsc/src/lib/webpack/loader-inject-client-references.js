@@ -1,3 +1,5 @@
+// TODO: use virtual module?
+
 /**
  * @typedef {{ clientReferences: Set<string> }} LoaderOptions
  */

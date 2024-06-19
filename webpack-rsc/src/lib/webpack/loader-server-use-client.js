@@ -1,3 +1,5 @@
+// TODO: use https://github.com/hi-ogawa/vite-plugins/tree/main/packages/transforms
+
 /**
  * @typedef {{ clientReferences: Set<string> }} LoaderOptions
  */

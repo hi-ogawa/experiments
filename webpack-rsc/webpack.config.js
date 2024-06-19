@@ -109,7 +109,9 @@ export default function (env, _argv) {
 					test: /\.tsx?$/,
 					use: [
 						{
-							loader: path.resolve("./src/lib/loader-server-use-client.js"),
+							loader: path.resolve(
+								"./src/lib/webpack/loader-server-use-client.js",
+							),
 							options: { clientReferences },
 						},
 						esbuildLoader,
@@ -255,7 +257,7 @@ export default function (env, _argv) {
 					test: path.resolve("./src/entry-browser.tsx"),
 					use: {
 						loader: path.resolve(
-							"./src/lib/loader-inject-client-references.js",
+							"./src/lib/webpack/loader-inject-client-references.js",
 						),
 						options: {
 							clientReferences,
