@@ -240,7 +240,9 @@ export default function (env, _argv) {
 		target: "web",
 		dependencies: ["server"],
 		entry: {
-			index: "./src/entry-browser",
+			index: {
+				import: ["./src/lib/virtual-client-references", "./src/entry-browser"],
+			},
 		},
 		output: {
 			// https://webpack.js.org/guides/public-path/
@@ -254,7 +256,8 @@ export default function (env, _argv) {
 				{
 					test: path.resolve("./src/lib/virtual-client-references.js"),
 					use: {
-						loader: "@hiogawa/local-loaders/loader-virtual-client-references.js",
+						loader:
+							"@hiogawa/local-loaders/loader-virtual-client-references.js",
 						options: {
 							clientReferences,
 						},
