@@ -8,7 +8,7 @@ import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
 import type { CallServerCallback } from "./types/react-types";
 
-// TODO: this one still has issues
+// TODO: maybe we have to revert the previous PR
 // https://github.com/hi-ogawa/experiments/pull/33
 () => [
 	import("./routes/_client"),
