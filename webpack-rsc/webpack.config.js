@@ -109,9 +109,7 @@ export default function (env, _argv) {
 					test: /\.tsx?$/,
 					use: [
 						{
-							loader: path.resolve(
-								"./src/lib/webpack/loader-server-use-client.js",
-							),
+							loader: "@hiogawa/local-loaders/loader-server-use-client.js",
 							options: { clientReferences },
 						},
 						esbuildLoader,
@@ -256,9 +254,7 @@ export default function (env, _argv) {
 				{
 					test: path.resolve("./src/lib/virtual-client-references.js"),
 					use: {
-						loader: path.resolve(
-							"./src/lib/webpack/loader-inject-client-references.js",
-						),
+						loader: "@hiogawa/local-loaders/loader-virtual-client-references.js",
 						options: {
 							clientReferences,
 						},

@@ -1,0 +1,8 @@
+{
+	"name": "local-loaders",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./*": "./*"
+	}
+}

@@ -24,6 +24,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.8.1
         version: 1.8.1
+      '@hiogawa/local-loaders':
+        specifier: link:./src/lib/webpack
+        version: link:src/lib/webpack
       '@hiogawa/utils-node':
         specifier: ^0.0.1
         version: 0.0.1

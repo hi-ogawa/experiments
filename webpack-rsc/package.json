@@ -27,6 +27,7 @@
 		"react-server-dom-webpack": "19.0.0-rc-dfd30974ab-20240613"
 	},
 	"devDependencies": {
+		"@hiogawa/local-loaders": "link:./src/lib/webpack",
 		"@biomejs/biome": "^1.8.1",
 		"@hiogawa/utils-node": "^0.0.1",
 		"@playwright/test": "^1.44.1",
