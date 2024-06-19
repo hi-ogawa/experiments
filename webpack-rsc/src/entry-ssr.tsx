@@ -4,7 +4,7 @@ import type { FlightData } from "./entry-server";
 import * as entryReactServer from "./entry-server-layer";
 import { getClientAssets } from "./lib/client-assets";
 import { getClientManifest } from "./lib/client-manifest";
-import { StreamTransfer } from "./lib/ssr-stream";
+import { injectFlightStream } from "./lib/ssr-stream";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);
@@ -23,16 +23,9 @@ export async function handler(request: Request) {
 
 	// react client (flight -> react node)
 	const { ssrManifest } = await getClientManifest();
-	const node = await ReactClient.createFromReadableStream<FlightData>(
+	const ssrRoot = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
 		{ ssrManifest },
-	);
-	const ssrRoot = (
-		<>
-			{node}
-			{/* send a copy of flight stream together with ssr */}
-			<StreamTransfer stream={flightStream2} />
-		</>
 	);
 
 	// react dom ssr (react node -> html)
@@ -41,7 +34,13 @@ export async function handler(request: Request) {
 		bootstrapScripts,
 	});
 
-	return new Response(htmlStream, {
+	const htmlStreamFinal = htmlStream
+		.pipeThrough(new TextDecoderStream())
+		// send a copy of flight stream together with ssr
+		.pipeThrough(injectFlightStream(flightStream2))
+		.pipeThrough(new TextEncoderStream());
+
+	return new Response(htmlStreamFinal, {
 		headers: {
 			"content-type": "text/html;charset=utf-8",
 		},
