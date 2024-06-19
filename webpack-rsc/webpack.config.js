@@ -91,6 +91,7 @@ export default function (env, _argv) {
 		optimization: {
 			minimize: false,
 			concatenateModules: false,
+			usedExports: false,
 		},
 		// TODO: https://webpack.js.org/configuration/externals
 		externals: {},
