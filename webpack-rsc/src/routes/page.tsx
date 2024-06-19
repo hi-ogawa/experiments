@@ -2,6 +2,7 @@ import React from "react";
 import reactLogo from "../assets/react.svg?inline";
 import webpackLogo from "../assets/webpack.svg?inline";
 import { Counter, Hydrated } from "./_client";
+import { Client2 } from "./_client2";
 
 export default function Page() {
 	return (
@@ -18,6 +19,7 @@ export default function Page() {
 			<pre>{React.version}</pre>
 			<pre>
 				<Hydrated />
+				<Client2 />
 			</pre>
 			<div className="card">
 				<Counter />
