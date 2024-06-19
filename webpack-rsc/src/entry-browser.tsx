@@ -11,7 +11,7 @@ async function main() {
 
 	function callServer() {
 		throw new Error("wip server action");
-	};
+	}
 
 	// react client (flight -> react node)
 	const initialFlight = ReactClient.createFromReadableStream<FlightData>(
