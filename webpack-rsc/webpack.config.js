@@ -147,127 +147,17 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					// inject discovered client references to ssr entries
-					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
-					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
-					// TODO: how to inject server references only imported from client references?
-					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
-						console.log("[finishMake]");
-						for (const reference of clientReferences) {
-							await includeReference(compilation, reference, {
-								layer: LAYER.ssr,
-							});
-						}
-					});
-
-					// generate client manifest and server manifest
 					compiler.hooks.thisCompilation.tap(NAME, (compilation) => {
-						// compilation.hooks.finishModules.tapPromise(NAME, async () => {
-						// 	// console.log("[finishModules]", {
-						// 	// 	clientReferences,
-						// 	// 	serverReferences,
-						// 	// })
-						// 	// for (const reference of clientReferences) {
-						// 	// 	await includeReference(compilation, reference, {
-						// 	// 		layer: LAYER.ssr,
-						// 	// 	});
-						// 	// }
-						// });
-
-						/**
-						 *
-						 * @param {Set<string>} lhs
-						 * @param {Set<string>} rhs
-						 */
-						function isEqualSet(lhs, rhs) {
-							return (
-								[...rhs].every((e) => lhs.has(e)) &&
-								[...lhs].every((e) => rhs.has(e))
-							);
-						}
-
+						// inject discovered client references as ssr entries
+						// and server references as server entries
 						let needAdditional = false;
 						let lastClientReferences = new Set(clientReferences);
 						let lastServerReferences = new Set(serverReferences);
-						// compilation.hooks.needAdditionalSeal.tap(NAME, () => {
-						// 	// console.log("[needAdditionalSeal]", {
-						// 	// 	lastClientReferences,
-						// 	// 	lastServerReferences,
-						// 	// 	clientReferences,
-						// 	// 	serverReferences,
-						// 	// });
-						// 	return needAdditional;
-						// 	// if (
-						// 	// 	isEqualSet(clientReferences, lastClientReferences) &&
-						// 	// 	isEqualSet(serverReferences, lastServerReferences)
-						// 	// ) {
-						// 	// 	return false;
-						// 	// }
-						// 	// lastClientReferences = new Set(clientReferences);
-						// 	// lastServerReferences = new Set(serverReferences);
-						// 	// return true;
-						// });
 
-						// compilation.hooks.seal.tap(NAME, async () => {
-						// 	// console.log("[seal]", {
-						// 	// 	clientReferences,
-						// 	// 	serverReferences,
-						// 	// })
-						// 	console.log("[seal]", {
-						// 		clientReferences,
-						// 		serverReferences,
-						// 	})
-						// 	// for (const reference of clientReferences) {
-						// 	// 	await includeReference(compilation, reference, {
-						// 	// 		layer: LAYER.ssr,
-						// 	// 	});
-						// 	// }
-						// });
-
-						// compilation.hooks.unseal.tap(NAME, async () => {
-						// 	console.log("[unseal]", {
-						// 		clientReferences,
-						// 		serverReferences,
-						// 	})
-						// });
-
-						// TODO: watch mode?
-						// let lastClientReferences = new Set(clientReferences);
-						// let lastServerReferences = new Set(serverReferences);
-						// compilation.hooks.processAssets.tapPromise(
-						// 	{
-						// 		name: NAME,
-						// 		stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
-						// 	},
-						// 	async () => {
-						// 		console.log("[processAssets]", {
-						// 			lastClientReferences,
-						// 			lastServerReferences,
-						// 			clientReferences,
-						// 			serverReferences,
-						// 		});
-						// 		if (
-						// 			isEqualSet(clientReferences, lastClientReferences) &&
-						// 			isEqualSet(serverReferences, lastServerReferences)
-						// 		) {
-						// 		}
-						// 		needAdditional = !(
-						// 			isEqualSet(clientReferences, lastClientReferences) &&
-						// 			isEqualSet(serverReferences, lastServerReferences)
-						// 		);
-						// 		lastClientReferences = new Set(clientReferences);
-						// 		lastServerReferences = new Set(serverReferences);
-						// 		for (const reference of clientReferences) {
-						// 			// if (lastClientReferences1.has(reference)) {
-						// 			// 	continue;
-						// 			// }
-						// 			// needAdditional = true;
-						// 			await includeReference(compilation, reference, {
-						// 				layer: LAYER.ssr,
-						// 			});
-						// 		}
-						// 	},
-						// );
+						compilation.hooks.needAdditionalSeal.tap(
+							NAME,
+							() => needAdditional,
+						);
 
 						compilation.hooks.processAssets.tapPromise(
 							{
@@ -275,51 +165,47 @@ export default function (env, _argv) {
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
 							async () => {
-								// console.log("[processAssets]", {
-								// 	lastClientReferences,
-								// 	lastServerReferences,
-								// 	clientReferences,
-								// 	serverReferences,
-								// });
-								// if (
-								// 	isEqualSet(clientReferences, lastClientReferences) &&
-								// 	isEqualSet(serverReferences, lastServerReferences)
-								// ) {
-								// }
-								// needAdditional = !(
-								// 	isEqualSet(clientReferences, lastClientReferences) &&
-								// 	isEqualSet(serverReferences, lastServerReferences)
-								// );
-								// lastClientReferences = new Set(clientReferences);
-								// lastServerReferences = new Set(serverReferences);
-								// for (const reference of clientReferences) {
-								// 	// if (lastClientReferences1.has(reference)) {
-								// 	// 	continue;
-								// 	// }
-								// 	// needAdditional = true;
+								console.log("[processAssets]", {
+									lastClientReferences,
+									lastServerReferences,
+									clientReferences,
+									serverReferences,
+								});
+								const newClientReferences = difference(
+									[...clientReferences],
+									[...lastClientReferences],
+								);
+								const newServerReferences = difference(
+									[...serverReferences],
+									[...lastServerReferences],
+								);
+								lastClientReferences = new Set(clientReferences);
+								lastServerReferences = new Set(serverReferences);
+								needAdditional =
+									newClientReferences.length > 0 ||
+									newServerReferences.length > 0;
+								for (const reference of newClientReferences) {
+									await includeReference(compilation, reference, {
+										layer: LAYER.ssr,
+									});
+								}
+								// TODO: entry is already included in LAYER.ssr ?
+								// for (const reference of newServerReferences) {
 								// 	await includeReference(compilation, reference, {
-								// 		layer: LAYER.ssr,
+								// 		layer: LAYER.server,
 								// 	});
 								// }
-								// for (const reference of serverReferences) {
-								// 	if (lastClientReferences.has(reference)) {
-								// 		continue;
-								// 	}
-								// 	await includeReference(compilation, reference, {
-								// 		layer: LAYER.ssr,
-								// 	});
-								// }
-								// console.log("[processAssets]", {
-								// 	lastClientReferences,
-								// 	lastServerReferences,
-								// 	clientReferences,
-								// 	serverReferences,
-								// });
-								// lastClientReferences = new Set(clientReferences);
-								// lastServerReferences = new Set(serverReferences);
-								// if (needAdditional) {
-								// 	return;
-								// }
+							},
+						);
+
+						// generate client manifest and server manifest
+						compilation.hooks.processAssets.tapPromise(
+							{
+								name: NAME,
+								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE,
+							},
+							async () => {
+								if (needAdditional) return;
 
 								const clientMap = processReferences(
 									compilation,
@@ -327,15 +213,15 @@ export default function (env, _argv) {
 									LAYER.ssr,
 								);
 								// TODO
-								// console.log("[processAssets]", {
-								// 	clientReferences,
-								// 	layerSsr: clientMap,
-								// 	layerServer: processReferences(
-								// 		compilation,
-								// 		clientReferences,
-								// 		LAYER.server,
-								// 	),
-								// });
+								console.log("[__client_reference_ssr]", {
+									clientReferences,
+									clientMap,
+									debug: processReferences(
+										compilation,
+										clientReferences,
+										LAYER.server,
+									),
+								});
 								compilation.emitAsset(
 									"__client_reference_ssr.js",
 									new webpack.sources.RawSource(
@@ -349,15 +235,15 @@ export default function (env, _argv) {
 									LAYER.server,
 								);
 								// TODO
-								// console.log({
-								// 	serverReferences,
-								// 	layerServer: serverMap,
-								// 	layerSsr: processReferences(
-								// 		compilation,
-								// 		serverReferences,
-								// 		LAYER.ssr,
-								// 	),
-								// });
+								console.log("[__server_reference]", {
+									serverReferences,
+									serverMap,
+									debug: processReferences(
+										compilation,
+										serverReferences,
+										LAYER.ssr,
+									),
+								});
 								compilation.emitAsset(
 									"__server_reference.js",
 									new webpack.sources.RawSource(
