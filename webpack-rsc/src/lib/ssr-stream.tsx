@@ -14,13 +14,13 @@ export function StreamTransfer(props: { stream: ReadableStream<Uint8Array> }) {
 	function Recurse(props: { depth: number }) {
 		const result = React.use((results[props.depth] ??= reader.read()));
 		if (result.done) {
-			return toScript(`self.__flightStreamController.close()`);
+			return toScript(`self.__f_close()`);
 		}
 		// TODO: escape
 		const data = JSON.stringify(result.value);
 		return (
 			<>
-				{toScript(`self.__flightStreamController.enqueue(${data})`)}
+				{toScript(`self.__f_push(${data})`)}
 				<React.Suspense>
 					<Recurse depth={props.depth + 1} />
 				</React.Suspense>
@@ -32,8 +32,9 @@ export function StreamTransfer(props: { stream: ReadableStream<Uint8Array> }) {
 		<>
 			{toScript(`
 self.__flightStream = new ReadableStream({
-	start(c) {
-		self.__flightStreamController = c;
+	start(controller) {
+		self.__f_push = (c) => controller.enqueue(c);
+		self.__f_close = () => controller.close();
 	}
 }).pipeThrough(new TextEncoderStream())
 `)}
