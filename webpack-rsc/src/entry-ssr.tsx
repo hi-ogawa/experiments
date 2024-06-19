@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOMServer from "react-dom/server.edge";
 import ReactClient from "react-server-dom-webpack/client.edge";
-import type { StatsCompilation } from "webpack";
 import type { FlightData } from "./entry-server";
 import * as entryReactServer from "./entry-server-layer";
+import { getClientAssets } from "./lib/client-assets";
 import { getClientManifest } from "./lib/client-manifest";
 
 export async function handler(request: Request) {
@@ -46,21 +46,6 @@ export async function handler(request: Request) {
 			"content-type": "text/html;charset=utf-8",
 		},
 	});
-}
-
-async function getClientAssets() {
-	let bootstrapScripts: string[] = [];
-	if (__define.DEV) {
-		bootstrapScripts = ["/assets/index.js"];
-	} else {
-		const clientStats: { default: StatsCompilation } = await import(
-			/* webpackIgnore: true */ "./__client_stats.js" as string
-		);
-		bootstrapScripts = clientStats.default.assetsByChunkName!["index"].map(
-			(file) => `/assets/${file}`,
-		);
-	}
-	return bootstrapScripts;
 }
 
 // based on https://github.com/remix-run/react-router/blob/09b52e491e3927e30e707abe67abdd8e9b9de946/packages/react-router/lib/dom/ssr/single-fetch.tsx#L49
