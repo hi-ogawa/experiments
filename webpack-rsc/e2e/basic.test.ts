@@ -67,3 +67,17 @@ async function testError(page: Page) {
 	await page.getByRole("link", { name: "Home" }).click();
 	await page.waitForURL("/");
 }
+
+test.only("action @js", async ({ page }) => {
+	await page.goto("/action");
+	await waitForHydration(page);
+	await page.getByText("Count is 0").click();
+	await page.getByRole("button", { name: "+" }).click();
+	await page.getByText("Count is 1").click();
+	await page.getByRole("button", { name: "-" }).click();
+	await page.getByText("Count is 0").click();
+});
+
+testNoJs("action @nojs", async ({ page }) => {
+	await page.goto("/action");
+});

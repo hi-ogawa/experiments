@@ -23,3 +23,7 @@ function useHydrated() {
 		() => false,
 	);
 }
+
+export function TestHydrated() {
+	return <span id="hydrated" data-hydrated={useHydrated()} />;
+}
