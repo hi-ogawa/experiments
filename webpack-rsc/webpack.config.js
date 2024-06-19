@@ -254,7 +254,7 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					test: path.resolve("./src/entry-browser.tsx"),
+					test: path.resolve("./src/lib/virtual-client-references.js"),
 					use: {
 						loader: path.resolve(
 							"./src/lib/webpack/loader-inject-client-references.js",

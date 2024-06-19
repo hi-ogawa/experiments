@@ -5,6 +5,7 @@ import type { FlightData } from "./entry-server";
 import { ErrorBoundary } from "./lib/error-boundary";
 import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
+import "./lib/virtual-client-references";
 
 async function main() {
 	const url = new URL(window.location.href);
