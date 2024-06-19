@@ -1,12 +1,7 @@
 import { cpSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import {
-	createManualPromise,
-	difference,
-	tinyassert,
-	uniq,
-} from "@hiogawa/utils";
+import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
