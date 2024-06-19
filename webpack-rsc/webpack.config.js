@@ -1,7 +1,12 @@
 import { cpSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
+import {
+	createManualPromise,
+	difference,
+	tinyassert,
+	uniq,
+} from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 
@@ -143,30 +148,81 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					// inject discovered client references to ssr entries
-					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
-					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
-					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
-						for (const reference of clientReferences) {
-							await includeReference(compilation, reference, {
-								layer: LAYER.ssr,
-							});
-						}
-					});
-
-					// generate client manifest
 					compiler.hooks.thisCompilation.tap(NAME, (compilation) => {
-						compilation.hooks.processAssets.tap(
+						// inject discovered client references as ssr entries
+						// and server references as server entries
+						let needAdditional = false;
+						let lastClientReferences = new Set(clientReferences);
+						let lastServerReferences = new Set(serverReferences);
+
+						compilation.hooks.needAdditionalSeal.tap(
+							NAME,
+							() => needAdditional,
+						);
+
+						compilation.hooks.processAssets.tapPromise(
 							{
 								name: NAME,
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
-							() => {
+							async () => {
+								console.log("[processAssets]", {
+									lastClientReferences,
+									lastServerReferences,
+									clientReferences,
+									serverReferences,
+								});
+								const newClientReferences = difference(
+									[...clientReferences],
+									[...lastClientReferences],
+								);
+								const newServerReferences = difference(
+									[...serverReferences],
+									[...lastServerReferences],
+								);
+								lastClientReferences = new Set(clientReferences);
+								lastServerReferences = new Set(serverReferences);
+								needAdditional =
+									newClientReferences.length > 0 ||
+									newServerReferences.length > 0;
+								for (const reference of newClientReferences) {
+									await includeReference(compilation, reference, {
+										layer: LAYER.ssr,
+									});
+								}
+								// TODO: entry is already included in LAYER.ssr ?
+								// for (const reference of newServerReferences) {
+								// 	await includeReference(compilation, reference, {
+								// 		layer: LAYER.server,
+								// 	});
+								// }
+							},
+						);
+
+						// generate client manifest and server manifest
+						compilation.hooks.processAssets.tapPromise(
+							{
+								name: NAME,
+								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+							},
+							async () => {
+								if (needAdditional) return;
+
 								const clientMap = processReferences(
 									compilation,
 									clientReferences,
 									LAYER.ssr,
 								);
+								// TODO
+								console.log("[__client_reference_ssr]", {
+									clientReferences,
+									clientMap,
+									debug: processReferences(
+										compilation,
+										clientReferences,
+										LAYER.server,
+									),
+								});
 								compilation.emitAsset(
 									"__client_reference_ssr.js",
 									new webpack.sources.RawSource(
@@ -179,6 +235,16 @@ export default function (env, _argv) {
 									serverReferences,
 									LAYER.server,
 								);
+								// TODO
+								console.log("[__server_reference]", {
+									serverReferences,
+									serverMap,
+									debug: processReferences(
+										compilation,
+										serverReferences,
+										LAYER.ssr,
+									),
+								});
 								compilation.emitAsset(
 									"__server_reference.js",
 									new webpack.sources.RawSource(
