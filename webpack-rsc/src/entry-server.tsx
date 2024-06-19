@@ -2,17 +2,26 @@ import { tinyassert } from "@hiogawa/utils";
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
 import { getClientManifest } from "./lib/client-manifest";
+import { type ActionResult, actionHandler } from "./lib/server-action/server";
 import Layout from "./routes/layout";
 
-export type FlightData = React.ReactNode;
+export type FlightData = {
+	node: React.ReactNode;
+	actionResult?: ActionResult;
+};
 
 export async function handler(request: Request) {
+	let actionResult: ActionResult | undefined;
+	if (request.method === "POST") {
+		actionResult = await actionHandler(request);
+	}
+
 	const { browserManifest } = await getClientManifest();
 
 	// react server (react node -> flight)
 	const node = <Router request={request} />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
-		node,
+		{ node, actionResult },
 		browserManifest,
 	);
 	return flightStream;

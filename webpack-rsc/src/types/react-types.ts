@@ -21,3 +21,5 @@ export interface SsrManifest {
 	// TODO
 	moduleLoading: null;
 }
+
+export type CallServerCallback = (id: string, args: unknown[]) => unknown;

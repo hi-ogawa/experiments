@@ -3,8 +3,10 @@ import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
 import { ErrorBoundary } from "./lib/error-boundary";
+import { $__global } from "./lib/global";
 import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
+import type { CallServerCallback } from "./types/react-types";
 
 async function main() {
 	const url = new URL(window.location.href);
@@ -12,9 +14,23 @@ async function main() {
 		return;
 	}
 
-	function callServer() {
-		throw new Error("wip server action");
-	}
+	let $__setFlight: (flight: Promise<FlightData>) => void;
+
+	const callServer: CallServerCallback = async (id, args) => {
+		const url = new URL(window.location.href);
+		url.searchParams.set("__f", "");
+		url.searchParams.set("__a", id);
+		const flight = ReactClient.createFromFetch<FlightData>(
+			fetch(url, {
+				method: "POST",
+				body: await ReactClient.encodeReply(args),
+			}),
+			{ callServer },
+		);
+		$__setFlight(flight);
+		return (await flight).actionResult;
+	};
+	$__global.__f_call_server = callServer;
 
 	// react client (flight -> react node)
 	const initialFlight = ReactClient.createFromReadableStream<FlightData>(
@@ -26,23 +42,21 @@ async function main() {
 		const [flight, setFlight] =
 			React.useState<Promise<FlightData>>(initialFlight);
 
-		React.useEffect(
-			() =>
-				setupBrowserRouter(() => {
-					React.startTransition(() => {
-						const url = new URL(window.location.href);
-						url.searchParams.set("__f", "");
-						setFlight(
-							ReactClient.createFromFetch<FlightData>(fetch(url), {
-								callServer,
-							}),
-						);
-					});
-				}),
-			[],
-		);
+		React.useEffect(() => {
+			$__setFlight = (flight) => React.startTransition(() => setFlight(flight));
 
-		return <>{React.use(flight)}</>;
+			return setupBrowserRouter(() => {
+				const url = new URL(window.location.href);
+				url.searchParams.set("__f", "");
+				$__setFlight(
+					ReactClient.createFromFetch<FlightData>(fetch(url), {
+						callServer,
+					}),
+				);
+			});
+		}, []);
+
+		return <>{React.use(flight).node}</>;
 	}
 
 	let browserRoot = (

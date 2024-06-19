@@ -24,10 +24,11 @@ export async function handler(request: Request) {
 
 	// react client (flight -> react node)
 	const { ssrManifest } = await getClientManifest();
-	const ssrRoot = await ReactClient.createFromReadableStream<FlightData>(
+	const flightData = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
 		{ ssrManifest },
 	);
+	const ssrRoot = flightData.node;
 
 	// react dom ssr (react node -> html)
 	let status = 200;
