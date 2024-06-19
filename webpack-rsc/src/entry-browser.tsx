@@ -2,21 +2,54 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
+import { setupBrowserRouter } from "./lib/router/browser";
 
 async function main() {
 	if (window.location.search.includes("__nojs")) {
 		return;
 	}
 
+	function callServer() {
+		throw new Error("wip server action");
+	}
+
 	// react client (flight -> react node)
-	const node = await ReactClient.createFromReadableStream<FlightData>(
+	const initialFlight = ReactClient.createFromReadableStream<FlightData>(
 		(globalThis as any).__flightStream,
-		{ callServer: () => {} },
+		{ callServer },
 	);
+
+	function BrowserRoot() {
+		const [flight, setFlight] =
+			React.useState<Promise<FlightData>>(initialFlight);
+
+		React.useEffect(
+			() =>
+				setupBrowserRouter(() => {
+					React.startTransition(() => {
+						const url = new URL(window.location.href);
+						url.searchParams.set("__f", "");
+						setFlight(
+							ReactClient.createFromFetch<FlightData>(fetch(url), {
+								callServer,
+							}),
+						);
+					});
+				}),
+			[],
+		);
+
+		return <>{React.use(flight)}</>;
+	}
 
 	// react dom browser (react node -> html)
 	React.startTransition(() => {
-		ReactDOMClient.hydrateRoot(document, node);
+		ReactDOMClient.hydrateRoot(
+			document,
+			<React.StrictMode>
+				<BrowserRoot />
+			</React.StrictMode>,
+		);
 	});
 
 	if (__define.DEV) {

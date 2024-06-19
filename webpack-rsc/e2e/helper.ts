@@ -7,3 +7,21 @@ export const testNoJs = test.extend({
 export async function waitForHydration(page: Page) {
 	await expect(page.getByText("[hydrated: 1]")).toBeVisible();
 }
+
+export async function createReloadChecker(page: Page) {
+	// inject custom meta
+	await page.evaluate(() => {
+		const el = document.createElement("meta");
+		el.setAttribute("name", "x-reload-check");
+		document.head.append(el);
+	});
+
+	return {
+		[Symbol.asyncDispose]: async () => {
+			// check if meta is preserved
+			await expect(page.locator(`meta[name="x-reload-check"]`)).toBeAttached({
+				timeout: 1,
+			});
+		},
+	};
+}

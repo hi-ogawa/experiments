@@ -4,7 +4,7 @@ import ReactClient from "react-server-dom-webpack/client.edge";
 import type { StatsCompilation } from "webpack";
 import type { FlightData } from "./entry-server";
 import * as entryReactServer from "./entry-server-layer";
-import { getClientManifest } from "./lib/utils";
+import { getClientManifest } from "./lib/client-manifest";
 
 export async function handler(request: Request) {
 	const url = new URL(request.url);

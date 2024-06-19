@@ -1,6 +1,6 @@
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
-import { getClientManifest } from "./lib/utils";
+import { getClientManifest } from "./lib/client-manifest";
 
 export type FlightData = React.ReactNode;
 
@@ -15,6 +15,10 @@ export async function handler(request: Request) {
 	);
 	return flightStream;
 }
+
+// TODO: fs routes
+// https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
+// https://webpack.js.org/api/module-methods/#webpackinclude
 
 const routes = {
 	"/": () => import(/* webpackMode: 'eager' */ "./routes/page"),
