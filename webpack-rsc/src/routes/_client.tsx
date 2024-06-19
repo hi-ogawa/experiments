@@ -25,5 +25,5 @@ function useHydrated() {
 }
 
 export function TestHydrated() {
-	return <span id="hydrated" data-hydrated={useHydrated()} />;
+	return <meta name="x-hydrated" data-hydrated={useHydrated()} />;
 }

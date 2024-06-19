@@ -5,7 +5,10 @@ export const testNoJs = test.extend({
 });
 
 export async function waitForHydration(page: Page) {
-	await expect(page.getByText("[hydrated: 1]")).toBeVisible();
+	await expect(page.locator(`meta[name="x-hydrated"]`)).toHaveAttribute(
+		"data-hydrated",
+		"true",
+	);
 }
 
 export async function createReloadChecker(page: Page) {
