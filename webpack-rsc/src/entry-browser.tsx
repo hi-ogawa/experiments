@@ -9,7 +9,7 @@ async function main() {
 		return;
 	}
 
-	const callServer = () => {
+	function callServer() {
 		throw new Error("wip server action");
 	};
 
