@@ -1,4 +1,5 @@
 import React from "react";
+import { Client3 } from "./_client3";
 
 export default function Page() {
 	return (
@@ -9,6 +10,7 @@ export default function Page() {
 			}}
 		>
 			<h2>Stream</h2>
+			<Client3 />
 			<div
 				style={{
 					padding: "1rem",
