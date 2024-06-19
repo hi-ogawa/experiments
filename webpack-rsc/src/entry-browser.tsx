@@ -5,7 +5,8 @@ import type { FlightData } from "./entry-server";
 import { setupBrowserRouter } from "./lib/router/browser";
 
 async function main() {
-	if (window.location.search.includes("__nojs")) {
+	const url = new URL(window.location.href);
+	if (url.searchParams.has("__nojs")) {
 		return;
 	}
 
@@ -42,15 +43,20 @@ async function main() {
 		return <>{React.use(flight)}</>;
 	}
 
+	const root = (
+		<React.StrictMode>
+			<BrowserRoot />
+		</React.StrictMode>
+	);
+
 	// react dom browser (react node -> html)
-	React.startTransition(() => {
-		ReactDOMClient.hydrateRoot(
-			document,
-			<React.StrictMode>
-				<BrowserRoot />
-			</React.StrictMode>,
-		);
-	});
+	if (url.searchParams.has("__nossr")) {
+		ReactDOMClient.createRoot(document).render(root);
+	} else {
+		React.startTransition(() => {
+			ReactDOMClient.hydrateRoot(document, root);
+		});
+	}
 
 	if (__define.DEV) {
 		// @ts-expect-error
@@ -69,3 +75,9 @@ async function main() {
 }
 
 main();
+
+declare module "react-dom/client" {
+	interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_CREATE_ROOT_CONTAINERS {
+		Document: Document;
+	}
+}
