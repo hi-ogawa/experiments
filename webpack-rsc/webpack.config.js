@@ -1,4 +1,4 @@
-import { cpSync, mkdir, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
