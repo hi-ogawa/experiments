@@ -1,4 +1,4 @@
-import { cpSync, writeFileSync } from "node:fs";
+import { cpSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
@@ -288,17 +288,6 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					test: path.resolve("./src/entry-browser.tsx"),
-					use: {
-						loader: path.resolve(
-							"./src/lib/webpack/loader-inject-client-references.js",
-						),
-						options: {
-							clientReferences,
-						},
-					},
-				},
-				{
 					test: /\.[cm]?[jt]sx?$/,
 					use: {
 						loader: path.resolve(
@@ -322,6 +311,20 @@ export default function (env, _argv) {
 				name: "client-reference:browser",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
+
+					compiler.hooks.make.tapPromise(NAME, async () => {
+						const dstPath = "src/lib/virtual/client-references.js";
+						const code = [
+							`export default [`,
+							...[...clientReferences].map(
+								(file) => `() => import(${JSON.stringify(file)}),`,
+							),
+							`];`,
+						].join("\n");
+						if (readFileSync(dstPath, "utf-8") !== code) {
+							writeFileSync(dstPath, code);
+						}
+					});
 
 					// generate client manifest
 					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L193

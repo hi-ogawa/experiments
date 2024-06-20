@@ -1,0 +1,3 @@
+# Not sure what's the most reliable way to do virtual module,
+# so we are writing to actual files...
+*.js
