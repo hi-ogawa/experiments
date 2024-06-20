@@ -4,6 +4,7 @@ import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
+import VirtualModulesPlugin from "webpack-virtual-modules";
 
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
@@ -22,6 +23,8 @@ export default function (env, _argv) {
 	const clientReferences = new Set();
 	/** @type {Set<string>} */
 	const serverReferences = new Set();
+
+	const clientVirtualModules = new VirtualModulesPlugin();
 
 	const LAYER = {
 		ssr: "ssr",
@@ -288,17 +291,6 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					test: path.resolve("./src/entry-browser.tsx"),
-					use: {
-						loader: path.resolve(
-							"./src/lib/webpack/loader-inject-client-references.js",
-						),
-						options: {
-							clientReferences,
-						},
-					},
-				},
-				{
 					test: /\.[cm]?[jt]sx?$/,
 					use: {
 						loader: path.resolve(
@@ -314,6 +306,7 @@ export default function (env, _argv) {
 			],
 		},
 		plugins: [
+			clientVirtualModules,
 			new webpack.DefinePlugin({
 				"__define.SSR": "false",
 				"__define.DEV": dev,
@@ -322,6 +315,20 @@ export default function (env, _argv) {
 				name: "client-reference:browser",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
+
+					compiler.hooks.make.tapPromise(NAME, async () => {
+						const code = [
+							`export default [`,
+							...[...clientReferences].map(
+								(file) => `() => import(${JSON.stringify(file)}),`,
+							),
+							`];`,
+						].join("\n");
+						clientVirtualModules.writeModule(
+							"node_modules/virtual-client-references.js",
+							code,
+						);
+					});
 
 					// generate client manifest
 					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L193

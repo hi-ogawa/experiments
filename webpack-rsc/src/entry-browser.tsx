@@ -7,6 +7,7 @@ import { $__global } from "./lib/global";
 import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
 import type { CallServerCallback } from "./types/react-types";
+import "virtual-client-references.js";
 
 async function main() {
 	const url = new URL(window.location.href);
