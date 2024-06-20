@@ -8,15 +8,6 @@ import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
 import type { CallServerCallback } from "./types/react-types";
 
-// TODO: maybe we have to revert the previous PR
-// https://github.com/hi-ogawa/experiments/pull/33
-() => [
-	import("./routes/_client"),
-	import("./routes/_client2"),
-	import("./routes/stream/_client3"),
-	import("./routes/action/_client"),
-];
-
 async function main() {
 	const url = new URL(window.location.href);
 	if (url.searchParams.has("__nojs")) {
