@@ -312,7 +312,7 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					compiler.hooks.make.tapPromise(NAME, async () => {
+					compiler.hooks.make.tap(NAME, async () => {
 						const dstPath = "src/lib/virtual/client-references.js";
 						const code = [
 							`export default [`,
