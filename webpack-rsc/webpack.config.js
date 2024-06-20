@@ -141,12 +141,39 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
+					// loop server build until all references are discovered
+					// TODO: how should we reset during dev watch mode?
+					/** @type {Set<string>} */
+					let lastClientRefs = new Set();
+					/** @type {Set<string>} */
+					let lastServerRefs = new Set();
+
+					let needAdditional = false;
+					compiler.hooks.thisCompilation.tap(NAME, (compilation) => {
+						compilation.hooks.needAdditionalPass.tap(NAME, () => {
+							const need = needAdditional;
+							needAdditional = false;
+							return need;
+						});
+					});
+
 					// inject discovered client/server references to ssr/server layers
-					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
-					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
-						// server references are discovered when including client reference modules
-						// so the order matters
+						const newClientRefs = [...clientReferences].filter(
+							(s) => !lastClientRefs.has(s),
+						);
+						const newServerRefs = [...serverReferences].filter(
+							(s) => !lastServerRefs.has(s),
+						);
+						lastClientRefs = new Set(clientReferences);
+						lastServerRefs = new Set(serverReferences);
+						needAdditional =
+							newClientRefs.length > 0 || newServerRefs.length > 0;
+						console.log("▶▶▶ [reference discovery]", {
+							needAdditional,
+							newClientRefs,
+							newServerRefs,
+						});
 						for (const reference of clientReferences) {
 							await includeReference(compilation, reference, LAYER.ssr);
 						}
@@ -163,6 +190,8 @@ export default function (env, _argv) {
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
 							() => {
+								if (needAdditional) return;
+
 								const clientMap = processReferences(
 									compilation,
 									clientReferences,
@@ -410,6 +439,8 @@ function processReferences(compilation, selected, layer) {
  * @param {string} issuerLayer
  */
 function includeReference(compilation, entry, issuerLayer) {
+	// include reference entry in server build
+	// cf. https://github.com/vercel/next.js/blob/6bebacb2202bae04eebb0d10b44c829909cc3d9a/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L931-L958
 	const [mainEntry] = compilation.entries.values();
 	tinyassert(mainEntry);
 
