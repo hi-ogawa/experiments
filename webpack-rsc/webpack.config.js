@@ -1,4 +1,4 @@
-import { cpSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, mkdir, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
@@ -313,7 +313,6 @@ export default function (env, _argv) {
 					const NAME = /** @type {any} */ (this).name;
 
 					compiler.hooks.make.tap(NAME, async () => {
-						const dstPath = "src/lib/virtual/client-references.js";
 						const code = [
 							`export default [`,
 							...[...clientReferences].map(
@@ -321,9 +320,7 @@ export default function (env, _argv) {
 							),
 							`];`,
 						].join("\n");
-						if (readFileSync(dstPath, "utf-8") !== code) {
-							writeFileSync(dstPath, code);
-						}
+						writeFileIfChanged("src/lib/virtual/client-references.js", code);
 					});
 
 					// generate client manifest
@@ -474,4 +471,15 @@ function collectModuleDeps(compilation, mod) {
 	recurse(mod);
 
 	return visited;
+}
+
+/**
+ * @param {string} filepath
+ * @param {string} code
+ */
+function writeFileIfChanged(filepath, code) {
+	mkdirSync(path.dirname(filepath), { recursive: true });
+	if (readFileSync(filepath, "utf-8") !== code) {
+		writeFileSync(filepath, code);
+	}
 }
