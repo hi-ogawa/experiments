@@ -251,6 +251,22 @@ export default function (env, _argv) {
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
+		module: {
+			rules: [
+				{
+					test: path.resolve("./src/entry-browser.tsx"),
+					use: {
+						loader: path.resolve(
+							"./src/lib/webpack/loader-inject-client-references.js",
+						),
+						options: {
+							clientReferences,
+						},
+					},
+				},
+				...commonConfig.module.rules,
+			],
+		},
 		plugins: [
 			new webpack.DefinePlugin({
 				"__define.SSR": "false",
@@ -260,17 +276,6 @@ export default function (env, _argv) {
 				name: "client-reference:browser",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
-
-					// include client reference chunks
-					compiler.hooks.make.tapPromise(NAME, async (compilation) => {
-						let i = 0;
-						for (const reference of clientReferences) {
-							includeReference(compilation, reference, {
-								name: `ref${i++}`,
-								dependOn: ["index"],
-							});
-						}
-					});
 
 					// generate client manifest
 					// https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-client-plugin.ts#L193
