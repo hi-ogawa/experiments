@@ -73,8 +73,11 @@ async function main() {
 		// render client only on ssr error
 		ReactDOMClient.createRoot(document).render(browserRoot);
 	} else {
+		const formState = (await initialFlight).actionResult;
 		React.startTransition(() => {
-			ReactDOMClient.hydrateRoot(document, browserRoot);
+			ReactDOMClient.hydrateRoot(document, browserRoot, {
+				formState,
+			});
 		});
 	}
 
@@ -97,6 +100,10 @@ async function main() {
 main();
 
 declare module "react-dom/client" {
+	interface HydrationOptions {
+		formState?: unknown;
+	}
+
 	interface DO_NOT_USE_OR_YOU_WILL_BE_FIRED_EXPERIMENTAL_CREATE_ROOT_CONTAINERS {
 		Document: Document;
 	}

@@ -11,7 +11,8 @@ export async function handler(request: Request) {
 	const url = new URL(request.url);
 
 	// react server (react node -> flight)
-	const flightStream = await entryReactServer.handler(request);
+	const { flightStream, actionResult } =
+		await entryReactServer.handler(request);
 	if (url.searchParams.has("__f")) {
 		return new Response(flightStream, {
 			headers: {
@@ -37,6 +38,7 @@ export async function handler(request: Request) {
 	try {
 		htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
 			bootstrapScripts,
+			formState: actionResult,
 		});
 	} catch (e) {
 		// two-pass render for ssr error
@@ -64,4 +66,10 @@ export async function handler(request: Request) {
 			"content-type": "text/html;charset=utf-8",
 		},
 	});
+}
+
+declare module "react-dom/server" {
+	interface RenderToReadableStreamOptions {
+		formState?: unknown;
+	}
 }

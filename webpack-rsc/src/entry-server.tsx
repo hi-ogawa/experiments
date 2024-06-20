@@ -10,7 +10,12 @@ export type FlightData = {
 	actionResult?: ActionResult;
 };
 
-export async function handler(request: Request) {
+export type ServerResult = {
+	flightStream: ReadableStream<Uint8Array>;
+	actionResult?: ActionResult;
+};
+
+export async function handler(request: Request): Promise<ServerResult> {
 	let actionResult: ActionResult | undefined;
 	if (request.method === "POST") {
 		actionResult = await actionHandler(request);
@@ -24,7 +29,7 @@ export async function handler(request: Request) {
 		{ node, actionResult },
 		browserManifest,
 	);
-	return flightStream;
+	return { flightStream, actionResult };
 }
 
 // fs routes
