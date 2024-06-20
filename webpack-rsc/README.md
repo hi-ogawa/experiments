@@ -12,7 +12,7 @@ Minimal RSC demo on Webpack
 - [x] ssr
 - [x] browser
 - [x] client reference (minimal)
-- [ ] server reference (minimal)
+- [x] server reference (minimal)
 - [ ] css
 - [ ] server hmr
 - [ ] client hmr
