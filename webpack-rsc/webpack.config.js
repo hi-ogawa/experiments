@@ -283,7 +283,8 @@ export default function (env, _argv) {
 			clean: true,
 		},
 		optimization: {
-			concatenateModules: false,
+			// for debugging
+			// minimize: false,
 		},
 		module: {
 			rules: [
@@ -330,10 +331,9 @@ export default function (env, _argv) {
 						const data = {};
 
 						for (const mod of compilation.modules) {
-							if (
-								mod instanceof webpack.NormalModule &&
-								clientReferences.has(mod.resource)
-							) {
+							// module can be either NormalModule or ConcatenatedModule
+							const name = mod.nameForCondition();
+							if (typeof name === "string" && clientReferences.has(name)) {
 								const mods = collectModuleDeps(compilation, mod);
 								const chunks = uniq(
 									[...mods].flatMap((mod) => [
@@ -349,7 +349,7 @@ export default function (env, _argv) {
 										}
 									}
 								}
-								data[mod.resource] = {
+								data[name] = {
 									id: compilation.chunkGraph.getModuleId(mod),
 									chunks: chunkIds,
 								};
@@ -397,13 +397,10 @@ function processReferences(compilation, selected, layer) {
 	/** @type {import("./src/lib/client-manifest").ReferenceMap} */
 	const result = {};
 	for (const mod of compilation.modules) {
-		if (
-			mod instanceof webpack.NormalModule &&
-			selected.has(mod.resource) &&
-			mod.layer === layer
-		) {
+		const name = mod.nameForCondition();
+		if (typeof name === "string" && selected.has(name) && mod.layer === layer) {
 			const id = compilation.chunkGraph.getModuleId(mod);
-			result[mod.resource] = { id, chunks: [] };
+			result[name] = { id, chunks: [] };
 		}
 	}
 	return result;
