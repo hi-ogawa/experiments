@@ -154,14 +154,14 @@ export default function (env, _argv) {
 						}
 					});
 
+					// generate client manifest
 					compiler.hooks.thisCompilation.tap(NAME, (compilation) => {
-						// generate client manifest and server manifest
-						compilation.hooks.processAssets.tapPromise(
+						compilation.hooks.processAssets.tap(
 							{
 								name: NAME,
-								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE,
+								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
-							async () => {
+							() => {
 								const clientMap = processReferences(
 									compilation,
 									clientReferences,
