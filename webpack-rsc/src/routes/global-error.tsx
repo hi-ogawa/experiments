@@ -3,7 +3,13 @@
 export default function GlobalErrorPage() {
 	return (
 		<html>
-			<body>
+			<body
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+				}}
+			>
 				<h3>Something went wrong</h3>
 				<div>
 					Back to <a href="/">Home</a>
