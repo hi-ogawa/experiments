@@ -38,7 +38,7 @@ export default async function loader(input) {
  * @param {string} name
  * @param {string} expr
  */
-function exportExpr(name, expr) {
+export function exportExpr(name, expr) {
 	return name === "default"
 		? `export default ${expr}`
 		: `export const ${name} = ${expr}`;

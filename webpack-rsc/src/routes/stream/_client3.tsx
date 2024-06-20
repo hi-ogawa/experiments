@@ -1,5 +1,5 @@
 "use client";
 
 export function Client3() {
-	return <span style={{ display: "none" }}>test-client2</span>;
+	return <span style={{ display: "none" }}>test-client3</span>;
 }

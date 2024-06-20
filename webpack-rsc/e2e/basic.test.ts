@@ -67,3 +67,23 @@ async function testError(page: Page) {
 	await page.getByRole("link", { name: "Home" }).click();
 	await page.waitForURL("/");
 }
+
+test("action @js", async ({ page }) => {
+	await page.goto("/action");
+	await waitForHydration(page);
+	await using _ = await createReloadChecker(page);
+	await testAction(page);
+});
+
+testNoJs("action @nojs", async ({ page }) => {
+	await page.goto("/action");
+	await testAction(page);
+});
+
+async function testAction(page: Page) {
+	await page.getByText("Count is 0").click();
+	await page.getByRole("button", { name: "+" }).click();
+	await page.getByText("Count is 1").click();
+	await page.getByRole("button", { name: "-" }).click();
+	await page.getByText("Count is 0").click();
+}

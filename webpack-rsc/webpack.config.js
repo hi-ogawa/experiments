@@ -20,6 +20,8 @@ export default function (env, _argv) {
 
 	/** @type {Set<string>} */
 	const clientReferences = new Set();
+	/** @type {Set<string>} */
+	const serverReferences = new Set();
 
 	const LAYER = {
 		ssr: "ssr",
@@ -83,6 +85,8 @@ export default function (env, _argv) {
 		},
 		optimization: {
 			minimize: false,
+			concatenateModules: false,
+			usedExports: false,
 		},
 		// TODO: https://webpack.js.org/configuration/externals
 		externals: {},
@@ -105,17 +109,26 @@ export default function (env, _argv) {
 				},
 				{
 					issuerLayer: LAYER.server,
-					// TODO: handle external js package too
-					test: /\.tsx?$/,
-					use: [
-						{
-							loader: path.resolve(
-								"./src/lib/webpack/loader-server-use-client.js",
-							),
-							options: { clientReferences },
+					test: /\.[cm]?[jt]sx?$/,
+					use: {
+						loader: path.resolve(
+							"./src/lib/webpack/loader-server-use-client.js",
+						),
+						options: { clientReferences },
+					},
+				},
+				{
+					issuerLayer: LAYER.ssr,
+					test: /\.[cm]?[jt]sx?$/,
+					use: {
+						loader: path.resolve(
+							"./src/lib/webpack/loader-client-use-server.js",
+						),
+						options: {
+							runtime: path.resolve("./src/lib/server-action/ssr"),
+							serverReferences,
 						},
-						esbuildLoader,
-					],
+					},
 				},
 				...commonConfig.module.rules,
 			],
@@ -149,11 +162,28 @@ export default function (env, _argv) {
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
 							() => {
-								const data = processReferences(compilation, clientReferences);
-								const code = `export default ${JSON.stringify(data, null, 2)}`;
+								const clientMap = processReferences(
+									compilation,
+									clientReferences,
+									LAYER.ssr,
+								);
 								compilation.emitAsset(
 									"__client_reference_ssr.js",
-									new webpack.sources.RawSource(code),
+									new webpack.sources.RawSource(
+										`export default ${JSON.stringify(clientMap, null, 2)}`,
+									),
+								);
+
+								const serverMap = processReferences(
+									compilation,
+									serverReferences,
+									LAYER.server,
+								);
+								compilation.emitAsset(
+									"__server_reference.js",
+									new webpack.sources.RawSource(
+										`export default ${JSON.stringify(serverMap, null, 2)}`,
+									),
 								);
 							},
 						);
@@ -175,6 +205,7 @@ export default function (env, _argv) {
 					 * @type {import("webpack-dev-server").Configuration}
 					 */
 					const devServerConfig = {
+						hot: false,
 						host: "localhost",
 						static: {
 							serveIndex: false,
@@ -251,6 +282,9 @@ export default function (env, _argv) {
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
+		optimization: {
+			concatenateModules: false,
+		},
 		module: {
 			rules: [
 				{
@@ -261,6 +295,18 @@ export default function (env, _argv) {
 						),
 						options: {
 							clientReferences,
+						},
+					},
+				},
+				{
+					test: /\.[cm]?[jt]sx?$/,
+					use: {
+						loader: path.resolve(
+							"./src/lib/webpack/loader-client-use-server.js",
+						),
+						options: {
+							runtime: path.resolve("./src/lib/server-action/browser"),
+							serverReferences: new Set(),
 						},
 					},
 				},
@@ -345,12 +391,17 @@ export default function (env, _argv) {
  *
  * @param {import("webpack").Compilation} compilation
  * @param {Set<string>} selected
+ * @param {string} layer
  */
-function processReferences(compilation, selected) {
+function processReferences(compilation, selected, layer) {
 	/** @type {import("./src/lib/client-manifest").ReferenceMap} */
 	const result = {};
 	for (const mod of compilation.modules) {
-		if (mod instanceof webpack.NormalModule && selected.has(mod.resource)) {
+		if (
+			mod instanceof webpack.NormalModule &&
+			selected.has(mod.resource) &&
+			mod.layer === layer
+		) {
 			const id = compilation.chunkGraph.getModuleId(mod);
 			result[mod.resource] = { id, chunks: [] };
 		}

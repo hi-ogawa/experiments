@@ -23,3 +23,7 @@ function useHydrated() {
 		() => false,
 	);
 }
+
+export function TestHydrated() {
+	return <meta name="x-hydrated" data-hydrated={useHydrated()} />;
+}
