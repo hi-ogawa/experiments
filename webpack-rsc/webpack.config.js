@@ -85,8 +85,6 @@ export default function (env, _argv) {
 		},
 		optimization: {
 			minimize: false,
-			concatenateModules: false,
-			usedExports: false,
 		},
 		// TODO: https://webpack.js.org/configuration/externals
 		externals: {},
@@ -143,14 +141,19 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					// inject discovered client references to ssr entries
+					// inject discovered client/server references to ssr/server layers
 					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
 					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
 						for (const reference of clientReferences) {
-							await includeReference(compilation, reference, {
-								layer: LAYER.ssr,
-							});
+							await includeReference(compilation, reference, LAYER.ssr);
+						}
+						// TODO: auto discovered server references
+						serverReferences.add(
+							path.resolve("./src/routes/action/_action.tsx"),
+						);
+						for (const reference of serverReferences) {
+							await includeReference(compilation, reference, LAYER.server);
 						}
 					});
 
@@ -282,10 +285,6 @@ export default function (env, _argv) {
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
-		optimization: {
-			// for debugging
-			// minimize: false,
-		},
 		module: {
 			rules: [
 				{
@@ -409,16 +408,23 @@ function processReferences(compilation, selected, layer) {
 /**
  *
  * @param {import("webpack").Compilation} compilation
- * @param {string} resource
- * @param {webpack.EntryOptions} options
+ * @param {string} entry
+ * @param {string} issuerLayer
  */
-function includeReference(compilation, resource, options) {
-	const dep = webpack.EntryPlugin.createDependency(resource, {});
+function includeReference(compilation, entry, issuerLayer) {
+	const [mainEntry] = compilation.entries.values();
+	tinyassert(mainEntry);
+
+	const dependency = webpack.EntryPlugin.createDependency(entry, {});
+	mainEntry.includeDependencies.push(dependency);
+
 	const promise = createManualPromise();
-	compilation.addInclude(
-		compilation.compiler.context,
-		dep,
-		options,
+	compilation.addModuleTree(
+		{
+			context: compilation.compiler.context,
+			dependency,
+			contextInfo: { issuerLayer },
+		},
 		(err, mod) => {
 			// force exports on build
 			// cf. https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-server-plugin.ts#L124-L126
