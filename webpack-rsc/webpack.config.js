@@ -142,6 +142,8 @@ export default function (env, _argv) {
 					const NAME = /** @type {any} */ (this).name;
 
 					// loop server build until all references are discovered
+					// cf. https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-server-plugin.ts#L240
+
 					// TODO: how should we reset during dev watch mode?
 					/** @type {Set<string>} */
 					let lastClientRefs = new Set();
