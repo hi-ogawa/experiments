@@ -1,4 +1,10 @@
-import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+	cpSync,
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
@@ -312,6 +318,9 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
+					compiler.hooks.initialize.tap(NAME, () => {
+						writeFileIfChanged("src/lib/virtual/client-references.js", "");
+					});
 					compiler.hooks.make.tap(NAME, async () => {
 						const code = [
 							`export default [`,
@@ -479,7 +488,7 @@ function collectModuleDeps(compilation, mod) {
  */
 function writeFileIfChanged(filepath, code) {
 	mkdirSync(path.dirname(filepath), { recursive: true });
-	if (readFileSync(filepath, "utf-8") !== code) {
+	if (!existsSync(filepath) || readFileSync(filepath, "utf-8") !== code) {
 		writeFileSync(filepath, code);
 	}
 }
