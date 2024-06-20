@@ -145,13 +145,11 @@ export default function (env, _argv) {
 					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
 					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
+						// server references are discovered when including client reference modules
+						// so the order matters
 						for (const reference of clientReferences) {
 							await includeReference(compilation, reference, LAYER.ssr);
 						}
-						// TODO: auto discovered server references
-						serverReferences.add(
-							path.resolve("./src/routes/action/_action.tsx"),
-						);
 						for (const reference of serverReferences) {
 							await includeReference(compilation, reference, LAYER.server);
 						}
