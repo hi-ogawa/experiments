@@ -85,8 +85,6 @@ export default function (env, _argv) {
 		},
 		optimization: {
 			minimize: false,
-			concatenateModules: false,
-			usedExports: false,
 		},
 		// TODO: https://webpack.js.org/configuration/externals
 		externals: {},
@@ -143,14 +141,17 @@ export default function (env, _argv) {
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 
-					// inject discovered client references to ssr entries
+					// inject discovered client/server references to ssr/server layers
 					// cf. FlightClientEntryPlugin.injectClientEntryAndSSRModules
 					// https://github.com/vercel/next.js/blob/cbbe586f2fa135ad5859ae6c38ac879c086927ef/packages/next/src/build/webpack/plugins/flight-client-entry-plugin.ts#L747
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
+						// server references are discovered when including client reference modules
+						// so the order matters
 						for (const reference of clientReferences) {
-							await includeReference(compilation, reference, {
-								layer: LAYER.ssr,
-							});
+							await includeReference(compilation, reference, LAYER.ssr);
+						}
+						for (const reference of serverReferences) {
+							await includeReference(compilation, reference, LAYER.server);
 						}
 					});
 
@@ -282,9 +283,6 @@ export default function (env, _argv) {
 			filename: dev ? "[name].js" : "[name].[contenthash:8].js",
 			clean: true,
 		},
-		optimization: {
-			concatenateModules: false,
-		},
 		module: {
 			rules: [
 				{
@@ -330,10 +328,9 @@ export default function (env, _argv) {
 						const data = {};
 
 						for (const mod of compilation.modules) {
-							if (
-								mod instanceof webpack.NormalModule &&
-								clientReferences.has(mod.resource)
-							) {
+							// module can be either NormalModule or ConcatenatedModule
+							const name = mod.nameForCondition();
+							if (typeof name === "string" && clientReferences.has(name)) {
 								const mods = collectModuleDeps(compilation, mod);
 								const chunks = uniq(
 									[...mods].flatMap((mod) => [
@@ -349,7 +346,7 @@ export default function (env, _argv) {
 										}
 									}
 								}
-								data[mod.resource] = {
+								data[name] = {
 									id: compilation.chunkGraph.getModuleId(mod),
 									chunks: chunkIds,
 								};
@@ -397,13 +394,10 @@ function processReferences(compilation, selected, layer) {
 	/** @type {import("./src/lib/client-manifest").ReferenceMap} */
 	const result = {};
 	for (const mod of compilation.modules) {
-		if (
-			mod instanceof webpack.NormalModule &&
-			selected.has(mod.resource) &&
-			mod.layer === layer
-		) {
+		const name = mod.nameForCondition();
+		if (typeof name === "string" && selected.has(name) && mod.layer === layer) {
 			const id = compilation.chunkGraph.getModuleId(mod);
-			result[mod.resource] = { id, chunks: [] };
+			result[name] = { id, chunks: [] };
 		}
 	}
 	return result;
@@ -412,16 +406,23 @@ function processReferences(compilation, selected, layer) {
 /**
  *
  * @param {import("webpack").Compilation} compilation
- * @param {string} resource
- * @param {webpack.EntryOptions} options
+ * @param {string} entry
+ * @param {string} issuerLayer
  */
-function includeReference(compilation, resource, options) {
-	const dep = webpack.EntryPlugin.createDependency(resource, {});
+function includeReference(compilation, entry, issuerLayer) {
+	const [mainEntry] = compilation.entries.values();
+	tinyassert(mainEntry);
+
+	const dependency = webpack.EntryPlugin.createDependency(entry, {});
+	mainEntry.includeDependencies.push(dependency);
+
 	const promise = createManualPromise();
-	compilation.addInclude(
-		compilation.compiler.context,
-		dep,
-		options,
+	compilation.addModuleTree(
+		{
+			context: compilation.compiler.context,
+			dependency,
+			contextInfo: { issuerLayer },
+		},
 		(err, mod) => {
 			// force exports on build
 			// cf. https://github.com/unstubbable/mfng/blob/251b5284ca6f10b4c46e16833dacf0fd6cf42b02/packages/webpack-rsc/src/webpack-rsc-server-plugin.ts#L124-L126
