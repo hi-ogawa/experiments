@@ -1,5 +1,3 @@
-// TODO: use https://github.com/hi-ogawa/vite-plugins/tree/main/packages/transforms
-
 import path from "node:path";
 import { transformDirectiveProxyExport } from "@hiogawa/transforms";
 import { tinyassert } from "@hiogawa/utils";
