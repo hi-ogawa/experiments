@@ -1,11 +1,11 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import { transformDirectiveProxyExport } from "@hiogawa/transforms";
+import { transformServerActionServer } from "@hiogawa/transforms";
 import { tinyassert } from "@hiogawa/utils";
 import { parseAstAsync } from "vite";
 
 /**
- * @typedef {{ manager: import("../build-manager.js").BuildManager, runtime: string }} LoaderOptions
+ * @typedef {{ manager: import("../build-manager.js").BuildManager }} LoaderOptions
  */
 
 /**
@@ -19,27 +19,29 @@ export default async function loader(input) {
 		return;
 	}
 
-	const { manager, runtime } = this.getOptions();
+	const { manager } = this.getOptions();
 	delete manager.serverReferenceMap[modName];
 
 	tinyassert(this._compiler);
 	const serverId = hashString(path.relative(this._compiler.context, modName));
 
 	const ast = await parseAstAsync(input);
-	const output = await transformDirectiveProxyExport(ast, {
-		directive: "use server",
+	const { output } = await transformServerActionServer(input, ast, {
 		id: serverId,
-		runtime: "$$proxy",
+		runtime: "$$register",
 	});
-	if (!output) {
+	if (!output.hasChanged()) {
 		callback(null, input);
 		return;
 	}
 
 	manager.serverReferenceMap[modName] = serverId;
 	output.prepend(`\
-import $$ReactClient from "${runtime}";
-const $$proxy = (id, name) => $$ReactClient.createServerReference(id + "#" + name, (...args) => __f_call_server(...args));
+import $$ReactServer from "react-server-dom-webpack/server.edge";
+const $$register = (action, id, name) =>
+	typeof action !== "function"
+	? action
+	: $$ReactServer.registerServerReference(action, id, name);
 `);
 	callback(null, output.toString());
 }

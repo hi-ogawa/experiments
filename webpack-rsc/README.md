@@ -11,8 +11,8 @@ Minimal RSC demo on Webpack
 - [x] flight server
 - [x] ssr
 - [x] browser
-- [x] client reference (minimal)
-- [x] server reference (minimal)
-- [ ] css
+- [x] client reference
+- [x] server reference
+- [x] css
 - [ ] server hmr
 - [ ] client hmr

@@ -124,6 +124,16 @@ export default function (env, _argv) {
 					},
 				},
 				{
+					issuerLayer: LAYER.server,
+					test: /\.[cm]?[jt]sx?$/,
+					use: {
+						loader: path.resolve(
+							"./src/lib/webpack/loader-server-use-server.js",
+						),
+						options: { manager },
+					},
+				},
+				{
 					issuerLayer: LAYER.ssr,
 					test: /\.[cm]?[jt]sx?$/,
 					use: {
@@ -131,7 +141,7 @@ export default function (env, _argv) {
 							"./src/lib/webpack/loader-client-use-server.js",
 						),
 						options: {
-							runtime: path.resolve("./src/lib/server-action/ssr"),
+							runtime: "react-server-dom-webpack/client.edge",
 							manager,
 						},
 					},
@@ -332,7 +342,7 @@ export default function (env, _argv) {
 							"./src/lib/webpack/loader-client-use-server.js",
 						),
 						options: {
-							runtime: path.resolve("./src/lib/server-action/browser"),
+							runtime: "react-server-dom-webpack/client.browser",
 							manager,
 						},
 					},

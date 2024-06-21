@@ -1,7 +1,7 @@
-// TODO: use https://github.com/hi-ogawa/vite-plugins/tree/main/packages/transforms
-
 import path from "node:path";
+import { transformDirectiveProxyExport } from "@hiogawa/transforms";
 import { tinyassert } from "@hiogawa/utils";
+import { parseAstAsync } from "vite";
 
 /**
  * @typedef {{ manager: import("../build-manager.js").BuildManager }} LoaderOptions
@@ -13,7 +13,7 @@ import { tinyassert } from "@hiogawa/utils";
 export default async function loader(input) {
 	const callback = this.async();
 	const modName = this._module?.nameForCondition();
-	if (!modName) {
+	if (!modName || !input.includes("use client")) {
 		callback(null, input);
 		return;
 	}
@@ -21,27 +21,26 @@ export default async function loader(input) {
 	const { manager } = this.getOptions();
 	delete manager.clientReferenceMap[modName];
 
-	// "use strict" injected by other loaders?
-	if (!/^("use client"|'use client')/m.test(input)) {
+	tinyassert(this._compiler);
+	const clientId = path.relative(this._compiler.context, modName);
+
+	const ast = await parseAstAsync(input);
+	const output = await transformDirectiveProxyExport(ast, {
+		directive: "use client",
+		id: clientId,
+		runtime: "$$proxy",
+	});
+	if (!output) {
 		callback(null, input);
 		return;
 	}
 
-	tinyassert(this._compiler);
-	const clientId = path.relative(this._compiler.context, modName);
 	manager.clientReferenceMap[modName] = clientId;
-
-	const matches = input.matchAll(/export function (\w+)\(/g);
-	const exportNames = [...matches].map((m) => m[1]);
-	let output = `import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge";\n`;
-	for (const name of exportNames) {
-		output +=
-			exportExpr(
-				name,
-				`$$register(() => {}, ${JSON.stringify(clientId)}, ${JSON.stringify(name)})`,
-			) + ";\n";
-	}
-	callback(null, output);
+	output.prepend(`\
+import $$ReactServer from "react-server-dom-webpack/server.edge";
+const $$proxy = (id, name) => $$ReactServer.registerClientReference(() => {}, id, name);
+`);
+	callback(null, output.toString());
 }
 
 /**
