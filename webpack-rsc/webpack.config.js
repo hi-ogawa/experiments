@@ -92,6 +92,12 @@ export default function (env, _argv) {
 		externals: {},
 		experiments: { layers: true },
 		module: {
+			parser: {
+				javascript: {
+					// https://webpack.js.org/configuration/module/#moduleparserjavascriptcommonjsmagiccomments
+					commonjsMagicComments: true,
+				},
+			},
 			rules: [
 				{
 					test: path.resolve("./src/entry-server-layer.tsx"),
@@ -191,15 +197,15 @@ export default function (env, _argv) {
 								}
 
 								compilation.emitAsset(
-									"__client_reference_ssr.js",
+									"__client_reference_ssr.cjs",
 									new webpack.sources.RawSource(
-										`export default ${JSON.stringify(clientMap, null, 2)}`,
+										`module.exports = ${JSON.stringify(clientMap, null, 2)}`,
 									),
 								);
 								compilation.emitAsset(
-									"__server_reference.js",
+									"__server_reference.cjs",
 									new webpack.sources.RawSource(
-										`export default ${JSON.stringify(serverMap, null, 2)}`,
+										`module.exports = ${JSON.stringify(serverMap, null, 2)}`,
 									),
 								);
 							},
@@ -378,8 +384,8 @@ export default function (env, _argv) {
 							}
 						}
 
-						const code = `export default ${JSON.stringify(data, null, 2)}`;
-						writeFileSync("./dist/server/__client_reference_browser.js", code);
+						const code = `module.exports = ${JSON.stringify(data, null, 2)}`;
+						writeFileSync("./dist/server/__client_reference_browser.cjs", code);
 					});
 				},
 			},
@@ -389,8 +395,8 @@ export default function (env, _argv) {
 					const NAME = /** @type {any} */ (this).name;
 					compiler.hooks.done.tap(NAME, (stats) => {
 						const statsJson = stats.toJson({ chunks: false, modules: false });
-						const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
-						writeFileSync("./dist/server/__client_stats.js", code);
+						const code = `module.exports = ${JSON.stringify(statsJson, null, 2)}`;
+						writeFileSync("./dist/server/__client_stats.cjs", code);
 					});
 				},
 			},

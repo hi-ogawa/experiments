@@ -3,8 +3,8 @@ import type { BundlerConfig, ImportManifestEntry } from "../types/react-types";
 import type { ReferenceMap } from "./client-manifest";
 
 export async function getServerManifest() {
-	const { default: serverRefs }: { default: ReferenceMap } = await import(
-		/* webpackIgnore: true */ "./__server_reference.js" as string
+	const serverRefs: ReferenceMap = require(
+		/* webpackIgnore: true */ "./__server_reference.cjs" as string,
 	);
 
 	const serverManifest: BundlerConfig = new Proxy(
