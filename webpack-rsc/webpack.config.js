@@ -4,7 +4,7 @@ import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
-import { BuildManager } from "./src/lib/build-manager";
+import { BuildManager } from "./src/lib/build-manager.js";
 
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
