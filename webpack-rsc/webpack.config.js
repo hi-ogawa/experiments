@@ -4,6 +4,7 @@ import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
+import { BuildManager } from "./src/lib/build-manager.js";
 
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
@@ -18,10 +19,7 @@ const require = createRequire(import.meta.url);
 export default function (env, _argv) {
 	const dev = !env.WEBPACK_BUILD;
 
-	/** @type {Set<string>} */
-	const clientReferences = new Set();
-	/** @type {Set<string>} */
-	const serverReferences = new Set();
+	const manager = new BuildManager();
 
 	const LAYER = {
 		ssr: "ssr",
@@ -112,7 +110,7 @@ export default function (env, _argv) {
 						loader: path.resolve(
 							"./src/lib/webpack/loader-server-use-client.js",
 						),
-						options: { clientReferences },
+						options: { manager },
 					},
 				},
 				{
@@ -124,7 +122,7 @@ export default function (env, _argv) {
 						),
 						options: {
 							runtime: path.resolve("./src/lib/server-action/ssr"),
-							serverReferences,
+							manager,
 						},
 					},
 				},
@@ -147,10 +145,10 @@ export default function (env, _argv) {
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
 						// server references are discovered when including client reference modules
 						// so the order matters
-						for (const reference of clientReferences) {
+						for (const reference in manager.clientReferenceMap) {
 							await includeReference(compilation, reference, LAYER.ssr);
 						}
-						for (const reference of serverReferences) {
+						for (const reference in manager.serverReferenceMap) {
 							await includeReference(compilation, reference, LAYER.server);
 						}
 					});
@@ -163,22 +161,36 @@ export default function (env, _argv) {
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
 							() => {
-								const clientMap = processReferences(
-									compilation,
-									clientReferences,
-									LAYER.ssr,
-								);
+								/** @type {import("./src/lib/client-manifest").ReferenceMap} */
+								const clientMap = {};
+								/** @type {import("./src/lib/client-manifest").ReferenceMap} */
+								const serverMap = {};
+
+								for (const mod of compilation.modules) {
+									const modName = mod.nameForCondition();
+									if (!modName) continue;
+
+									const clientId = manager.clientReferenceMap[modName];
+									if (clientId && mod.layer === LAYER.ssr) {
+										clientMap[clientId] = {
+											id: compilation.chunkGraph.getModuleId(mod),
+											chunks: [],
+										};
+									}
+									const serverId = manager.serverReferenceMap[modName];
+									if (serverId && mod.layer === LAYER.server) {
+										serverMap[serverId] = {
+											id: compilation.chunkGraph.getModuleId(mod),
+											chunks: [],
+										};
+									}
+								}
+
 								compilation.emitAsset(
 									"__client_reference_ssr.js",
 									new webpack.sources.RawSource(
 										`export default ${JSON.stringify(clientMap, null, 2)}`,
 									),
-								);
-
-								const serverMap = processReferences(
-									compilation,
-									serverReferences,
-									LAYER.server,
 								);
 								compilation.emitAsset(
 									"__server_reference.js",
@@ -243,7 +255,7 @@ export default function (env, _argv) {
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(NAME, () => {
 						// TODO: when to invalidate client references?
-						clientReferences;
+						manager.clientReferenceMap;
 
 						// invalidate all server cjs
 						for (const key in require.cache) {
@@ -290,12 +302,12 @@ export default function (env, _argv) {
 					use: {
 						loader: path.resolve("./src/lib/webpack/loader-virtual.js"),
 						options: {
-							clientReferences,
 							getCode: () => {
 								return [
 									`export default [`,
-									...[...clientReferences].map(
-										(file) => `() => import(${JSON.stringify(file)}),`,
+									...Object.values(manager.clientReferenceMap).map(
+										(file) =>
+											`() => import(${JSON.stringify(path.join("../..", file))}),`,
 									),
 									`]`,
 								].join("\n");
@@ -311,7 +323,7 @@ export default function (env, _argv) {
 						),
 						options: {
 							runtime: path.resolve("./src/lib/server-action/browser"),
-							serverReferences: new Set(),
+							manager,
 						},
 					},
 				},
@@ -335,9 +347,11 @@ export default function (env, _argv) {
 						const data = {};
 
 						for (const mod of compilation.modules) {
-							// module can be either NormalModule or ConcatenatedModule
-							const name = mod.nameForCondition();
-							if (typeof name === "string" && clientReferences.has(name)) {
+							const modName = mod.nameForCondition();
+							if (!modName) continue;
+
+							const clientId = manager.clientReferenceMap[modName];
+							if (clientId) {
 								const mods = collectModuleDeps(compilation, mod);
 								const chunks = uniq(
 									[...mods].flatMap((mod) => [
@@ -353,7 +367,7 @@ export default function (env, _argv) {
 										}
 									}
 								}
-								data[name] = {
+								data[clientId] = {
 									id: compilation.chunkGraph.getModuleId(mod),
 									chunks: chunkIds,
 								};
@@ -394,33 +408,14 @@ export default function (env, _argv) {
 /**
  *
  * @param {import("webpack").Compilation} compilation
- * @param {Set<string>} selected
- * @param {string} layer
- */
-function processReferences(compilation, selected, layer) {
-	/** @type {import("./src/lib/client-manifest").ReferenceMap} */
-	const result = {};
-	for (const mod of compilation.modules) {
-		const name = mod.nameForCondition();
-		if (typeof name === "string" && selected.has(name) && mod.layer === layer) {
-			const id = compilation.chunkGraph.getModuleId(mod);
-			result[name] = { id, chunks: [] };
-		}
-	}
-	return result;
-}
-
-/**
- *
- * @param {import("webpack").Compilation} compilation
- * @param {string} entry
+ * @param {string} reference
  * @param {string} issuerLayer
  */
-function includeReference(compilation, entry, issuerLayer) {
+function includeReference(compilation, reference, issuerLayer) {
 	const [mainEntry] = compilation.entries.values();
 	tinyassert(mainEntry);
 
-	const dependency = webpack.EntryPlugin.createDependency(entry, {});
+	const dependency = webpack.EntryPlugin.createDependency(reference, {});
 	mainEntry.includeDependencies.push(dependency);
 
 	const promise = createManualPromise();

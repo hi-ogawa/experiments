@@ -1,7 +1,10 @@
 // TODO: use https://github.com/hi-ogawa/vite-plugins/tree/main/packages/transforms
 
+import path from "node:path";
+import { tinyassert } from "@hiogawa/utils";
+
 /**
- * @typedef {{ clientReferences: Set<string> }} LoaderOptions
+ * @typedef {{ manager: import("../build-manager.js").BuildManager }} LoaderOptions
  */
 
 /**
@@ -9,8 +12,14 @@
  */
 export default async function loader(input) {
 	const callback = this.async();
-	const { clientReferences } = this.getOptions();
-	clientReferences.delete(this.resourcePath);
+	const modName = this._module?.nameForCondition();
+	if (!modName) {
+		callback(null, input);
+		return;
+	}
+
+	const { manager } = this.getOptions();
+	delete manager.clientReferenceMap[modName];
 
 	// "use strict" injected by other loaders?
 	if (!/^("use client"|'use client')/m.test(input)) {
@@ -18,8 +27,10 @@ export default async function loader(input) {
 		return;
 	}
 
-	clientReferences.add(this.resourcePath);
-	const id = this.resourcePath; // TODO: obfuscate id
+	tinyassert(this._compiler);
+	const clientId = path.relative(this._compiler.context, modName);
+	manager.clientReferenceMap[modName] = clientId;
+
 	const matches = input.matchAll(/export function (\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);
 	let output = `import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge";\n`;
@@ -27,7 +38,7 @@ export default async function loader(input) {
 		output +=
 			exportExpr(
 				name,
-				`$$register(() => {}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
+				`$$register(() => {}, ${JSON.stringify(clientId)}, ${JSON.stringify(name)})`,
 			) + ";\n";
 	}
 	callback(null, output);
