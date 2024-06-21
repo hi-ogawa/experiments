@@ -8,6 +8,7 @@ import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
 import type { CallServerCallback } from "./types/react-types";
 import "./lib/client-references-browser.js";
+import "./routes/_style.css?url";
 
 async function main() {
 	const url = new URL(window.location.href);

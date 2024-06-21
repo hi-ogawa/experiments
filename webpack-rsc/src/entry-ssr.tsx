@@ -29,15 +29,36 @@ export async function handler(request: Request) {
 		flightStream1,
 		{ ssrManifest },
 	);
-	const ssrRoot = flightData.node;
+
+	const assets = await getClientAssets();
+	const links = (
+		<>
+			{assets.css.map((href) => (
+				<link
+					key={href}
+					rel="stylesheet"
+					href={href}
+					// @ts-expect-error precedence to force head rendering
+					// https://react.dev/reference/react-dom/components/link#special-rendering-behavior
+					precedence="high"
+				/>
+			))}
+		</>
+	);
+
+	const ssrRoot = (
+		<>
+			{flightData.node}
+			{links}
+		</>
+	);
 
 	// react dom ssr (react node -> html)
 	let status = 200;
 	let htmlStream: ReadableStream<Uint8Array>;
-	const bootstrapScripts = await getClientAssets();
 	try {
 		htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
-			bootstrapScripts,
+			bootstrapScripts: assets.bootstrapScripts,
 			formState: actionResult,
 		});
 	} catch (e) {
@@ -47,10 +68,11 @@ export async function handler(request: Request) {
 			<>
 				<GlobalErrorPage />
 				<script dangerouslySetInnerHTML={{ __html: "self.__nossr = true" }} />
+				{links}
 			</>
 		);
 		htmlStream = await ReactDOMServer.renderToReadableStream(errorRoot, {
-			bootstrapScripts,
+			bootstrapScripts: assets.bootstrapScripts,
 		});
 	}
 

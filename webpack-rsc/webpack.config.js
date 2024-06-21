@@ -58,6 +58,10 @@ export default function (env, _argv) {
 					resourceQuery: /inline/,
 					type: "asset/inline",
 				},
+				{
+					resourceQuery: /url/,
+					type: "asset/resource",
+				},
 			],
 		},
 	};
@@ -379,12 +383,12 @@ export default function (env, _argv) {
 					});
 				},
 			},
-			!dev && {
+			{
 				name: "client-stats",
 				apply(compiler) {
 					const NAME = /** @type {any} */ (this).name;
 					compiler.hooks.done.tap(NAME, (stats) => {
-						const statsJson = stats.toJson({ all: false, assets: true });
+						const statsJson = stats.toJson({ chunks: false, modules: false });
 						const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
 						writeFileSync("./dist/server/__client_stats.js", code);
 					});
