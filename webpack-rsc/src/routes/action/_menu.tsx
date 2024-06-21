@@ -9,7 +9,7 @@ export function Menu() {
 			}}
 		>
 			<a href="/action">Basic</a>
-			<a href="/action/extra">Inline</a>
+			<a href="/action/inline">Inline</a>
 		</div>
 	);
 }

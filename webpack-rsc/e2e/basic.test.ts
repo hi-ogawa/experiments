@@ -68,15 +68,27 @@ async function testError(page: Page) {
 	await page.waitForURL("/");
 }
 
-test("action @js", async ({ page }) => {
+test("action state @js", async ({ page }) => {
 	await page.goto("/action");
 	await waitForHydration(page);
 	await using _ = await createReloadChecker(page);
 	await testAction(page);
 });
 
-testNoJs("action @nojs", async ({ page }) => {
+testNoJs("action state @nojs", async ({ page }) => {
 	await page.goto("/action");
+	await testAction(page);
+});
+
+test("inline action @js", async ({ page }) => {
+	await page.goto("/action/inline");
+	await waitForHydration(page);
+	await using _ = await createReloadChecker(page);
+	await testAction(page);
+});
+
+testNoJs("inline action @nojs", async ({ page }) => {
+	await page.goto("/action/inline");
 	await testAction(page);
 });
 
