@@ -13,7 +13,7 @@ import { parseAstAsync } from "vite";
 export default async function loader(input) {
 	const callback = this.async();
 	const modName = this._module?.nameForCondition();
-	if (!modName) {
+	if (!modName || !input.includes("use client")) {
 		callback(null, input);
 		return;
 	}

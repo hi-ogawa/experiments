@@ -13,7 +13,7 @@ import { exportExpr } from "./loader-server-use-client.js";
 export default async function loader(input) {
 	const callback = this.async();
 	const modName = this._module?.nameForCondition();
-	if (!modName) {
+	if (!modName || !input.includes("use server")) {
 		callback(null, input);
 		return;
 	}
