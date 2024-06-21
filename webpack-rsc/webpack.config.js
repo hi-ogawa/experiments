@@ -286,13 +286,20 @@ export default function (env, _argv) {
 		module: {
 			rules: [
 				{
-					test: path.resolve("./src/entry-browser.tsx"),
+					test: path.resolve("./src/lib/client-references-browser.js"),
 					use: {
-						loader: path.resolve(
-							"./src/lib/webpack/loader-inject-client-references.js",
-						),
+						loader: path.resolve("./src/lib/webpack/loader-virtual.js"),
 						options: {
 							clientReferences,
+							getCode: () => {
+								return [
+									`export default [`,
+									...[...clientReferences].map(
+										(file) => `() => import(${JSON.stringify(file)}),`,
+									),
+									`]`,
+								].join("\n");
+							},
 						},
 					},
 				},
