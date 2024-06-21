@@ -2,6 +2,7 @@ import { tinyassert } from "@hiogawa/utils";
 import type { StatsCompilation } from "webpack";
 
 export async function getClientAssets() {
+	// TODO: need to invalidate esm by `?t=...` or use cjs with `delete require.cache[...]`
 	const { default: stats }: { default: StatsCompilation } = await import(
 		/* webpackIgnore: true */ "./__client_stats.js" as string
 	);
