@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import path from "node:path";
 import { tinyassert } from "@hiogawa/utils";
 import { exportExpr } from "./loader-server-use-client.js";
@@ -25,8 +26,9 @@ export default async function loader(input) {
 		return;
 	}
 
+	// TODO: obfuscate export names too?
 	tinyassert(this._compiler);
-	const serverId = path.relative(this._compiler.context, modName);
+	const serverId = hashString(path.relative(this._compiler.context, modName));
 	manager.serverReferenceMap[modName] = serverId;
 
 	const matches = input.matchAll(/export\s+(?:async)?\s+function\s+(\w+)\(/g);
@@ -40,4 +42,12 @@ export default async function loader(input) {
 			) + ";\n";
 	}
 	callback(null, output);
+}
+
+/**
+ *
+ * @param {string} value
+ */
+function hashString(value) {
+	return crypto.createHash("sha256").update(value).digest().toString("hex");
 }
