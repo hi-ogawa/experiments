@@ -1,10 +1,10 @@
 export class BuildManager {
-	/** @type {Set<string>} */
-	serverReferences = new Set();
+	// keep mapping of
+	//   module name (abs path) => client id (rel path)
 
-	/**
-	 * module name (abs path) -> client id (rel path)
-	 * @type {Record<string, string>}
-	 */
+	/** @type {Record<string, string>} */
 	clientReferenceMap = {};
+
+	/** @type {Record<string, string>} */
+	serverReferenceMap = {};
 }

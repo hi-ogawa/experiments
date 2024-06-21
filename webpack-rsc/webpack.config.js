@@ -148,7 +148,7 @@ export default function (env, _argv) {
 						for (const reference in manager.clientReferenceMap) {
 							await includeReference(compilation, reference, LAYER.ssr);
 						}
-						for (const reference of manager.serverReferences) {
+						for (const reference in manager.serverReferenceMap) {
 							await includeReference(compilation, reference, LAYER.server);
 						}
 					});
@@ -177,11 +177,9 @@ export default function (env, _argv) {
 											chunks: [],
 										};
 									}
-									if (
-										manager.serverReferences.has(modName) &&
-										mod.layer === LAYER.server
-									) {
-										serverMap[modName] = {
+									const serverId = manager.serverReferenceMap[modName];
+									if (serverId && mod.layer === LAYER.server) {
+										serverMap[serverId] = {
 											id: compilation.chunkGraph.getModuleId(mod),
 											chunks: [],
 										};

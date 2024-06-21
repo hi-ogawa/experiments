@@ -12,13 +12,13 @@ import { tinyassert } from "@hiogawa/utils";
  */
 export default async function loader(input) {
 	const callback = this.async();
-	const { manager } = this.getOptions();
-
 	const modName = this._module?.nameForCondition();
 	if (!modName) {
 		callback(null, input);
 		return;
 	}
+
+	const { manager } = this.getOptions();
 	delete manager.clientReferenceMap[modName];
 
 	// "use strict" injected by other loaders?
@@ -30,6 +30,7 @@ export default async function loader(input) {
 	tinyassert(this._compiler);
 	const clientId = path.relative(this._compiler.context, modName);
 	manager.clientReferenceMap[modName] = clientId;
+
 	const matches = input.matchAll(/export function (\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);
 	let output = `import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge";\n`;
