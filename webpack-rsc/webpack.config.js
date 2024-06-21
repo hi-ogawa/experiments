@@ -145,7 +145,7 @@ export default function (env, _argv) {
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
 						// server references are discovered when including client reference modules
 						// so the order matters
-						for (const reference of manager.clientReferences) {
+						for (const reference in manager.clientReferenceMap) {
 							await includeReference(compilation, reference, LAYER.ssr);
 						}
 						for (const reference of manager.serverReferences) {
@@ -257,7 +257,7 @@ export default function (env, _argv) {
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(NAME, () => {
 						// TODO: when to invalidate client references?
-						manager.clientReferences;
+						manager.clientReferenceMap;
 
 						// invalidate all server cjs
 						for (const key in require.cache) {
@@ -307,7 +307,7 @@ export default function (env, _argv) {
 							getCode: () => {
 								return [
 									`export default [`,
-									...[...manager.clientReferences].map(
+									...Object.keys(manager.clientReferenceMap).map(
 										(file) => `() => import(${JSON.stringify(file)}),`,
 									),
 									`]`,

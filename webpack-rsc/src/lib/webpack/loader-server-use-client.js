@@ -19,9 +19,7 @@ export default async function loader(input) {
 		callback(null, input);
 		return;
 	}
-
 	delete manager.clientReferenceMap[modName];
-	manager.clientReferences.delete(this.resourcePath);
 
 	// "use strict" injected by other loaders?
 	if (!/^("use client"|'use client')/m.test(input)) {
@@ -32,7 +30,6 @@ export default async function loader(input) {
 	tinyassert(this._compiler);
 	const clientId = path.relative(this._compiler.context, modName);
 	manager.clientReferenceMap[modName] = clientId;
-	manager.clientReferences.add(this.resourcePath);
 	const matches = input.matchAll(/export function (\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);
 	let output = `import { registerClientReference as $$register } from "react-server-dom-webpack/server.edge";\n`;
