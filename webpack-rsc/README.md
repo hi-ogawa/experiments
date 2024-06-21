@@ -14,5 +14,5 @@ Minimal RSC demo on Webpack
 - [x] client reference
 - [x] server reference
 - [x] css
-- [ ] server hmr
+- [x] server hmr
 - [ ] client hmr
