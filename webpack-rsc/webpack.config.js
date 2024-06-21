@@ -336,6 +336,10 @@ export default function (env, _argv) {
 					},
 				},
 				{
+					test: /\.[cm]?[jt]sx$/,
+					use: "@hiogawa/tiny-refresh/webpack",
+				},
+				{
 					test: /\.[cm]?[jt]sx?$/,
 					use: {
 						loader: path.resolve(
