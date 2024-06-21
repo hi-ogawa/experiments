@@ -292,9 +292,13 @@ export default function (env, _argv) {
 						options: {
 							clientReferences,
 							getCode: () => {
-								return [...clientReferences]
-									.map((file) => `() => import(${JSON.stringify(file)})`)
-									.join(";\n");
+								return [
+									`export default [`,
+									...[...clientReferences].map(
+										(file) => `() => import(${JSON.stringify(file)}),`,
+									),
+									`]`,
+								].join("\n");
 							},
 						},
 					},
