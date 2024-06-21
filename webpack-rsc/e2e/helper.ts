@@ -1,3 +1,5 @@
+import { readFileSync, writeFileSync } from "fs";
+import { tinyassert } from "@hiogawa/utils";
 import test, { type Page, expect } from "@playwright/test";
 
 export const testNoJs = test.extend({
@@ -25,6 +27,20 @@ export async function createReloadChecker(page: Page) {
 			await expect(page.locator(`meta[name="x-reload-check"]`)).toBeAttached({
 				timeout: 1,
 			});
+		},
+	};
+}
+
+export function createEditor(filepath: string) {
+	const init = readFileSync(filepath, "utf-8");
+	return {
+		edit(editFn: (data: string) => string) {
+			const next = editFn(init);
+			tinyassert(next !== init);
+			writeFileSync(filepath, next);
+		},
+		[Symbol.dispose]() {
+			writeFileSync(filepath, init);
 		},
 	};
 }
