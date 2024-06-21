@@ -105,7 +105,7 @@ async function testAction(page: Page) {
 	await page.getByText("Count is 0").click();
 }
 
-test("server hmr", async ({ page }) => {
+test("server hmr @dev", async ({ page }) => {
 	await page.goto("/");
 	await waitForHydration(page);
 
