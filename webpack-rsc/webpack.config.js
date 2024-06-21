@@ -305,8 +305,9 @@ export default function (env, _argv) {
 							getCode: () => {
 								return [
 									`export default [`,
-									...Object.keys(manager.clientReferenceMap).map(
-										(file) => `() => import(${JSON.stringify(file)}),`,
+									...Object.values(manager.clientReferenceMap).map(
+										(file) =>
+											`() => import(${JSON.stringify(path.join("../..", file))}),`,
 									),
 									`]`,
 								].join("\n");
