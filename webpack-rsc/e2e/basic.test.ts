@@ -1,5 +1,10 @@
 import { type Page, test } from "@playwright/test";
-import { createReloadChecker, testNoJs, waitForHydration } from "./helper";
+import {
+	createEditor,
+	createReloadChecker,
+	testNoJs,
+	waitForHydration,
+} from "./helper";
 
 test("basic @js", async ({ page }) => {
 	await page.goto("/");
@@ -99,3 +104,18 @@ async function testAction(page: Page) {
 	await page.getByRole("button", { name: "-" }).click();
 	await page.getByText("Count is 0").click();
 }
+
+test("server hmr @dev", async ({ page }) => {
+	await page.goto("/");
+	await waitForHydration(page);
+
+	await page.getByRole("heading", { name: "Webpack RSC" }).click();
+	await page.getByRole("button", { name: "count is 0" }).click();
+
+	await using _ = await createReloadChecker(page);
+	using editor = createEditor("./src/routes/page.tsx");
+	editor.edit((s) => s.replace("Webpack RSC", "Webpack [EDIT] RSC"));
+
+	await page.getByRole("heading", { name: "Webpack [EDIT] RSC" }).click();
+	await page.getByRole("button", { name: "count is 1" }).click();
+});
