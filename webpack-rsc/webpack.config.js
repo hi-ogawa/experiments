@@ -322,7 +322,7 @@ export default function (env, _argv) {
 						),
 						options: {
 							runtime: path.resolve("./src/lib/server-action/browser"),
-							serverReferences: new Set(),
+							manager,
 						},
 					},
 				},
