@@ -124,6 +124,16 @@ export default function (env, _argv) {
 					},
 				},
 				{
+					issuerLayer: LAYER.server,
+					test: /\.[cm]?[jt]sx?$/,
+					use: {
+						loader: path.resolve(
+							"./src/lib/webpack/loader-server-use-server.js",
+						),
+						options: { manager },
+					},
+				},
+				{
 					issuerLayer: LAYER.ssr,
 					test: /\.[cm]?[jt]sx?$/,
 					use: {
