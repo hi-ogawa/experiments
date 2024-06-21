@@ -93,7 +93,7 @@ async function main() {
 		client.onMessage((data: string) => {
 			const message = JSON.parse(data);
 			if (message.type === "custom:update-server") {
-				window.location.reload();
+				window.history.replaceState({}, "", window.location.href);
 			}
 		});
 	}
