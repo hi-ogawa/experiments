@@ -4,6 +4,7 @@ import path from "node:path";
 import { createManualPromise, tinyassert, uniq } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
+import { BuildManager } from "./src/lib/build-manager";
 
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
@@ -18,10 +19,7 @@ const require = createRequire(import.meta.url);
 export default function (env, _argv) {
 	const dev = !env.WEBPACK_BUILD;
 
-	/** @type {Set<string>} */
-	const clientReferences = new Set();
-	/** @type {Set<string>} */
-	const serverReferences = new Set();
+	const manager = new BuildManager();
 
 	const LAYER = {
 		ssr: "ssr",
@@ -112,7 +110,7 @@ export default function (env, _argv) {
 						loader: path.resolve(
 							"./src/lib/webpack/loader-server-use-client.js",
 						),
-						options: { clientReferences },
+						options: { manager },
 					},
 				},
 				{
@@ -124,7 +122,7 @@ export default function (env, _argv) {
 						),
 						options: {
 							runtime: path.resolve("./src/lib/server-action/ssr"),
-							serverReferences,
+							manager,
 						},
 					},
 				},
@@ -147,10 +145,10 @@ export default function (env, _argv) {
 					compiler.hooks.finishMake.tapPromise(NAME, async (compilation) => {
 						// server references are discovered when including client reference modules
 						// so the order matters
-						for (const reference of clientReferences) {
+						for (const reference of manager.clientReferences) {
 							await includeReference(compilation, reference, LAYER.ssr);
 						}
-						for (const reference of serverReferences) {
+						for (const reference of manager.serverReferences) {
 							await includeReference(compilation, reference, LAYER.server);
 						}
 					});
@@ -165,7 +163,7 @@ export default function (env, _argv) {
 							() => {
 								const clientMap = processReferences(
 									compilation,
-									clientReferences,
+									manager.clientReferences,
 									LAYER.ssr,
 								);
 								compilation.emitAsset(
@@ -177,7 +175,7 @@ export default function (env, _argv) {
 
 								const serverMap = processReferences(
 									compilation,
-									serverReferences,
+									manager.serverReferences,
 									LAYER.server,
 								);
 								compilation.emitAsset(
@@ -243,7 +241,7 @@ export default function (env, _argv) {
 					// https://webpack.js.org/api/compiler-hooks/
 					compiler.hooks.invalid.tap(NAME, () => {
 						// TODO: when to invalidate client references?
-						clientReferences;
+						manager.clientReferences;
 
 						// invalidate all server cjs
 						for (const key in require.cache) {
@@ -290,11 +288,10 @@ export default function (env, _argv) {
 					use: {
 						loader: path.resolve("./src/lib/webpack/loader-virtual.js"),
 						options: {
-							clientReferences,
 							getCode: () => {
 								return [
 									`export default [`,
-									...[...clientReferences].map(
+									...[...manager.clientReferences].map(
 										(file) => `() => import(${JSON.stringify(file)}),`,
 									),
 									`]`,
@@ -337,7 +334,10 @@ export default function (env, _argv) {
 						for (const mod of compilation.modules) {
 							// module can be either NormalModule or ConcatenatedModule
 							const name = mod.nameForCondition();
-							if (typeof name === "string" && clientReferences.has(name)) {
+							if (
+								typeof name === "string" &&
+								manager.clientReferences.has(name)
+							) {
 								const mods = collectModuleDeps(compilation, mod);
 								const chunks = uniq(
 									[...mods].flatMap((mod) => [

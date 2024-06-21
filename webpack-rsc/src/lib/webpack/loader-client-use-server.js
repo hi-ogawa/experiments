@@ -2,7 +2,7 @@ import path from "node:path";
 import { exportExpr } from "./loader-server-use-client.js";
 
 /**
- * @typedef {{ serverReferences: Set<string>, runtime: string }} LoaderOptions
+ * @typedef {{ manager: import("../build-manager.js").BuildManager, runtime: string }} LoaderOptions
  */
 
 /**
@@ -10,15 +10,15 @@ import { exportExpr } from "./loader-server-use-client.js";
  */
 export default async function loader(input) {
 	const callback = this.async();
-	const { serverReferences, runtime } = this.getOptions();
-	serverReferences.delete(this.resourcePath);
+	const { manager, runtime } = this.getOptions();
+	manager.serverReferences.delete(this.resourcePath);
 
 	if (!/^("use server"|'use server')/m.test(input)) {
 		callback(null, input);
 		return;
 	}
 
-	serverReferences.add(this.resourcePath);
+	manager.serverReferences.add(this.resourcePath);
 	const id = this.resourcePath; // TODO: obfuscate id
 	const matches = input.matchAll(/export\s+(?:async)?\s+function\s+(\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);

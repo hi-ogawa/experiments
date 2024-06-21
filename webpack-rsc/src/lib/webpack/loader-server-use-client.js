@@ -1,7 +1,7 @@
 // TODO: use https://github.com/hi-ogawa/vite-plugins/tree/main/packages/transforms
 
 /**
- * @typedef {{ clientReferences: Set<string> }} LoaderOptions
+ * @typedef {{ manager: import("../build-manager.js").BuildManager }} LoaderOptions
  */
 
 /**
@@ -9,8 +9,8 @@
  */
 export default async function loader(input) {
 	const callback = this.async();
-	const { clientReferences } = this.getOptions();
-	clientReferences.delete(this.resourcePath);
+	const { manager } = this.getOptions();
+	manager.clientReferences.delete(this.resourcePath);
 
 	// "use strict" injected by other loaders?
 	if (!/^("use client"|'use client')/m.test(input)) {
@@ -18,7 +18,7 @@ export default async function loader(input) {
 		return;
 	}
 
-	clientReferences.add(this.resourcePath);
+	manager.clientReferences.add(this.resourcePath);
 	const id = this.resourcePath; // TODO: obfuscate id
 	const matches = input.matchAll(/export function (\w+)\(/g);
 	const exportNames = [...matches].map((m) => m[1]);
