@@ -6,7 +6,7 @@ export function Hydrated() {
 	return <>[hydrated: {Number(useHydrated())}]</>;
 }
 
-export function Counter() {
+export const Counter: React.FC = () => {
 	const [count, setCount] = React.useState(0);
 
 	return (
@@ -14,7 +14,7 @@ export function Counter() {
 			count is {count}
 		</button>
 	);
-}
+};
 
 function useHydrated() {
 	return React.useSyncExternalStore(
