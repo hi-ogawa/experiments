@@ -120,7 +120,10 @@ export default function (env, _argv) {
 						loader: path.resolve(
 							"./src/lib/webpack/loader-server-use-client.js",
 						),
-						options: { manager },
+						options: {
+							runtime: path.resolve("./src/lib/client-component/server"),
+							manager,
+						},
 					},
 				},
 				{
