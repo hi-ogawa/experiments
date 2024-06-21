@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import path from "node:path";
+import { transformDirectiveProxyExport } from "@hiogawa/transforms";
 import { tinyassert } from "@hiogawa/utils";
-import { exportExpr } from "./loader-server-use-client.js";
+import { parseAstAsync } from "vite";
 
 /**
  * @typedef {{ manager: import("../build-manager.js").BuildManager, runtime: string }} LoaderOptions
@@ -21,27 +22,25 @@ export default async function loader(input) {
 	const { manager, runtime } = this.getOptions();
 	delete manager.serverReferenceMap[modName];
 
-	if (!/^("use server"|'use server')/m.test(input)) {
+	tinyassert(this._compiler);
+	const serverId = hashString(path.relative(this._compiler.context, modName));
+
+	const ast = await parseAstAsync(input);
+	const output = await transformDirectiveProxyExport(ast, {
+		directive: "use server",
+		id: serverId,
+		runtime: "$$proxy",
+	});
+	if (!output) {
 		callback(null, input);
 		return;
 	}
 
-	// TODO: obfuscate export names too?
-	tinyassert(this._compiler);
-	const serverId = hashString(path.relative(this._compiler.context, modName));
 	manager.serverReferenceMap[modName] = serverId;
-
-	const matches = input.matchAll(/export\s+(?:async)?\s+function\s+(\w+)\(/g);
-	const exportNames = [...matches].map((m) => m[1]);
-	let output = `import { createServerReference as $$proxy } from "${path.resolve(runtime)}";\n`;
-	for (const name of exportNames) {
-		output +=
-			exportExpr(
-				name,
-				`$$proxy(${JSON.stringify(serverId)}, ${JSON.stringify(name)})`,
-			) + ";\n";
-	}
-	callback(null, output);
+	output.prepend(`\
+import { createServerReference as $$proxy } from "${path.resolve(runtime)}";;
+`);
+	callback(null, output.toString());
 }
 
 /**

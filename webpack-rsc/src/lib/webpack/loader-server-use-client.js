@@ -37,8 +37,8 @@ export default async function loader(input) {
 
 	manager.clientReferenceMap[modName] = clientId;
 	output.prepend(`\
-import { registerClientReference } from "react-server-dom-webpack/server.edge";
-const $$proxy = (id, name) => registerClientReference(() => {}, id, name);
+import $$ReactServer from "react-server-dom-webpack/server.edge";
+const $$proxy = (id, name) => $$ReactServer.registerClientReference(() => {}, id, name);
 `);
 	callback(null, output.toString());
 }
