@@ -1,8 +1,10 @@
 import { tinyassert } from "@hiogawa/utils";
+import { Menu } from "../_menu";
 
 export default function Page() {
 	return (
 		<div>
+			<Menu />
 			<h3>Inline Server Action</h3>
 			<ServerCounterInline />
 		</div>
