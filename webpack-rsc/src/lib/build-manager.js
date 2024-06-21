@@ -1,6 +1,6 @@
 export class BuildManager {
 	// keep mapping of
-	//   module name (abs path) => client id (rel path)
+	//   module name (absolute path) => client id (hashed relative path)
 
 	/** @type {Record<string, string>} */
 	clientReferenceMap = {};
