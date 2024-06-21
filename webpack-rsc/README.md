@@ -16,3 +16,4 @@ Minimal RSC demo on Webpack
 - [x] css
 - [x] server hmr
 - [ ] client hmr
+- [ ] package
