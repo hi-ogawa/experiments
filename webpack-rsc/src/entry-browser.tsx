@@ -7,6 +7,7 @@ import { $__global } from "./lib/global";
 import { setupBrowserRouter } from "./lib/router/browser";
 import GlobalErrorPage from "./routes/global-error";
 import type { CallServerCallback } from "./types/react-types";
+import "./style.css?url";
 import "./lib/client-references-browser.js";
 
 async function main() {
