@@ -167,22 +167,24 @@ export default function (env, _argv) {
 								const serverMap = {};
 
 								for (const mod of compilation.modules) {
-									const name = mod.nameForCondition();
-									if (name === null) {
-										continue;
+									const modName = mod.nameForCondition();
+									if (!modName) continue;
+
+									const clientId = manager.clientReferenceMap[modName];
+									if (clientId && mod.layer === LAYER.ssr) {
+										clientMap[clientId] = {
+											id: compilation.chunkGraph.getModuleId(mod),
+											chunks: [],
+										};
 									}
-									const id = compilation.chunkGraph.getModuleId(mod);
 									if (
-										manager.clientReferences.has(name) &&
-										mod.layer === LAYER.ssr
-									) {
-										clientMap[name] = { id, chunks: [] };
-									}
-									if (
-										manager.serverReferences.has(name) &&
+										manager.serverReferences.has(modName) &&
 										mod.layer === LAYER.server
 									) {
-										serverMap[name] = { id, chunks: [] };
+										serverMap[modName] = {
+											id: compilation.chunkGraph.getModuleId(mod),
+											chunks: [],
+										};
 									}
 								}
 
@@ -346,12 +348,11 @@ export default function (env, _argv) {
 						const data = {};
 
 						for (const mod of compilation.modules) {
-							// module can be either NormalModule or ConcatenatedModule
-							const name = mod.nameForCondition();
-							if (
-								typeof name === "string" &&
-								manager.clientReferences.has(name)
-							) {
+							const modName = mod.nameForCondition();
+							if (!modName) continue;
+
+							const clientId = manager.clientReferenceMap[modName];
+							if (clientId) {
 								const mods = collectModuleDeps(compilation, mod);
 								const chunks = uniq(
 									[...mods].flatMap((mod) => [
@@ -367,7 +368,7 @@ export default function (env, _argv) {
 										}
 									}
 								}
-								data[name] = {
+								data[clientId] = {
 									id: compilation.chunkGraph.getModuleId(mod),
 									chunks: chunkIds,
 								};
