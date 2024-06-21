@@ -28,9 +28,6 @@ export default function Page() {
 				</p>
 			</div>
 			<p className="read-the-docs">
-				Click on Webpack and React logos to learn more
-			</p>
-			<p className="read-the-docs">
 				<a href="https://github.com/hi-ogawa/experiments/tree/main/webpack-rsc">
 					View code on GitHub
 				</a>
