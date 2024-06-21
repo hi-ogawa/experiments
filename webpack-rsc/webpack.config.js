@@ -141,7 +141,7 @@ export default function (env, _argv) {
 							"./src/lib/webpack/loader-client-use-server.js",
 						),
 						options: {
-							runtime: path.resolve("./src/lib/server-action/ssr"),
+							runtime: "react-server-dom-webpack/client.edge",
 							manager,
 						},
 					},
@@ -342,7 +342,7 @@ export default function (env, _argv) {
 							"./src/lib/webpack/loader-client-use-server.js",
 						),
 						options: {
-							runtime: path.resolve("./src/lib/server-action/browser"),
+							runtime: "react-server-dom-webpack/client.browser",
 							manager,
 						},
 					},

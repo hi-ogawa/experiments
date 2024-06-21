@@ -38,7 +38,8 @@ export default async function loader(input) {
 
 	manager.serverReferenceMap[modName] = serverId;
 	output.prepend(`\
-import { createServerReference as $$proxy } from "${path.resolve(runtime)}";;
+import $$ReactClient from "${runtime}";
+const $$proxy = (id, name) => $$ReactClient.createServerReference(id + "#" + name, (...args) => __f_call_server(...args));
 `);
 	callback(null, output.toString());
 }
