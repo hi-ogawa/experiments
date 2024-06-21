@@ -15,11 +15,11 @@ export type ReferenceMap = {
 };
 
 export async function getClientManifest() {
-	const { default: browserRefs }: { default: ReferenceMap } = await import(
-		/* webpackIgnore: true */ "./__client_reference_browser.js" as string
+	const browserRefs: ReferenceMap = require(
+		/* webpackIgnore: true */ "./__client_reference_browser.cjs" as string,
 	);
-	const { default: ssrRefs }: { default: ReferenceMap } = await import(
-		/* webpackIgnore: true */ "./__client_reference_ssr.js" as string
+	const ssrRefs: ReferenceMap = require(
+		/* webpackIgnore: true */ "./__client_reference_ssr.cjs" as string,
 	);
 
 	const browserManifest: BundlerConfig = new Proxy(
