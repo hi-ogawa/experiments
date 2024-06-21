@@ -161,22 +161,36 @@ export default function (env, _argv) {
 								stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 							},
 							() => {
-								const clientMap = processReferences(
-									compilation,
-									manager.clientReferences,
-									LAYER.ssr,
-								);
+								/** @type {import("./src/lib/client-manifest").ReferenceMap} */
+								const clientMap = {};
+								/** @type {import("./src/lib/client-manifest").ReferenceMap} */
+								const serverMap = {};
+
+								for (const mod of compilation.modules) {
+									const name = mod.nameForCondition();
+									if (name === null) {
+										continue;
+									}
+									const id = compilation.chunkGraph.getModuleId(mod);
+									if (
+										manager.clientReferences.has(name) &&
+										mod.layer === LAYER.ssr
+									) {
+										clientMap[name] = { id, chunks: [] };
+									}
+									if (
+										manager.serverReferences.has(name) &&
+										mod.layer === LAYER.server
+									) {
+										serverMap[name] = { id, chunks: [] };
+									}
+								}
+
 								compilation.emitAsset(
 									"__client_reference_ssr.js",
 									new webpack.sources.RawSource(
 										`export default ${JSON.stringify(clientMap, null, 2)}`,
 									),
-								);
-
-								const serverMap = processReferences(
-									compilation,
-									manager.serverReferences,
-									LAYER.server,
 								);
 								compilation.emitAsset(
 									"__server_reference.js",
@@ -394,33 +408,14 @@ export default function (env, _argv) {
 /**
  *
  * @param {import("webpack").Compilation} compilation
- * @param {Set<string>} selected
- * @param {string} layer
- */
-function processReferences(compilation, selected, layer) {
-	/** @type {import("./src/lib/client-manifest").ReferenceMap} */
-	const result = {};
-	for (const mod of compilation.modules) {
-		const name = mod.nameForCondition();
-		if (typeof name === "string" && selected.has(name) && mod.layer === layer) {
-			const id = compilation.chunkGraph.getModuleId(mod);
-			result[name] = { id, chunks: [] };
-		}
-	}
-	return result;
-}
-
-/**
- *
- * @param {import("webpack").Compilation} compilation
- * @param {string} entry
+ * @param {string} reference
  * @param {string} issuerLayer
  */
-function includeReference(compilation, entry, issuerLayer) {
+function includeReference(compilation, reference, issuerLayer) {
 	const [mainEntry] = compilation.entries.values();
 	tinyassert(mainEntry);
 
-	const dependency = webpack.EntryPlugin.createDependency(entry, {});
+	const dependency = webpack.EntryPlugin.createDependency(reference, {});
 	mainEntry.includeDependencies.push(dependency);
 
 	const promise = createManualPromise();
