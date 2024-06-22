@@ -40,7 +40,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     let new_name = format!("$hoist_{}", self.hoist_names.len());
                     self.hoist_names.push(new_name.clone());
 
-                    // bind variables which are neither global nor in own scope
+                    // collect variables which are neither global nor in own scope
                     // TODO
 
                     // append a new `FunctionDeclaration` at the end
