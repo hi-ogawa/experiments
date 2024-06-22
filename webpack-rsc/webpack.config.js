@@ -238,7 +238,6 @@ export default function (env, _argv) {
 					 * @type {import("webpack-dev-server").Configuration}
 					 */
 					const devServerConfig = {
-						hot: false,
 						host: "localhost",
 						static: {
 							serveIndex: false,
@@ -334,6 +333,10 @@ export default function (env, _argv) {
 							},
 						},
 					},
+				},
+				dev && {
+					test: /\.[cm]?[jt]sx$/,
+					use: "@hiogawa/tiny-refresh/webpack",
 				},
 				{
 					test: /\.[cm]?[jt]sx?$/,

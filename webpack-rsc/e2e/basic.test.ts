@@ -110,6 +110,7 @@ test("server hmr @dev", async ({ page }) => {
 	await waitForHydration(page);
 
 	await page.getByRole("heading", { name: "Webpack RSC" }).click();
+	// 0 -> 1
 	await page.getByRole("button", { name: "count is 0" }).click();
 
 	await using _ = await createReloadChecker(page);
@@ -117,5 +118,30 @@ test("server hmr @dev", async ({ page }) => {
 	editor.edit((s) => s.replace("Webpack RSC", "Webpack [EDIT] RSC"));
 
 	await page.getByRole("heading", { name: "Webpack [EDIT] RSC" }).click();
+	// 1 -> 2
 	await page.getByRole("button", { name: "count is 1" }).click();
+});
+
+test("client hmr @dev", async ({ page }) => {
+	await page.goto("/");
+	await waitForHydration(page);
+
+	// 0 -> 1
+	await page.getByRole("button", { name: "count is 0" }).click();
+
+	// for some reason, it full reloas on first edit
+	using editor = createEditor("./src/routes/_client.tsx");
+
+	const reloadPromise = page.waitForRequest("/");
+	editor.edit((s) => s.replace("count is", "count [EDIT] is"));
+	await reloadPromise;
+	await waitForHydration(page);
+	// 0 -> 1
+	await page.getByRole("button", { name: "count [EDIT] is 0" }).click();
+
+	// hmr works on 2nd time
+	await using _ = await createReloadChecker(page);
+	editor.edit((s) => s.replace("count is", "count [EDIT2] is"));
+	// 1 -> 2
+	await page.getByRole("button", { name: "count [EDIT2] is 1" }).click();
 });

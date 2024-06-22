@@ -9,6 +9,7 @@ import GlobalErrorPage from "./routes/global-error";
 import type { CallServerCallback } from "./types/react-types";
 import "./style.css?url";
 import "./lib/client-references-browser.js";
+import { tinyassert } from "@hiogawa/utils";
 
 async function main() {
 	const url = new URL(window.location.href);
@@ -85,17 +86,20 @@ async function main() {
 
 	if (__define.DEV) {
 		// @ts-expect-error
-		// use dev server client
+		// reuse builtin dev server client
 		// https://github.com/webpack/webpack-dev-server/blob/d78905bdb0326a7246e2df2fc6a1350acaa4c1b3/client-src/socket.js#L20-L23
 		const { client } = await import("webpack-dev-server/client/socket.js");
-
-		// custom event for server update
-		client.onMessage((data: string) => {
-			const message = JSON.parse(data);
+		const ws = client.client as WebSocket;
+		const oldOnMessage = ws.onmessage;
+		tinyassert(oldOnMessage);
+		ws.onmessage = function (e) {
+			const message = JSON.parse(e.data);
 			if (message.type === "custom:update-server") {
 				window.history.replaceState({}, "", window.location.href);
+			} else {
+				oldOnMessage.apply(this, [e]);
 			}
-		});
+		};
 	}
 }
 
