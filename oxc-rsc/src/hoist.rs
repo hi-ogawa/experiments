@@ -61,23 +61,26 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     //
 
                     // $$register(...)
-                    let new_expr = ctx.ast.call_expression(
-                        SPAN,
-                        ctx.ast.identifier_reference_expression(
-                            ctx.ast.identifier_reference(SPAN, &self.runtime),
-                        ),
-                        ctx.ast.new_vec_from_iter([
-                            Argument::from(
-                                ctx.ast.identifier_reference_expression(
-                                    ctx.ast.identifier_reference(SPAN, &new_name.clone()),
-                                )
+                    let new_expr =
+                        ctx.ast.call_expression(
+                            SPAN,
+                            ctx.ast.identifier_reference_expression(
+                                ctx.ast.identifier_reference(SPAN, &self.runtime),
                             ),
-                            Argument::from(ctx.ast.literal_string_expression(ctx.ast.string_literal(SPAN, &self.id))),
-                            Argument::from(ctx.ast.literal_string_expression(ctx.ast.string_literal(SPAN, &new_name)))
-                        ]),
-                        false,
-                        None,
-                    );
+                            ctx.ast.new_vec_from_iter([
+                                Argument::from(ctx.ast.identifier_reference_expression(
+                                    ctx.ast.identifier_reference(SPAN, &new_name.clone()),
+                                )),
+                                Argument::from(ctx.ast.literal_string_expression(
+                                    ctx.ast.string_literal(SPAN, &self.id),
+                                )),
+                                Argument::from(ctx.ast.literal_string_expression(
+                                    ctx.ast.string_literal(SPAN, &new_name),
+                                )),
+                            ]),
+                            false,
+                            None,
+                        );
 
                     // $$register(...).bind(...)
                     let new_expr = ctx.ast.call_expression(
