@@ -6,3 +6,4 @@ publish = false
 
 [dependencies]
 oxc = { version = "0.15.0", features = ["transformer", "codegen"] }
+oxc_traverse = { version = "0.15.0" }

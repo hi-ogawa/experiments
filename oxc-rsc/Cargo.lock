@@ -310,6 +310,7 @@ name = "oxc-rsc"
 version = "0.0.0"
 dependencies = [
  "oxc",
+ "oxc_traverse",
 ]
 
 [[package]]
