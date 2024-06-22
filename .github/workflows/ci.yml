@@ -95,5 +95,6 @@ jobs:
         working-directory: ./oxc-rsc
     steps:
       - uses: actions/checkout@v4
+      - run: rustup show
       - run: cargo fmt --check
       - run: cargo test
