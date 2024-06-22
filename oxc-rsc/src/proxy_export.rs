@@ -1,6 +1,6 @@
 use oxc::{allocator::Allocator, codegen::CodeGenerator, parser::Parser, span::SourceType};
 
-pub fn proxy_transform(source_text: &str) -> String {
+pub fn transform_proxy_export(source_text: &str) -> String {
     let allocator = Allocator::default();
     let source_type = SourceType::default().with_module(true);
     let parser = Parser::new(&allocator, source_text, source_type);
@@ -17,7 +17,7 @@ export function TestFnDecl() {}
 export const TestVarDecl = () => {}
 export default function TestDefault() {}
 ";
-    let result = proxy_transform(input);
+    let result = transform_proxy_export(input);
     assert_eq!(
         result,
         "export function TestFnDecl() {}
