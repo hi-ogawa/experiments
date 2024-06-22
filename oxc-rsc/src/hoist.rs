@@ -1,17 +1,8 @@
 use oxc::{
-    allocator::Allocator,
-    ast::{
-        ast::{
-            Argument, ArrayExpressionElement, BindingIdentifier, BindingPattern, Expression,
-            FormalParameterKind, NullLiteral,
-        },
-        AstBuilder,
-    },
-    codegen::CodeGenerator,
-    parser::Parser,
-    span::{SourceType, SPAN},
+    ast::ast::{Argument, Expression, NullLiteral},
+    span::SPAN,
 };
-use oxc_traverse::{traverse_mut, Traverse};
+use oxc_traverse::Traverse;
 
 pub struct HoistTransformer<'a> {
     directive: &'a str,
@@ -54,6 +45,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
 
                     // append a new `FunctionDeclaration` at the end
                     // TODO
+                    // let original_expr = ctx.ast.move_expression(expr);
 
                     //
                     // replace function definition with action register and bind
@@ -61,7 +53,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     //
 
                     // $$register(...)
-                    let new_expr =
+                    let mut new_expr =
                         ctx.ast.call_expression(
                             SPAN,
                             ctx.ast.identifier_reference_expression(
@@ -83,7 +75,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         );
 
                     // $$register(...).bind(...)
-                    let new_expr = ctx.ast.call_expression(
+                    new_expr = ctx.ast.call_expression(
                         SPAN,
                         ctx.ast.static_member_expression(
                             SPAN,
@@ -107,6 +99,9 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
 
 #[test]
 fn test_traverse() {
+    use oxc::{allocator::Allocator, codegen::CodeGenerator, parser::Parser, span::SourceType};
+    use oxc_traverse::traverse_mut;
+
     let source_text = r#"
 let count = 0;
 
