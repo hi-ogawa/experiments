@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hiogawa/tiny-refresh':
-        specifier: file:./hiogawa-tiny-refresh-0.1.0.tgz
-        version: file:hiogawa-tiny-refresh-0.1.0.tgz(vite@5.2.13(@types/node@20.14.2)(terser@5.31.1))
+        specifier: ^0.1.1
+        version: 0.1.1(vite@5.2.13(@types/node@20.14.2)(terser@5.31.1))
       '@hiogawa/utils':
         specifier: ^1.7.0
         version: 1.7.0
@@ -402,9 +402,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@hiogawa/tiny-refresh@file:hiogawa-tiny-refresh-0.1.0.tgz':
-    resolution: {integrity: sha512-Aa0ZyhttYq/h4yjs5PzGuIo7Ojcht5uhbz9PFlmOaqceiUe/Ckos1StcnjzmVE5NdoWHp7rIYkuSw/jKCB/piw==, tarball: file:hiogawa-tiny-refresh-0.1.0.tgz}
-    version: 0.1.0
+  '@hiogawa/tiny-refresh@0.1.1':
+    resolution: {integrity: sha512-OHHtS14ywlDpPcQLgMTFq25XYQkl3ze2PuikxN7zATZ+DGQ/Uhtwa0uirSH7mSCb/YOg6ET1dsNfM8m9lbWHXg==}
     peerDependencies:
       vite: '*'
     peerDependenciesMeta:
@@ -2183,7 +2182,7 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
-  '@hiogawa/tiny-refresh@file:hiogawa-tiny-refresh-0.1.0.tgz(vite@5.2.13(@types/node@20.14.2)(terser@5.31.1))':
+  '@hiogawa/tiny-refresh@0.1.1(vite@5.2.13(@types/node@20.14.2)(terser@5.31.1))':
     optionalDependencies:
       vite: 5.2.13(@types/node@20.14.2)(terser@5.31.1)
 
