@@ -21,7 +21,7 @@ pub struct HoistTransformer<'a> {
 }
 
 impl<'a> HoistTransformer<'a> {
-    fn new(directive: &'a str, runtime: &'a str, id: &'a str) -> Self {
+    pub fn new(directive: &'a str, runtime: &'a str, id: &'a str) -> Self {
         Self {
             directive,
             runtime,
