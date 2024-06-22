@@ -238,7 +238,6 @@ export default function (env, _argv) {
 					 * @type {import("webpack-dev-server").Configuration}
 					 */
 					const devServerConfig = {
-						hot: true,
 						host: "localhost",
 						static: {
 							serveIndex: false,
