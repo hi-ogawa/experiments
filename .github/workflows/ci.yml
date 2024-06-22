@@ -87,3 +87,13 @@ jobs:
       - run: pnpm test-e2e
       - run: pnpm build
       - run: pnpm test-e2e-preview
+
+  oxc-rsc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./oxc-rsc
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo fmt --check
+      - run: cargo test
