@@ -187,6 +187,18 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         Modifiers::empty(),
                     );
 
+                    // TODO
+                    //   sourcemap is broken when body count changes?
+                    //   for example, when inserting hoisted function here,
+                    //   hoisted function's sourcemap is correct,
+                    //   but the last statement misses sourcemap,
+                    // program.body.insert(1, Statement::ExportNamedDeclaration(
+                    //     ctx.ast.plain_export_named_declaration_declaration(
+                    //         node.span,
+                    //         Declaration::FunctionDeclaration(new_func),
+                    //     ),
+                    // ));
+
                     program.body.push(Statement::ExportNamedDeclaration(
                         ctx.ast.plain_export_named_declaration_declaration(
                             node.span,
@@ -241,7 +253,8 @@ mod tests {
 
             if std::env::var("DEBUG_SOURCEMAP").is_ok() {
                 println!(
-                    ":: DEBUG SOURECEMAP ::\n{}",
+                    ":: DEBUG SOURECEMAP : {} ::\n{}",
+                    path.to_string_lossy(),
                     to_source_map_viz(&codegen_ret).0
                 );
             }
