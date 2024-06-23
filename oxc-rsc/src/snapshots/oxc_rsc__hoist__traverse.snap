@@ -4,10 +4,10 @@ expression: codegen_ret.source_text
 ---
 let count = 0;
 function Counter() {
-	const name = 'value';
+	const outer = 0;
 	return {
 		type: 'form',
-		action: $$register($$hoist_0, '<id>', '$$hoist_0').bind(null, name)
+		action: $$register($$hoist_0, '<id>', '$$hoist_0').bind(null, outer)
 	};
 }
 async function $$hoist_0() {}

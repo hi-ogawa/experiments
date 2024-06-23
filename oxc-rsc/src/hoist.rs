@@ -33,25 +33,31 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
     ) {
         // append hosited function declarations
         // TODO
-        node.body
-            .push(ctx.ast.function_declaration(ctx.ast.function(
-                FunctionType::FunctionDeclaration,
-                SPAN,
-                Some(BindingIdentifier::new(SPAN, "$$hoist_0".into())),
-                false,
-                true,
-                None,
-                ctx.ast.formal_parameters(
+        node.body.push(
+            ctx.ast.function_declaration(
+                ctx.ast.function(
+                    FunctionType::FunctionDeclaration,
                     SPAN,
-                    FormalParameterKind::FormalParameter,
-                    ctx.ast.new_vec(),
+                    Some(BindingIdentifier::new(SPAN, "$$hoist_0".into())),
+                    false,
+                    true,
                     None,
+                    ctx.ast.formal_parameters(
+                        SPAN,
+                        FormalParameterKind::FormalParameter,
+                        ctx.ast.new_vec(),
+                        None,
+                    ),
+                    Some(
+                        ctx.ast
+                            .function_body(SPAN, ctx.ast.new_vec(), ctx.ast.new_vec()),
+                    ),
+                    None,
+                    None,
+                    Modifiers::empty(),
                 ),
-                Some(ctx.ast.function_body(SPAN, ctx.ast.new_vec(), ctx.ast.new_vec())),
-                None,
-                None,
-                Modifiers::empty(),
-            )));
+            ),
+        );
     }
 
     fn enter_expression(
@@ -74,7 +80,12 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
 
                     // collect variables which are neither global nor in own scope
                     // TODO
-                    let bind_vars = vec!["name"];
+                    // - collect identifier references inside node.body
+                    // - check where it lives e.g.
+                    //     [global] count
+                    //     [local] formData, inner
+                    //     [others] outer <-- this needs to be bound
+                    let bind_vars = vec!["outer"];
 
                     // append a new `FunctionDeclaration` at the end
                     // TODO
@@ -148,13 +159,16 @@ fn test_traverse() {
 let count = 0;
 
 function Counter() {
-  const name = "value";
+  const outer = 0;
 
   return {
     type: "form",
     action: (formData) => {
       "use server";
-      count += Number(formData.get(name));
+      const inner = 0;
+      count += Number(formData.get("name"));
+      count += outer;
+      count += inner;
     }
   }
 }
