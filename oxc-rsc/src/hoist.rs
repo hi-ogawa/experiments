@@ -165,7 +165,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                             ),
                             Some(ctx.ast.function_body(
                                 node.body.span,
-                                ctx.ast.new_vec(),
+                                ctx.ast.copy(&node.body.directives),
                                 ctx.ast.move_statement_vec(&mut node.body.statements),
                             )),
                             None,
@@ -223,6 +223,8 @@ function Counter() {
         .enable_source_map("test.js", &source_text)
         .build(&program);
     let output = codegen_ret.source_text;
+
+    // TODO: glob snapshot
     insta::assert_snapshot!(output);
 
     // source map viz

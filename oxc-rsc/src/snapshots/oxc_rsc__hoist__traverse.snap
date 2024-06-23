@@ -12,6 +12,7 @@ function Counter() {
 	};
 }
 function $$hoist_0(outer1, outer2, formData) {
+	'use server';
 	const inner = 0;
 	count += Number(formData.get('name'));
 	count += inner;
