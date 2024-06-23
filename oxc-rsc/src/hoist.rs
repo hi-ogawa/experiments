@@ -7,6 +7,9 @@ use oxc::{
 };
 use oxc_traverse::Traverse;
 
+// porting
+// https://github.com/hi-ogawa/vite-plugins/blob/main/packages/transforms/src/hoist.ts
+
 pub struct HoistTransformer<'a> {
     directive: &'a str,
     runtime: &'a str,
