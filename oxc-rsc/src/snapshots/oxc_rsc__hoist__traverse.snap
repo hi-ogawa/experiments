@@ -10,4 +10,9 @@ function Counter() {
 		action: $$register($$hoist_0, '<id>', '$$hoist_0').bind(null, outer)
 	};
 }
-async function $$hoist_0() {}
+async function $$hoist_0(outer, formData) {
+	const inner = 0;
+	count += Number(formData.get('name'));
+	count += outer;
+	count += inner;
+}
