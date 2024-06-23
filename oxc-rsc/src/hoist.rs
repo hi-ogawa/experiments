@@ -48,6 +48,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     // collect references which are neither global nor in own scope
                     //
                     let mut bind_vars: Vec<String> = vec![];
+                    // TODO: should loop only references inside the function
                     for reference in &ctx.symbols().references {
                         // filter used inside (TODO: probably shouldn't rely on span?)
                         let ref_span = reference.span();
@@ -190,18 +191,8 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         Modifiers::empty(),
                     );
 
-                    // TODO
-                    //   sourcemap is broken when body count changes?
-                    //   for example, when inserting hoisted function here,
-                    //   hoisted function's sourcemap is correct,
-                    //   but the last statement misses sourcemap,
-                    // program.body.insert(1, Statement::ExportNamedDeclaration(
-                    //     ctx.ast.plain_export_named_declaration_declaration(
-                    //         node.span,
-                    //         Declaration::FunctionDeclaration(new_func),
-                    //     ),
-                    // ));
-
+                    // TODO: source map missing when mixing up ast nodes
+                    // https://github.com/oxc-project/oxc/issues/3843
                     program.body.push(Statement::ExportNamedDeclaration(
                         ctx.ast.plain_export_named_declaration_declaration(
                             node.span,
