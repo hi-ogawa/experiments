@@ -26,70 +26,7 @@ impl<'a> HoistTransformer<'a> {
 }
 
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
-    fn exit_program(
-        &mut self,
-        program: &mut oxc::ast::ast::Program<'a>,
-        ctx: &mut oxc_traverse::TraverseCtx<'a>,
-    ) {
-        // append hosited function declarations
-        for (hoist_name, bind_vars, func) in &mut self.hoisted_functions {
-            match func {
-                Expression::ArrowFunctionExpression(node) => {
-                    let mut params = ctx.ast.copy(&node.params.items);
-                    for bind_var in bind_vars {
-                        params.insert(
-                            0,
-                            ctx.ast.formal_parameter(
-                                SPAN,
-                                ctx.ast.binding_pattern(
-                                    ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
-                                        SPAN,
-                                        ctx.ast.new_atom(bind_var.as_str()),
-                                    )),
-                                    None,
-                                    false,
-                                ),
-                                None,
-                                false,
-                                false,
-                                ctx.ast.new_vec(),
-                            ),
-                        );
-                    }
-                    program
-                        .body
-                        .push(ctx.ast.function_declaration(ctx.ast.function(
-                            FunctionType::FunctionDeclaration,
-                            SPAN,
-                            Some(BindingIdentifier::new(
-                                SPAN,
-                                ctx.ast.new_atom(hoist_name.as_str()),
-                            )),
-                            false,
-                            true,
-                            None,
-                            ctx.ast.formal_parameters(
-                                SPAN,
-                                FormalParameterKind::FormalParameter,
-                                params,
-                                None,
-                            ),
-                            Some(ctx.ast.function_body(
-                                SPAN,
-                                ctx.ast.new_vec(),
-                                ctx.ast.move_statement_vec(&mut node.body.statements),
-                            )),
-                            None,
-                            None,
-                            Modifiers::empty(),
-                        )));
-                }
-                _ => {}
-            }
-        }
-    }
-
-    fn enter_expression(
+    fn exit_expression(
         &mut self,
         expr: &mut Expression<'a>,
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
@@ -177,6 +114,69 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                 }
             }
             _ => {}
+        }
+    }
+
+    fn exit_program(
+        &mut self,
+        program: &mut oxc::ast::ast::Program<'a>,
+        ctx: &mut oxc_traverse::TraverseCtx<'a>,
+    ) {
+        // append hosited function declarations
+        for (hoist_name, bind_vars, func) in &mut self.hoisted_functions {
+            match func {
+                Expression::ArrowFunctionExpression(node) => {
+                    let mut params = ctx.ast.copy(&node.params.items);
+                    for bind_var in bind_vars {
+                        params.insert(
+                            0,
+                            ctx.ast.formal_parameter(
+                                SPAN,
+                                ctx.ast.binding_pattern(
+                                    ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
+                                        SPAN,
+                                        ctx.ast.new_atom(bind_var.as_str()),
+                                    )),
+                                    None,
+                                    false,
+                                ),
+                                None,
+                                false,
+                                false,
+                                ctx.ast.new_vec(),
+                            ),
+                        );
+                    }
+                    program
+                        .body
+                        .push(ctx.ast.function_declaration(ctx.ast.function(
+                            FunctionType::FunctionDeclaration,
+                            SPAN,
+                            Some(BindingIdentifier::new(
+                                SPAN,
+                                ctx.ast.new_atom(hoist_name.as_str()),
+                            )),
+                            false,
+                            true,
+                            None,
+                            ctx.ast.formal_parameters(
+                                SPAN,
+                                FormalParameterKind::FormalParameter,
+                                params,
+                                None,
+                            ),
+                            Some(ctx.ast.function_body(
+                                SPAN,
+                                ctx.ast.new_vec(),
+                                ctx.ast.move_statement_vec(&mut node.body.statements),
+                            )),
+                            None,
+                            None,
+                            Modifiers::empty(),
+                        )));
+                }
+                _ => {}
+            }
         }
     }
 }
