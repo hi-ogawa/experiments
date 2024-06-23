@@ -11,7 +11,6 @@ pub struct HoistTransformer<'a> {
     directive: &'a str,
     runtime: &'a str,
     id: &'a str,
-    hoist_names: Vec<String>,
     hoisted_functions: Vec<(String, Vec<String>, Expression<'a>)>,
 }
 
@@ -21,7 +20,6 @@ impl<'a> HoistTransformer<'a> {
             directive,
             runtime,
             id,
-            hoist_names: vec![],
             hoisted_functions: vec![],
         }
     }
@@ -106,8 +104,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     .iter()
                     .any(|e| e.expression.value == self.directive)
                 {
-                    let new_name = format!("$$hoist_{}", self.hoist_names.len());
-                    self.hoist_names.push(new_name.clone());
+                    let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
 
                     // collect variables which are neither global nor in own scope
                     // TODO
