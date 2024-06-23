@@ -252,11 +252,8 @@ mod tests {
                 .build(&program);
 
             if std::env::var("DEBUG_SOURCEMAP").is_ok() {
-                println!(
-                    ":: DEBUG SOURECEMAP : {} ::\n{}",
-                    path.to_string_lossy(),
-                    to_source_map_viz(&codegen_ret).0
-                );
+                let output = to_source_map_debug(&codegen_ret);
+                fs::write(path.parent().unwrap().join(format!("{name}.debug")), output).unwrap();
             }
 
             insta::with_settings!({
@@ -270,7 +267,7 @@ mod tests {
         });
     }
 
-    fn to_source_map_viz(result: &CodegenReturn) -> (String, String) {
+    fn to_source_map_debug(result: &CodegenReturn) -> String {
         // https://github.com/oxc-project/oxc/blob/a6487482bc053797f7f1a42f5793fafbd9a47114/crates/oxc_codegen/examples/sourcemap.rs#L34-L44
         let source_map = result.source_map.as_ref().unwrap();
         let source_map_json = source_map.to_json_string().unwrap();
@@ -282,11 +279,11 @@ mod tests {
             source_map_json
         ));
         let evanw_url = format!("https://evanw.github.io/source-map-visualization/#{evanw_hash}");
-        let combined = format!(
-            "{}\n\n//# sourceMappingURL={}\n",
+        return format!(
+            "{}\n// {}\n//# sourceMappingURL={}\n",
             &result.source_text,
+            &evanw_url,
             source_map.to_data_url().unwrap()
         );
-        (evanw_url, combined)
     }
 }
