@@ -41,8 +41,6 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     .iter()
                     .any(|e| e.expression.value == self.directive)
                 {
-                    let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
-
                     //
                     // collect references which are neither global nor in own scope
                     //
@@ -75,6 +73,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     //
 
                     // $$register(...)
+                    let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
                     let mut new_expr =
                         ctx.ast.call_expression(
                             SPAN,
