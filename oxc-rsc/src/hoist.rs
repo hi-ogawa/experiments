@@ -43,14 +43,31 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                 {
                     let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
 
-                    // collect variables which are neither global nor in own scope
-                    // TODO
-                    // - collect identifier references inside node.body
-                    // - check where it lives e.g.
-                    //     [global] count
-                    //     [local] formData, inner
-                    //     [others] outer1, outer2 <-- these needs to be bound
-                    let bind_vars = vec!["outer1".to_string(), "outer2".to_string()];
+                    //
+                    // collect references which are neither global nor in own scope
+                    //
+                    let mut bind_vars: Vec<String> = vec![];
+                    for reference in &ctx.symbols().references {
+                        // filter used inside (TODO: probably shouldn't realy on span?)
+                        let ref_span = reference.span();
+                        if !(node.span.start <= ref_span.start && ref_span.end <= node.span.end) {
+                            continue;
+                        }
+                        if let Some(symbol_id) = reference.symbol_id() {
+                            // filter defined outside
+                            let sym_span = ctx.symbols().get_span(symbol_id);
+                            if node.span.start <= sym_span.start && sym_span.end <= node.span.end {
+                                continue;
+                            }
+                            let scope_id = ctx.symbols().get_scope_id(symbol_id);
+                            let scope_flags = ctx.scopes().get_flags(scope_id);
+                            // skip top level symbol
+                            if scope_flags.is_top() {
+                                continue;
+                            }
+                            bind_vars.push(reference.name().to_string());
+                        }
+                    }
 
                     //
                     // replace function definition with action register and bind
