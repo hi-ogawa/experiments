@@ -1,7 +1,7 @@
 use oxc::{
     ast::ast::{
-        Argument, BindingIdentifier, Expression, FormalParameterKind, FunctionType, Modifiers,
-        NullLiteral,
+        Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind, FunctionType,
+        Modifiers, NullLiteral, Statement,
     },
     span::SPAN,
 };
@@ -126,7 +126,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
         for (hoist_name, bind_vars, func) in &mut self.hoisted_functions {
             match func {
                 Expression::ArrowFunctionExpression(node) => {
-                    let mut params = ctx.ast.new_vec_from_iter(bind_vars.iter().map(|var| {
+                    let mut new_params = ctx.ast.new_vec_from_iter(bind_vars.iter().map(|var| {
                         ctx.ast.formal_parameter(
                             SPAN,
                             ctx.ast.binding_pattern(
@@ -143,35 +143,40 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                             ctx.ast.new_vec(),
                         )
                     }));
-                    params.extend(ctx.ast.copy(&node.params.items));
+                    new_params.extend(ctx.ast.copy(&node.params.items));
 
-                    program
-                        .body
-                        .push(ctx.ast.function_declaration(ctx.ast.function(
-                            FunctionType::FunctionDeclaration,
+                    let new_func = ctx.ast.function(
+                        FunctionType::FunctionDeclaration,
+                        node.span,
+                        Some(BindingIdentifier::new(
+                            SPAN,
+                            ctx.ast.new_atom(hoist_name.as_str()),
+                        )),
+                        false,
+                        node.r#async,
+                        None,
+                        ctx.ast.formal_parameters(
+                            node.params.span,
+                            FormalParameterKind::FormalParameter,
+                            new_params,
+                            None,
+                        ),
+                        Some(ctx.ast.function_body(
+                            node.body.span,
+                            ctx.ast.copy(&node.body.directives),
+                            ctx.ast.move_statement_vec(&mut node.body.statements),
+                        )),
+                        None,
+                        None,
+                        Modifiers::empty(),
+                    );
+
+                    program.body.push(Statement::ExportNamedDeclaration(
+                        ctx.ast.plain_export_named_declaration_declaration(
                             node.span,
-                            Some(BindingIdentifier::new(
-                                SPAN,
-                                ctx.ast.new_atom(hoist_name.as_str()),
-                            )),
-                            false,
-                            node.r#async,
-                            None,
-                            ctx.ast.formal_parameters(
-                                node.params.span,
-                                FormalParameterKind::FormalParameter,
-                                params,
-                                None,
-                            ),
-                            Some(ctx.ast.function_body(
-                                node.body.span,
-                                ctx.ast.copy(&node.body.directives),
-                                ctx.ast.move_statement_vec(&mut node.body.statements),
-                            )),
-                            None,
-                            None,
-                            Modifiers::empty(),
-                        )));
+                            Declaration::FunctionDeclaration(new_func),
+                        ),
+                    ));
                 }
                 _ => {}
             }

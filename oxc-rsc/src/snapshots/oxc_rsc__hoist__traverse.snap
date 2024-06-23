@@ -11,7 +11,7 @@ function Counter() {
 		action: $$register($$hoist_0, '<id>', '$$hoist_0').bind(null, outer1, outer2)
 	};
 }
-function $$hoist_0(outer1, outer2, formData) {
+export function $$hoist_0(outer1, outer2, formData) {
 	'use server';
 	const inner = 0;
 	count += Number(formData.get('name'));
