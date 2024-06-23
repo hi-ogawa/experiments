@@ -1,6 +1,6 @@
 ---
 source: src/hoist.rs
-expression: output
+expression: codegen_ret.source_text
 input_file: tests/hoist/basic.js
 ---
 let count = 0;
@@ -13,7 +13,6 @@ export function Counter() {
 	};
 }
 export function $$hoist_0(outer1, outer2, formData) {
-	'use server';
 	const inner = 0;
 	count += Number(formData.get('name'));
 	count += inner;

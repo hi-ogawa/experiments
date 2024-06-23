@@ -163,7 +163,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         ),
                         Some(ctx.ast.function_body(
                             node.body.span,
-                            ctx.ast.copy(&node.body.directives),
+                            ctx.ast.new_vec(),
                             ctx.ast.move_statement_vec(&mut node.body.statements),
                         )),
                         None,
