@@ -149,22 +149,22 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         .body
                         .push(ctx.ast.function_declaration(ctx.ast.function(
                             FunctionType::FunctionDeclaration,
-                            SPAN,
+                            node.span,
                             Some(BindingIdentifier::new(
                                 SPAN,
                                 ctx.ast.new_atom(hoist_name.as_str()),
                             )),
                             false,
-                            true,
+                            node.r#async,
                             None,
                             ctx.ast.formal_parameters(
-                                SPAN,
+                                node.params.span,
                                 FormalParameterKind::FormalParameter,
                                 params,
                                 None,
                             ),
                             Some(ctx.ast.function_body(
-                                SPAN,
+                                node.body.span,
                                 ctx.ast.new_vec(),
                                 ctx.ast.move_statement_vec(&mut node.body.statements),
                             )),
