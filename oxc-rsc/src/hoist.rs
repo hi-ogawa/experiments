@@ -184,63 +184,78 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
     }
 }
 
-#[test]
-fn test_traverse() {
+#[cfg(test)]
+mod tests {
+    use std::fs;
+
     use base64::{engine::general_purpose::STANDARD, Engine as _};
-    use oxc::{allocator::Allocator, codegen::CodeGenerator, parser::Parser, span::SourceType};
+    use oxc::{
+        allocator::Allocator,
+        codegen::{CodeGenerator, CodegenReturn},
+        parser::Parser,
+        span::SourceType,
+    };
     use oxc_traverse::traverse_mut;
 
-    let source_text = r#"
-let count = 0;
+    use super::HoistTransformer;
 
-function Counter() {
-  const outer1 = 0;
-  const outer2 = 0;
+    #[test]
+    fn test_hoist_snapshot() {
+        insta::glob!("../tests/hoist", "*.js", |path| {
+            let source_text = fs::read_to_string(path).unwrap();
+            let name = path.file_stem().unwrap().to_str().unwrap();
 
-  return {
-    type: "form",
-    action: (formData) => {
-      "use server";
-      const inner = 0;
-      count += Number(formData.get("name"));
-      count += inner;
-      count += outer1;
-      count += outer2;
+            let allocator = Allocator::default();
+            let source_type = SourceType::default().with_module(true);
+            let parser = Parser::new(&allocator, &source_text, source_type);
+            let parser_ret = parser.parse();
+            assert_eq!(parser_ret.errors.len(), 0);
+            let mut program = parser_ret.program;
+            let mut traverser = HoistTransformer::new("use server", "$$register", "<id>");
+            traverse_mut(
+                &mut traverser,
+                &mut program,
+                &source_text,
+                source_type,
+                &allocator,
+            );
+            let codegen_ret = CodeGenerator::new()
+                .enable_source_map("test.js", &source_text)
+                .build(&program);
+
+            if std::env::var("DEBUG_SOURCEMAP").is_ok() {
+                println!(
+                    ":: DEBUG SOURECEMAP ::\n{}",
+                    to_source_map_viz(&codegen_ret).0
+                );
+            }
+
+            insta::with_settings!({
+                prepend_module_to_snapshot => false,
+                snapshot_path => path.parent().unwrap()
+            }, {
+                insta::assert_snapshot!(name, codegen_ret.source_text);
+            });
+        });
     }
-  }
-}
-"#;
-    let allocator = Allocator::default();
-    let source_type = SourceType::default().with_module(true);
-    let parser = Parser::new(&allocator, source_text, source_type);
-    let parser_ret = parser.parse();
-    assert_eq!(parser_ret.errors.len(), 0);
-    let mut program = parser_ret.program;
-    let mut traverser = HoistTransformer::new("use server", "$$register", "<id>");
-    traverse_mut(
-        &mut traverser,
-        &mut program,
-        source_text,
-        source_type,
-        &allocator,
-    );
-    let codegen_ret = CodeGenerator::new()
-        .enable_source_map("test.js", &source_text)
-        .build(&program);
-    let output = codegen_ret.source_text;
 
-    // TODO: glob snapshot
-    insta::assert_snapshot!(output);
-
-    // source map viz
-    // https://github.com/oxc-project/oxc/blob/a6487482bc053797f7f1a42f5793fafbd9a47114/crates/oxc_codegen/examples/sourcemap.rs#L34-L44
-    let source_map = codegen_ret.source_map.unwrap().to_json_string().unwrap();
-    let hash = STANDARD.encode(format!(
-        "{}\0{}{}\0{}",
-        output.len(),
-        output,
-        source_map.len(),
-        source_map
-    ));
-    println!("https://evanw.github.io/source-map-visualization/#{hash}");
+    fn to_source_map_viz(result: &CodegenReturn) -> (String, String) {
+        // https://github.com/oxc-project/oxc/blob/a6487482bc053797f7f1a42f5793fafbd9a47114/crates/oxc_codegen/examples/sourcemap.rs#L34-L44
+        let source_map = result.source_map.as_ref().unwrap();
+        let source_map_json = source_map.to_json_string().unwrap();
+        let evanw_hash = STANDARD.encode(format!(
+            "{}\0{}{}\0{}",
+            result.source_text.len(),
+            result.source_text,
+            source_map_json.len(),
+            source_map_json
+        ));
+        let evanw_url = format!("https://evanw.github.io/source-map-visualization/#{evanw_hash}");
+        let combined = format!(
+            "{}\n\n//# sourceMappingURL={}\n",
+            &result.source_text,
+            source_map.to_data_url().unwrap()
+        );
+        (evanw_url, combined)
+    }
 }

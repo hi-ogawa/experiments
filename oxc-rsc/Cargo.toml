@@ -10,7 +10,7 @@ oxc_traverse = { version = "0.15.0" }
 
 [dev-dependencies]
 base64 = "0.22.1"
-insta = { version = "1.39.0" }
+insta = { version = "1.39.0", features = ["glob"] }
 
 [profile.dev.package]
 insta.opt-level = 3

@@ -10,5 +10,5 @@ lint-check:
 test:
 	cargo test -- --nocapture
 
-test-snap:
+test-snapshot:
 	cargo insta test --review
