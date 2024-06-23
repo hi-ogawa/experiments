@@ -8,7 +8,7 @@ lint-check:
 	cargo fmt --check
 
 test:
-	cargo test
+	cargo test -- --nocapture
 
 test-snap:
 	cargo insta test --review

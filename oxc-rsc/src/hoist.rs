@@ -181,6 +181,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
 
 #[test]
 fn test_traverse() {
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
     use oxc::{allocator::Allocator, codegen::CodeGenerator, parser::Parser, span::SourceType};
     use oxc_traverse::traverse_mut;
 
@@ -218,7 +219,21 @@ function Counter() {
         source_type,
         &allocator,
     );
-    let codegen_ret = CodeGenerator::new().build(&program);
-    // TODO: debug sourcemap
-    insta::assert_snapshot!(codegen_ret.source_text);
+    let codegen_ret = CodeGenerator::new()
+        .enable_source_map("test.js", &source_text)
+        .build(&program);
+    let output = codegen_ret.source_text;
+    insta::assert_snapshot!(output);
+
+    // source map viz
+    // https://github.com/oxc-project/oxc/blob/a6487482bc053797f7f1a42f5793fafbd9a47114/crates/oxc_codegen/examples/sourcemap.rs#L34-L44
+    let source_map = codegen_ret.source_map.unwrap().to_json_string().unwrap();
+    let hash = STANDARD.encode(format!(
+        "{}\0{}{}\0{}",
+        output.len(),
+        output,
+        source_map.len(),
+        source_map
+    ));
+    println!("https://evanw.github.io/source-map-visualization/#{hash}");
 }

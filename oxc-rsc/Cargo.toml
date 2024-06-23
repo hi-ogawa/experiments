@@ -9,6 +9,7 @@ oxc = { version = "0.15.0", features = ["transformer", "codegen"] }
 oxc_traverse = { version = "0.15.0" }
 
 [dev-dependencies]
+base64 = "0.22.1"
 insta = { version = "1.39.0" }
 
 [profile.dev.package]
