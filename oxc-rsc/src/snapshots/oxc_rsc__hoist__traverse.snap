@@ -7,6 +7,6 @@ function Counter() {
 	const name = 'value';
 	return {
 		type: 'form',
-		action: $$register($hoist_0, '<id>', '$hoist_0').bind(null)
+		action: $$register($hoist_0, '<id>', '$hoist_0').bind(null, name)
 	};
 }

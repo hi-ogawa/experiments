@@ -42,6 +42,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
 
                     // collect variables which are neither global nor in own scope
                     // TODO
+                    let bind_vars = vec!["name"];
 
                     // append a new `FunctionDeclaration` at the end
                     // TODO
@@ -74,21 +75,30 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                             None,
                         );
 
-                    // $$register(...).bind(...)
-                    new_expr = ctx.ast.call_expression(
-                        SPAN,
-                        ctx.ast.static_member_expression(
-                            SPAN,
-                            new_expr,
-                            ctx.ast.identifier_name(SPAN, "bind"),
-                            false,
-                        ),
-                        ctx.ast.new_vec_single(Argument::from(
+                    if bind_vars.len() > 0 {
+                        // $$register(...).bind(...)
+                        let mut arguments = ctx.ast.new_vec_single(Argument::from(
                             ctx.ast.literal_null_expression(NullLiteral::new(SPAN)),
-                        )),
-                        false,
-                        None,
-                    );
+                        ));
+                        for var in bind_vars {
+                            arguments.push(Argument::from(ctx.ast.identifier_reference_expression(
+                                ctx.ast.identifier_reference(SPAN, var),
+                            )))
+                        }
+                        new_expr = ctx.ast.call_expression(
+                            SPAN,
+                            ctx.ast.static_member_expression(
+                                SPAN,
+                                new_expr,
+                                ctx.ast.identifier_name(SPAN, "bind"),
+                                false,
+                            ),
+                            arguments,
+                            false,
+                            None,
+                        );
+                    }
+
                     *expr = new_expr;
                 }
             }
