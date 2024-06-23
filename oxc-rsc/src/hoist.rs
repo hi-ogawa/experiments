@@ -232,6 +232,8 @@ mod tests {
 
             insta::with_settings!({
                 prepend_module_to_snapshot => false,
+                omit_expression => true,
+                snapshot_suffix => "",
                 snapshot_path => path.parent().unwrap()
             }, {
                 insta::assert_snapshot!(name, codegen_ret.source_text);
