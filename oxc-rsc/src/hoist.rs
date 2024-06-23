@@ -49,8 +49,8 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     // - check where it lives e.g.
                     //     [global] count
                     //     [local] formData, inner
-                    //     [others] outer <-- this needs to be bound
-                    let bind_vars = vec!["outer".to_string()];
+                    //     [others] outer1, outer2 <-- these needs to be bound
+                    let bind_vars = vec!["outer1".to_string(), "outer2".to_string()];
 
                     //
                     // replace function definition with action register and bind
@@ -126,27 +126,25 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
         for (hoist_name, bind_vars, func) in &mut self.hoisted_functions {
             match func {
                 Expression::ArrowFunctionExpression(node) => {
-                    let mut params = ctx.ast.copy(&node.params.items);
-                    for bind_var in bind_vars {
-                        params.insert(
-                            0,
-                            ctx.ast.formal_parameter(
-                                SPAN,
-                                ctx.ast.binding_pattern(
-                                    ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
-                                        SPAN,
-                                        ctx.ast.new_atom(bind_var.as_str()),
-                                    )),
-                                    None,
-                                    false,
-                                ),
+                    let mut params = ctx.ast.new_vec_from_iter(bind_vars.iter().map(|var| {
+                        ctx.ast.formal_parameter(
+                            SPAN,
+                            ctx.ast.binding_pattern(
+                                ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
+                                    SPAN,
+                                    ctx.ast.new_atom(var.as_str()),
+                                )),
                                 None,
                                 false,
-                                false,
-                                ctx.ast.new_vec(),
                             ),
-                        );
-                    }
+                            None,
+                            false,
+                            false,
+                            ctx.ast.new_vec(),
+                        )
+                    }));
+                    params.extend(ctx.ast.copy(&node.params.items));
+
                     program
                         .body
                         .push(ctx.ast.function_declaration(ctx.ast.function(
@@ -190,7 +188,8 @@ fn test_traverse() {
 let count = 0;
 
 function Counter() {
-  const outer = 0;
+  const outer1 = 0;
+  const outer2 = 0;
 
   return {
     type: "form",
@@ -198,8 +197,9 @@ function Counter() {
       "use server";
       const inner = 0;
       count += Number(formData.get("name"));
-      count += outer;
       count += inner;
+      count += outer1;
+      count += outer2;
     }
   }
 }
