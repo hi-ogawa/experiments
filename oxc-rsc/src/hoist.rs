@@ -46,7 +46,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     //
                     let mut bind_vars: Vec<String> = vec![];
                     for reference in &ctx.symbols().references {
-                        // filter used inside (TODO: probably shouldn't realy on span?)
+                        // filter used inside (TODO: probably shouldn't rely on span?)
                         let ref_span = reference.span();
                         if !(node.span.start <= ref_span.start && ref_span.end <= node.span.end) {
                             continue;
