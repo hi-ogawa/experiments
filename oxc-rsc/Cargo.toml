@@ -10,3 +10,7 @@ oxc_traverse = { version = "0.15.0" }
 
 [dev-dependencies]
 insta = { version = "1.39.0" }
+
+[profile.dev.package]
+insta.opt-level = 3
+similar.opt-level = 3

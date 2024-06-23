@@ -1,5 +1,8 @@
 use oxc::{
-    ast::ast::{Argument, Expression, NullLiteral},
+    ast::ast::{
+        Argument, BindingIdentifier, Expression, FormalParameterKind, FunctionType, Modifiers,
+        NullLiteral,
+    },
     span::SPAN,
 };
 use oxc_traverse::Traverse;
@@ -23,12 +26,41 @@ impl<'a> HoistTransformer<'a> {
 }
 
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
+    fn exit_program(
+        &mut self,
+        node: &mut oxc::ast::ast::Program<'a>,
+        ctx: &mut oxc_traverse::TraverseCtx<'a>,
+    ) {
+        // append hosited function declarations
+        // TODO
+        node.body
+            .push(ctx.ast.function_declaration(ctx.ast.function(
+                FunctionType::FunctionDeclaration,
+                SPAN,
+                Some(BindingIdentifier::new(SPAN, "$$hoist_0".into())),
+                false,
+                true,
+                None,
+                ctx.ast.formal_parameters(
+                    SPAN,
+                    FormalParameterKind::FormalParameter,
+                    ctx.ast.new_vec(),
+                    None,
+                ),
+                Some(ctx.ast.function_body(SPAN, ctx.ast.new_vec(), ctx.ast.new_vec())),
+                None,
+                None,
+                Modifiers::empty(),
+            )));
+    }
+
     fn enter_expression(
         &mut self,
         expr: &mut Expression<'a>,
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
     ) {
         match expr {
+            // TODO: also FunctionExpression, FunctionDeclaration
             Expression::ArrowFunctionExpression(node) => {
                 // check "use server"
                 if node
@@ -37,7 +69,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     .iter()
                     .any(|e| e.expression.value == self.directive)
                 {
-                    let new_name = format!("$hoist_{}", self.hoist_names.len());
+                    let new_name = format!("$$hoist_{}", self.hoist_names.len());
                     self.hoist_names.push(new_name.clone());
 
                     // collect variables which are neither global nor in own scope
