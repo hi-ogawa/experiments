@@ -2,6 +2,20 @@
 
 https://vue-server-demo.hiro18181.workers.dev/
 
+```sh
+# local dev
+pnpm i
+pnpm dev
+
+# local preview
+pnpm build
+pnpm preview
+
+# deploy cloudflare
+pnpm cf-build
+pnpm cf-release
+```
+
 ## references
 
 - https://github.com/hi-ogawa/js-utils/pull/227
