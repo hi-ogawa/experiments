@@ -29,6 +29,68 @@ impl<'a> HoistTransformer<'a> {
 }
 
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
+    // TODO: this misses
+    fn exit_statement(
+        &mut self,
+        stmt: &mut Statement<'a>,
+        ctx: &mut oxc_traverse::TraverseCtx<'a>,
+    ) {
+        match stmt {
+            Statement::FunctionDeclaration(node) => {
+                if let (Some(body), Some(name)) = (&node.body, &node.id) {
+                    // check "use server"
+                    if body
+                        .directives
+                        .iter()
+                        .any(|e| e.expression.value == self.directive)
+                    {
+                        let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
+
+                        // $$register(...)
+                        let register_call = ctx.ast.call_expression(
+                            SPAN,
+                            ctx.ast.identifier_reference_expression(
+                                ctx.ast.identifier_reference(SPAN, &self.runtime),
+                            ),
+                            ctx.ast.new_vec_from_iter([
+                                Argument::from(ctx.ast.identifier_reference_expression(
+                                    ctx.ast.identifier_reference(SPAN, &new_name.clone()),
+                                )),
+                                Argument::from(ctx.ast.literal_string_expression(
+                                    ctx.ast.string_literal(SPAN, &self.id),
+                                )),
+                                Argument::from(ctx.ast.literal_string_expression(
+                                    ctx.ast.string_literal(SPAN, &new_name),
+                                )),
+                            ]),
+                            false,
+                            None,
+                        );
+
+                        // const <name> = $$register(...)
+                        *stmt = Statement::VariableDeclaration(ctx.ast.variable_declaration(
+                            SPAN,
+                            oxc::ast::ast::VariableDeclarationKind::Const,
+                            ctx.ast.new_vec_single(ctx.ast.variable_declarator(
+                                SPAN,
+                                oxc::ast::ast::VariableDeclarationKind::Const,
+                                ctx.ast.binding_pattern(
+                                    ctx.ast.binding_pattern_identifier(name.clone()),
+                                    None,
+                                    false,
+                                ),
+                                Some(register_call),
+                                true,
+                            )),
+                            Modifiers::empty(),
+                        ));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn exit_expression(
         &mut self,
         expr: &mut Expression<'a>,
