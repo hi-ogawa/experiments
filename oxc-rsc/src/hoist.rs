@@ -16,7 +16,7 @@ pub struct HoistTransformer<'a> {
     directive: &'a str,
     runtime: &'a str,
     id: &'a str,
-    hoisted_functions: Vec<(String, Vec<String>, Expression<'a>)>,
+    hoisted_functions: Vec<Statement<'a>>,
 }
 
 impl<'a> HoistTransformer<'a> {
@@ -89,18 +89,48 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                                 Modifiers::empty(),
                             ));
 
-                        // save to hoist it later
-                        let original_stmt = ctx.ast.move_statement(stmt);
-                        if let Statement::FunctionDeclaration(node) = original_stmt {
-                            self.hoisted_functions.push((
-                                new_name,
-                                // TODO
-                                vec![],
-                                ctx.ast.function_expression(node),
+                        //
+                        // create new function to be hoisted at the end
+                        //
+                        let Function {
+                            span,
+                            r#async,
+                            params,
+                            body,
+                            ..
+                        } = node.borrow_mut().deref_mut();
+                        // TODO: bind_vars
+                        let new_param_items = ctx.ast.copy(&params.items);
+                        let body = body.as_mut().unwrap();
+                        let new_func = ctx.ast.function(
+                            FunctionType::FunctionDeclaration,
+                            *span,
+                            Some(BindingIdentifier::new(SPAN, ctx.ast.new_atom(&new_name))),
+                            false,
+                            *r#async,
+                            None,
+                            ctx.ast.formal_parameters(
+                                params.span,
+                                FormalParameterKind::FormalParameter,
+                                new_param_items,
+                                None,
+                            ),
+                            Some(ctx.ast.function_body(
+                                body.span,
+                                ctx.ast.new_vec(),
+                                ctx.ast.move_statement_vec(&mut body.statements),
+                            )),
+                            None,
+                            None,
+                            Modifiers::empty(),
+                        );
+                        self.hoisted_functions
+                            .push(Statement::ExportNamedDeclaration(
+                                ctx.ast.plain_export_named_declaration_declaration(
+                                    SPAN,
+                                    Declaration::FunctionDeclaration(new_func),
+                                ),
                             ));
-                        } else {
-                            unreachable!();
-                        }
 
                         *stmt = new_stmt;
                     }
@@ -116,7 +146,6 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
     ) {
         match expr {
-            // TODO: also FunctionExpression, FunctionDeclaration
             Expression::ArrowFunctionExpression(node) => {
                 // check "use server"
                 if node
@@ -205,11 +234,57 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     }
 
                     //
-                    // save function definition to hoist it at the end
+                    // create new function to be hoisted at the end
                     //
-                    let original_expr = ctx.ast.move_expression(expr);
+                    let mut new_param_items =
+                        ctx.ast.new_vec_from_iter(bind_vars.iter().map(|var| {
+                            ctx.ast.formal_parameter(
+                                SPAN,
+                                ctx.ast.binding_pattern(
+                                    ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
+                                        SPAN,
+                                        ctx.ast.new_atom(&var),
+                                    )),
+                                    None,
+                                    false,
+                                ),
+                                None,
+                                false,
+                                false,
+                                ctx.ast.new_vec(),
+                            )
+                        }));
+                    new_param_items.extend(ctx.ast.copy(&node.params.items));
+
+                    let new_func = ctx.ast.function(
+                        FunctionType::FunctionDeclaration,
+                        node.span,
+                        Some(BindingIdentifier::new(SPAN, ctx.ast.new_atom(&new_name))),
+                        false,
+                        node.r#async,
+                        None,
+                        ctx.ast.formal_parameters(
+                            node.params.span,
+                            FormalParameterKind::FormalParameter,
+                            new_param_items,
+                            None,
+                        ),
+                        Some(ctx.ast.function_body(
+                            node.body.span,
+                            ctx.ast.new_vec(),
+                            ctx.ast.move_statement_vec(&mut node.body.statements),
+                        )),
+                        None,
+                        None,
+                        Modifiers::empty(),
+                    );
                     self.hoisted_functions
-                        .push((new_name, bind_vars, original_expr));
+                        .push(Statement::ExportNamedDeclaration(
+                            ctx.ast.plain_export_named_declaration_declaration(
+                                SPAN,
+                                Declaration::FunctionDeclaration(new_func),
+                            ),
+                        ));
 
                     *expr = new_expr;
                 }
@@ -223,110 +298,8 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
         program: &mut oxc::ast::ast::Program<'a>,
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
     ) {
-        // append hosited function declarations
-        for (hoist_name, bind_vars, func) in &mut self.hoisted_functions {
-            match func {
-                Expression::FunctionExpression(node) => {
-                    let Function {
-                        span,
-                        r#async,
-                        params,
-                        body,
-                        ..
-                    } = node.borrow_mut().deref_mut();
-                    // TODO: bind_vars
-                    let new_param_items = ctx.ast.copy(&params.items);
-                    let body = body.as_mut().unwrap();
-                    let new_func = ctx.ast.function(
-                        FunctionType::FunctionDeclaration,
-                        *span,
-                        Some(BindingIdentifier::new(
-                            SPAN,
-                            ctx.ast.new_atom(hoist_name.as_str()),
-                        )),
-                        false,
-                        *r#async,
-                        None,
-                        ctx.ast.formal_parameters(
-                            params.span,
-                            FormalParameterKind::FormalParameter,
-                            new_param_items,
-                            None,
-                        ),
-                        Some(ctx.ast.function_body(
-                            body.span,
-                            ctx.ast.new_vec(),
-                            ctx.ast.move_statement_vec(&mut body.statements),
-                        )),
-                        None,
-                        None,
-                        Modifiers::empty(),
-                    );
-
-                    program.body.push(Statement::ExportNamedDeclaration(
-                        ctx.ast.plain_export_named_declaration_declaration(
-                            node.span,
-                            Declaration::FunctionDeclaration(new_func),
-                        ),
-                    ));
-                }
-                Expression::ArrowFunctionExpression(node) => {
-                    let mut new_params = ctx.ast.new_vec_from_iter(bind_vars.iter().map(|var| {
-                        ctx.ast.formal_parameter(
-                            SPAN,
-                            ctx.ast.binding_pattern(
-                                ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
-                                    SPAN,
-                                    ctx.ast.new_atom(var.as_str()),
-                                )),
-                                None,
-                                false,
-                            ),
-                            None,
-                            false,
-                            false,
-                            ctx.ast.new_vec(),
-                        )
-                    }));
-                    new_params.extend(ctx.ast.copy(&node.params.items));
-
-                    let new_func = ctx.ast.function(
-                        FunctionType::FunctionDeclaration,
-                        node.span,
-                        Some(BindingIdentifier::new(
-                            SPAN,
-                            ctx.ast.new_atom(hoist_name.as_str()),
-                        )),
-                        false,
-                        node.r#async,
-                        None,
-                        ctx.ast.formal_parameters(
-                            node.params.span,
-                            FormalParameterKind::FormalParameter,
-                            new_params,
-                            None,
-                        ),
-                        Some(ctx.ast.function_body(
-                            node.body.span,
-                            ctx.ast.new_vec(),
-                            ctx.ast.move_statement_vec(&mut node.body.statements),
-                        )),
-                        None,
-                        None,
-                        Modifiers::empty(),
-                    );
-
-                    // TODO: source map missing when mixing up ast nodes
-                    // https://github.com/oxc-project/oxc/issues/3843
-                    program.body.push(Statement::ExportNamedDeclaration(
-                        ctx.ast.plain_export_named_declaration_declaration(
-                            node.span,
-                            Declaration::FunctionDeclaration(new_func),
-                        ),
-                    ));
-                }
-                _ => {}
-            }
+        for stmt in &mut self.hoisted_functions {
+            program.body.push(ctx.ast.move_statement(stmt));
         }
     }
 }
