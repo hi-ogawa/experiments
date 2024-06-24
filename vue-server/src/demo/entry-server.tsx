@@ -25,7 +25,7 @@ export async function handler(request: Request) {
 	const app = createSSRApp(Root);
 	const ssrHtml = await renderToString(app);
 	let html = (await import("virtual:index-html" as string)).default as string;
-	html = html.replace("<body>", () => `<div id="root">${ssrHtml}</div>`);
+	html = html.replace("<body>", () => `<body><div id="root">${ssrHtml}</div>`);
 	html = html.replace(
 		"<head>",
 		() =>

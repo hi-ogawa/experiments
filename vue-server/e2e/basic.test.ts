@@ -20,6 +20,14 @@ testNoJs("basic @nojs", async ({ page }) => {
 	await page.getByText("Count: 0").click();
 });
 
+test("ssr", async ({ request }) => {
+	const res = await request.get("/");
+	const resText = await res.text();
+	expect(resText).toMatch(
+		/^<!DOCTYPE html>\s*<html>\s*<head>.*<\/head>\s*<body>.*<\/body>\s*<\/html>\s*$/s,
+	);
+});
+
 test("navigation @js", async ({ page }) => {
 	await page.goto("/");
 	await waitForHydration(page);
@@ -84,7 +92,6 @@ async function testFormNavigation(page: Page, options: { js: boolean }) {
 test("hmr server @dev", async ({ page }) => {
 	await page.goto("/");
 	await waitForHydration(page);
-	await page.pause();
 
 	// check client state is preserved
 	await page.getByRole("button", { name: "client sfc: 0" }).click();
@@ -111,7 +118,6 @@ test("hmr server @dev", async ({ page }) => {
 test("hmr sfc @dev", async ({ page }) => {
 	await page.goto("/sfc");
 	await waitForHydration(page);
-	await page.pause();
 
 	await page.getByRole("button", { name: "client counter 0" }).first().click();
 	await page.getByRole("button", { name: "client counter 1" }).click();
