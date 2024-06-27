@@ -1,26 +1,25 @@
 const x = "x";
 
-export const f = async () => {
+const f = async () => {
 	"use server";
 	return x;
 };
-// export async function f() {
-//   "use server";
-//   return x;
-// }
 
-export const g = async () => {};
-// export async function g() {}
+async function f2() {
+  "use server";
+  return x;
+}
 
-export const h = async (formData) => {
+const g = async () => {};
+
+async function g2() {}
+
+const h = async (formData) => {
 	"use server";
 	return formData.get(x);
 };
-// export async function h(formData) {
-//   "use server";
-//   return formData.get(x);
-// }
 
-// export default function w() {
-//   "use server";
-// }
+async function h2(formData) {
+  "use server";
+  return formData.get(x);
+}
