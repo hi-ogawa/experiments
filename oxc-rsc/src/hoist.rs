@@ -3,7 +3,7 @@ use std::{borrow::BorrowMut, ops::DerefMut};
 use oxc::{
     ast::ast::{
         Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind, Function,
-        FunctionType, Modifiers, NullLiteral, Statement,
+        FunctionType, NullLiteral, Statement,
     },
     span::SPAN,
 };
@@ -154,6 +154,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         Some(BindingIdentifier::new(SPAN, ctx.ast.new_atom(&new_name))),
                         false,
                         node.r#async,
+                        false,
                         None,
                         ctx.ast.formal_parameters(
                             node.params.span,
@@ -168,7 +169,6 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         )),
                         None,
                         None,
-                        Modifiers::empty(),
                     );
                     self.hoisted_functions
                         .push(Statement::ExportNamedDeclaration(
@@ -241,7 +241,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                                     Some(register_call),
                                     true,
                                 )),
-                                Modifiers::empty(),
+                                false,
                             ));
 
                         //
@@ -263,6 +263,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                             Some(BindingIdentifier::new(SPAN, ctx.ast.new_atom(&new_name))),
                             false,
                             *r#async,
+                            false,
                             None,
                             ctx.ast.formal_parameters(
                                 params.span,
@@ -277,7 +278,6 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                             )),
                             None,
                             None,
-                            Modifiers::empty(),
                         );
                         self.hoisted_functions
                             .push(Statement::ExportNamedDeclaration(
