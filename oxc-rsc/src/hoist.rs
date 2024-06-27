@@ -1,7 +1,7 @@
 use oxc::{
     ast::ast::{
         Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind, FunctionType,
-        Modifiers, NullLiteral, Statement,
+        NullLiteral, Statement,
     },
     span::SPAN,
 };
@@ -174,6 +174,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         )),
                         false,
                         node.r#async,
+                        false,
                         None,
                         ctx.ast.formal_parameters(
                             node.params.span,
@@ -188,7 +189,6 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         )),
                         None,
                         None,
-                        Modifiers::empty(),
                     );
 
                     // TODO: source map missing when mixing up ast nodes
