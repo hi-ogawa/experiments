@@ -70,7 +70,10 @@ export async function getClientManifest() {
 	);
 	const ssrManifest: SsrManifest = {
 		moduleMap: ssrModuleMap,
-		moduleLoading: null,
+		moduleLoading: {
+			prefix: "/assets/",
+			crossOrigin: null,
+		},
 	};
 
 	return { browserManifest, ssrManifest };
