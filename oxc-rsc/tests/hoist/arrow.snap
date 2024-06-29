@@ -1,0 +1,14 @@
+---
+source: src/hoist.rs
+input_file: tests/hoist/arrow.js
+---
+let count = 0;
+export function Counter() {
+	return {
+		type: 'form',
+		action: $$register($$hoist_0, '<id>', '$$hoist_0')
+	};
+}
+export async function $$hoist_0(formData) {
+	count += Number(formData.get('name'));
+}
