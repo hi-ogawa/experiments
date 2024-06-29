@@ -43,14 +43,13 @@ fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec
         }
         if let Some(symbol_id) = reference.symbol_id() {
             // pick symbol defined outside except top level one
-            let sym_span = ctx.symbols().get_span(symbol_id);
-            if span.start <= sym_span.start && sym_span.end <= span.end {
-                continue;
-            }
             let scope_id = ctx.symbols().get_scope_id(symbol_id);
             let scope_flags = ctx.scopes().get_flags(scope_id);
-            // skip top level symbol
             if scope_flags.is_top() {
+                continue;
+            }
+            let sym_span = ctx.symbols().get_span(symbol_id);
+            if span.start <= sym_span.start && sym_span.end <= span.end {
                 continue;
             }
             bind_vars.push(reference.clone());
