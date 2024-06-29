@@ -3,6 +3,7 @@ use oxc::{
         Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind,
         FormalParameters, FunctionBody, FunctionType, NullLiteral, Statement,
     },
+    semantic::Reference,
     span::{Span, SPAN},
 };
 use oxc_traverse::Traverse;
@@ -32,8 +33,8 @@ impl<'a> HoistTransformer<'a> {
 // collect references which are neither global nor in own scope
 // TODO: probably relying on "span" is not robust.
 //
-fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<String> {
-    let mut bind_vars: Vec<String> = vec![];
+fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<Reference> {
+    let mut bind_vars: Vec<Reference> = vec![];
     for reference in &ctx.symbols().references {
         // pick reference used inside (TODO: probably shouldn't rely on span?)
         let ref_span = reference.span();
@@ -52,7 +53,7 @@ fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec
             if scope_flags.is_top() {
                 continue;
             }
-            bind_vars.push(reference.name().to_string());
+            bind_vars.push(reference.clone());
         }
     }
     bind_vars
@@ -71,7 +72,7 @@ fn ast_register_bind_expression<'a>(
     id: &str,
     runtime: &str,
     name: &str,
-    bind_vars: &Vec<String>,
+    bind_vars: &Vec<Reference>,
 ) -> Expression<'a> {
     // $$register(...)
     let mut expr = ctx.ast.call_expression(
@@ -101,9 +102,9 @@ fn ast_register_bind_expression<'a>(
         let mut arguments = ctx.ast.new_vec_single(Argument::from(
             ctx.ast.literal_null_expression(NullLiteral::new(SPAN)),
         ));
-        for var in bind_vars.clone() {
+        for var in bind_vars {
             arguments.push(Argument::from(ctx.ast.identifier_reference_expression(
-                ctx.ast.identifier_reference(SPAN, var.as_str()),
+                ctx.ast.identifier_reference(SPAN, var.name()),
             )))
         }
         expr = ctx.ast.call_expression(
@@ -130,7 +131,7 @@ fn ast_hoist_declaration<'a>(
     name: &str,
     params: &FormalParameters<'a>,
     body: &FunctionBody<'a>,
-    bind_vars: &Vec<String>,
+    bind_vars: &Vec<Reference>,
 ) -> Statement<'a> {
     let mut new_param_items = ctx.ast.new_vec_from_iter(bind_vars.iter().map(|var| {
         ctx.ast.formal_parameter(
@@ -138,7 +139,7 @@ fn ast_hoist_declaration<'a>(
             ctx.ast.binding_pattern(
                 ctx.ast.binding_pattern_identifier(BindingIdentifier::new(
                     SPAN,
-                    ctx.ast.new_atom(&var),
+                    ctx.ast.new_atom(var.name()),
                 )),
                 None,
                 false,
