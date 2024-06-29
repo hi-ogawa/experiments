@@ -64,7 +64,7 @@ fn has_directive(body: &FunctionBody, directive: &str) -> bool {
         .any(|e| e.expression.value == directive)
 }
 
-// replace function definition with action register/bind
+// create action register and bind expression
 //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
 fn ast_register_bind_expression<'a>(
     ctx: &mut oxc_traverse::TraverseCtx<'a>,
@@ -122,6 +122,8 @@ fn ast_register_bind_expression<'a>(
     expr
 }
 
+// create hoisted function declarations
+//   export function $$hoist(...) { ... }
 fn ast_hoist_declaration<'a>(
     ctx: &mut oxc_traverse::TraverseCtx<'a>,
     span: Span,
