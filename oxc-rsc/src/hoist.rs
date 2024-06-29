@@ -179,16 +179,12 @@ fn ast_hoist_declaration<'a>(
 }
 
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
-    // Expression::ArrowFunctionExpression
     fn exit_expression(
         &mut self,
         expr: &mut Expression<'a>,
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
     ) {
         match expr {
-            Expression::FunctionExpression(_node) => {
-                // TODO
-            }
             Expression::ArrowFunctionExpression(node) => {
                 if has_directive(&node.body, &self.directive) {
                     // replace function definition with action register and bind
@@ -217,11 +213,36 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     *expr = new_expr;
                 }
             }
+            Expression::FunctionExpression(node) => {
+                if let Some(body) = &node.body {
+                    if has_directive(&body, &self.directive) {
+                        let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
+                        let bind_vars = get_bind_vars(ctx, node.span);
+                        let new_expr = ast_register_bind_expression(
+                            ctx,
+                            &self.id,
+                            &self.runtime,
+                            &new_name,
+                            &bind_vars,
+                        );
+
+                        self.hoisted_functions.push(ast_hoist_declaration(
+                            ctx,
+                            node.span,
+                            &new_name,
+                            &node.params,
+                            node.body.as_ref().unwrap(),
+                            &bind_vars,
+                        ));
+
+                        *expr = new_expr;
+                    }
+                }
+            }
             _ => {}
         }
     }
 
-    // Statement::FunctionDeclaration
     fn exit_statement(
         &mut self,
         stmt: &mut Statement<'a>,
