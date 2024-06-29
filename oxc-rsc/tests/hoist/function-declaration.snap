@@ -11,6 +11,6 @@ export function Counter() {
 		action
 	};
 }
-export function $$hoist_0(formData) {
+export async function $$hoist_0(formData) {
 	count += Number(formData.get('name'));
 }

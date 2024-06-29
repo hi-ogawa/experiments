@@ -20,14 +20,14 @@ export function Counter2() {
 		action
 	};
 }
-export function $$hoist_0(outer1, outer2, formData) {
+export async function $$hoist_0(outer1, outer2, formData) {
 	const inner = 0;
 	count += Number(formData.get('name'));
 	count += inner;
 	count += outer1;
 	count += outer2;
 }
-export function $$hoist_1(formData) {
+export async function $$hoist_1(outer1, outer2, formData) {
 	const inner = 0;
 	count += Number(formData.get('name'));
 	count += inner;
