@@ -1,9 +1,11 @@
+use std::collections::BTreeSet;
+
 use oxc::{
     ast::ast::{
         Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind,
         FormalParameters, FunctionBody, FunctionType, NullLiteral, Statement,
     },
-    semantic::Reference,
+    semantic::{Reference, ScopeId},
     span::{Span, SPAN},
 };
 use oxc_traverse::Traverse;
@@ -35,6 +37,7 @@ impl<'a> HoistTransformer<'a> {
 //
 fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<Reference> {
     let mut bind_vars: Vec<Reference> = vec![];
+    let ancestors: BTreeSet<ScopeId> = ctx.scopes().ancestors(ctx.current_scope_id()).collect();
     for reference in &ctx.symbols().references {
         // pick reference used inside
         let ref_span = reference.span();
@@ -45,14 +48,9 @@ fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec
             // pick symbol defined outside except top level one
             let scope_id = ctx.symbols().get_scope_id(symbol_id);
             let scope_flags = ctx.scopes().get_flags(scope_id);
-            if scope_flags.is_top() {
-                continue;
+            if !scope_flags.is_top() && ancestors.contains(&scope_id) {
+                bind_vars.push(reference.clone());
             }
-            let sym_span = ctx.symbols().get_span(symbol_id);
-            if span.start <= sym_span.start && sym_span.end <= span.end {
-                continue;
-            }
-            bind_vars.push(reference.clone());
         }
     }
     bind_vars
