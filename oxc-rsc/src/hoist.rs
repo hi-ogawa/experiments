@@ -3,7 +3,7 @@ use std::{borrow::BorrowMut, ops::DerefMut};
 use oxc::{
     ast::ast::{
         Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind, Function,
-        FunctionType, NullLiteral, Statement,
+        FunctionBody, FunctionType, NullLiteral, Statement,
     },
     span::{Span, SPAN},
 };
@@ -29,7 +29,9 @@ impl<'a> HoistTransformer<'a> {
         }
     }
 
-    fn ast_register_action(
+    // replace function definition with action register/bind
+    //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
+    fn ast_register_bind_expression(
         &mut self,
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
         name: &str,
@@ -115,6 +117,12 @@ fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec
     bind_vars
 }
 
+fn has_directive(body: &FunctionBody, directive: &str) -> bool {
+    body.directives
+        .iter()
+        .any(|e| e.expression.value == directive)
+}
+
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
     // Expression::ArrowFunctionExpression
     fn exit_expression(
@@ -127,20 +135,14 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                 // TODO
             }
             Expression::ArrowFunctionExpression(node) => {
-                // check "use server"
-                if node
-                    .body
-                    .directives
-                    .iter()
-                    .any(|e| e.expression.value == self.directive)
-                {
+                if has_directive(&node.body, &self.directive) {
                     //
                     // replace function definition with action register and bind
                     //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
                     //
                     let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
                     let bind_vars = get_bind_vars(ctx, node.span);
-                    let new_expr = self.ast_register_action(ctx, &new_name, &bind_vars);
+                    let new_expr = self.ast_register_bind_expression(ctx, &new_name, &bind_vars);
 
                     //
                     // create new function to be hoisted at the end
@@ -211,15 +213,11 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
         match stmt {
             Statement::FunctionDeclaration(node) => {
                 if let (Some(body), Some(name)) = (&node.body, &node.id) {
-                    // check "use server"
-                    if body
-                        .directives
-                        .iter()
-                        .any(|e| e.expression.value == self.directive)
-                    {
+                    if has_directive(&body, &self.directive) {
                         let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
                         let bind_vars = get_bind_vars(ctx, node.span);
-                        let new_expr = self.ast_register_action(ctx, &new_name, &bind_vars);
+                        let new_expr =
+                            self.ast_register_bind_expression(ctx, &new_name, &bind_vars);
 
                         // const <name> = $$register(...)
                         let new_stmt =
