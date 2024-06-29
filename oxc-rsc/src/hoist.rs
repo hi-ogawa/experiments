@@ -36,13 +36,13 @@ impl<'a> HoistTransformer<'a> {
 fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<Reference> {
     let mut bind_vars: Vec<Reference> = vec![];
     for reference in &ctx.symbols().references {
-        // pick reference used inside (TODO: probably shouldn't rely on span?)
+        // pick reference used inside
         let ref_span = reference.span();
         if !(span.start <= ref_span.start && ref_span.end <= span.end) {
             continue;
         }
         if let Some(symbol_id) = reference.symbol_id() {
-            // pick symbol defined outside
+            // pick symbol defined outside except top level one
             let sym_span = ctx.symbols().get_span(symbol_id);
             if span.start <= sym_span.start && sym_span.end <= span.end {
                 continue;
