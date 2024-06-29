@@ -5,7 +5,7 @@ use oxc::{
         Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind, Function,
         FunctionType, NullLiteral, Statement,
     },
-    span::SPAN,
+    span::{Span, SPAN},
 };
 use oxc_traverse::Traverse;
 
@@ -30,6 +30,36 @@ impl<'a> HoistTransformer<'a> {
     }
 }
 
+//
+// collect references which are neither global nor in own scope
+// TODO: probably relying on "span" is not robust.
+//
+fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<String> {
+    let mut bind_vars: Vec<String> = vec![];
+    for reference in &ctx.symbols().references {
+        // pick reference used inside (TODO: probably shouldn't rely on span?)
+        let ref_span = reference.span();
+        if !(span.start <= ref_span.start && ref_span.end <= span.end) {
+            continue;
+        }
+        if let Some(symbol_id) = reference.symbol_id() {
+            // pick symbol defined outside
+            let sym_span = ctx.symbols().get_span(symbol_id);
+            if span.start <= sym_span.start && sym_span.end <= span.end {
+                continue;
+            }
+            let scope_id = ctx.symbols().get_scope_id(symbol_id);
+            let scope_flags = ctx.scopes().get_flags(scope_id);
+            // skip top level symbol
+            if scope_flags.is_top() {
+                continue;
+            }
+            bind_vars.push(reference.name().to_string());
+        }
+    }
+    bind_vars
+}
+
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
     // Expression::ArrowFunctionExpression
     fn exit_expression(
@@ -49,33 +79,6 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     .iter()
                     .any(|e| e.expression.value == self.directive)
                 {
-                    //
-                    // collect references which are neither global nor in own scope
-                    //
-                    let mut bind_vars: Vec<String> = vec![];
-                    // TODO: should loop only references inside the function
-                    for reference in &ctx.symbols().references {
-                        // filter used inside (TODO: probably shouldn't rely on span?)
-                        let ref_span = reference.span();
-                        if !(node.span.start <= ref_span.start && ref_span.end <= node.span.end) {
-                            continue;
-                        }
-                        if let Some(symbol_id) = reference.symbol_id() {
-                            // filter defined outside
-                            let sym_span = ctx.symbols().get_span(symbol_id);
-                            if node.span.start <= sym_span.start && sym_span.end <= node.span.end {
-                                continue;
-                            }
-                            let scope_id = ctx.symbols().get_scope_id(symbol_id);
-                            let scope_flags = ctx.scopes().get_flags(scope_id);
-                            // skip top level symbol
-                            if scope_flags.is_top() {
-                                continue;
-                            }
-                            bind_vars.push(reference.name().to_string());
-                        }
-                    }
-
                     //
                     // replace function definition with action register and bind
                     //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
@@ -104,6 +107,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                             None,
                         );
 
+                    let bind_vars = get_bind_vars(ctx, node.span);
                     if bind_vars.len() > 0 {
                         // $$register(...).bind(...)
                         let mut arguments = ctx.ast.new_vec_single(Argument::from(
@@ -206,7 +210,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
 
                         // $$register(...)
-                        let register_call = ctx.ast.call_expression(
+                        let mut new_expr = ctx.ast.call_expression(
                             SPAN,
                             ctx.ast.identifier_reference_expression(
                                 ctx.ast.identifier_reference(SPAN, &self.runtime),
@@ -227,6 +231,32 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         );
 
                         // TODO: $$register(...).bind(...)
+                        let bind_vars = get_bind_vars(ctx, node.span);
+                        if bind_vars.len() > 0 {
+                            // $$register(...).bind(...)
+                            let mut arguments = ctx.ast.new_vec_single(Argument::from(
+                                ctx.ast.literal_null_expression(NullLiteral::new(SPAN)),
+                            ));
+                            for var in bind_vars.clone() {
+                                arguments.push(Argument::from(
+                                    ctx.ast.identifier_reference_expression(
+                                        ctx.ast.identifier_reference(SPAN, var.as_str()),
+                                    ),
+                                ))
+                            }
+                            new_expr = ctx.ast.call_expression(
+                                SPAN,
+                                ctx.ast.static_member_expression(
+                                    SPAN,
+                                    new_expr,
+                                    ctx.ast.identifier_name(SPAN, "bind"),
+                                    false,
+                                ),
+                                arguments,
+                                false,
+                                None,
+                            );
+                        }
 
                         // const <name> = $$register(...)
                         let new_stmt =
@@ -241,7 +271,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                                         None,
                                         false,
                                     ),
-                                    Some(register_call),
+                                    Some(new_expr),
                                     true,
                                 )),
                                 false,

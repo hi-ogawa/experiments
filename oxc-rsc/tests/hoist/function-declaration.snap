@@ -1,0 +1,16 @@
+---
+source: src/hoist.rs
+input_file: tests/hoist/function-declaration.js
+---
+let count = 0;
+export function Counter() {
+	const action = $$register($$hoist_0, '<id>', '$$hoist_0');
+	;
+	return {
+		type: 'form',
+		action
+	};
+}
+export function $$hoist_0(formData) {
+	count += Number(formData.get('name'));
+}
