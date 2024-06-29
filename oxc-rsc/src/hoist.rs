@@ -28,6 +28,61 @@ impl<'a> HoistTransformer<'a> {
             hoisted_functions: vec![],
         }
     }
+
+    fn ast_register_action(
+        &mut self,
+        ctx: &mut oxc_traverse::TraverseCtx<'a>,
+        name: &str,
+        bind_vars: &Vec<String>,
+    ) -> Expression<'a> {
+        // $$register(...)
+        let mut expr = ctx.ast.call_expression(
+            SPAN,
+            ctx.ast
+                .identifier_reference_expression(ctx.ast.identifier_reference(SPAN, &self.runtime)),
+            ctx.ast.new_vec_from_iter([
+                Argument::from(
+                    ctx.ast
+                        .identifier_reference_expression(ctx.ast.identifier_reference(SPAN, &name)),
+                ),
+                Argument::from(
+                    ctx.ast
+                        .literal_string_expression(ctx.ast.string_literal(SPAN, &self.id)),
+                ),
+                Argument::from(
+                    ctx.ast
+                        .literal_string_expression(ctx.ast.string_literal(SPAN, &name)),
+                ),
+            ]),
+            false,
+            None,
+        );
+
+        if bind_vars.len() > 0 {
+            // $$register(...).bind(...)
+            let mut arguments = ctx.ast.new_vec_single(Argument::from(
+                ctx.ast.literal_null_expression(NullLiteral::new(SPAN)),
+            ));
+            for var in bind_vars.clone() {
+                arguments.push(Argument::from(ctx.ast.identifier_reference_expression(
+                    ctx.ast.identifier_reference(SPAN, var.as_str()),
+                )))
+            }
+            expr = ctx.ast.call_expression(
+                SPAN,
+                ctx.ast.static_member_expression(
+                    SPAN,
+                    expr,
+                    ctx.ast.identifier_name(SPAN, "bind"),
+                    false,
+                ),
+                arguments,
+                false,
+                None,
+            );
+        }
+        expr
+    }
 }
 
 //
@@ -83,54 +138,9 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     // replace function definition with action register and bind
                     //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
                     //
-
-                    // $$register(...)
                     let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
-                    let mut new_expr =
-                        ctx.ast.call_expression(
-                            SPAN,
-                            ctx.ast.identifier_reference_expression(
-                                ctx.ast.identifier_reference(SPAN, &self.runtime),
-                            ),
-                            ctx.ast.new_vec_from_iter([
-                                Argument::from(ctx.ast.identifier_reference_expression(
-                                    ctx.ast.identifier_reference(SPAN, &new_name.clone()),
-                                )),
-                                Argument::from(ctx.ast.literal_string_expression(
-                                    ctx.ast.string_literal(SPAN, &self.id),
-                                )),
-                                Argument::from(ctx.ast.literal_string_expression(
-                                    ctx.ast.string_literal(SPAN, &new_name),
-                                )),
-                            ]),
-                            false,
-                            None,
-                        );
-
                     let bind_vars = get_bind_vars(ctx, node.span);
-                    if bind_vars.len() > 0 {
-                        // $$register(...).bind(...)
-                        let mut arguments = ctx.ast.new_vec_single(Argument::from(
-                            ctx.ast.literal_null_expression(NullLiteral::new(SPAN)),
-                        ));
-                        for var in bind_vars.clone() {
-                            arguments.push(Argument::from(ctx.ast.identifier_reference_expression(
-                                ctx.ast.identifier_reference(SPAN, var.as_str()),
-                            )))
-                        }
-                        new_expr = ctx.ast.call_expression(
-                            SPAN,
-                            ctx.ast.static_member_expression(
-                                SPAN,
-                                new_expr,
-                                ctx.ast.identifier_name(SPAN, "bind"),
-                                false,
-                            ),
-                            arguments,
-                            false,
-                            None,
-                        );
-                    }
+                    let new_expr = self.ast_register_action(ctx, &new_name, &bind_vars);
 
                     //
                     // create new function to be hoisted at the end
@@ -208,55 +218,8 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                         .any(|e| e.expression.value == self.directive)
                     {
                         let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
-
-                        // $$register(...)
-                        let mut new_expr = ctx.ast.call_expression(
-                            SPAN,
-                            ctx.ast.identifier_reference_expression(
-                                ctx.ast.identifier_reference(SPAN, &self.runtime),
-                            ),
-                            ctx.ast.new_vec_from_iter([
-                                Argument::from(ctx.ast.identifier_reference_expression(
-                                    ctx.ast.identifier_reference(SPAN, &new_name.clone()),
-                                )),
-                                Argument::from(ctx.ast.literal_string_expression(
-                                    ctx.ast.string_literal(SPAN, &self.id),
-                                )),
-                                Argument::from(ctx.ast.literal_string_expression(
-                                    ctx.ast.string_literal(SPAN, &new_name),
-                                )),
-                            ]),
-                            false,
-                            None,
-                        );
-
-                        // TODO: $$register(...).bind(...)
                         let bind_vars = get_bind_vars(ctx, node.span);
-                        if bind_vars.len() > 0 {
-                            // $$register(...).bind(...)
-                            let mut arguments = ctx.ast.new_vec_single(Argument::from(
-                                ctx.ast.literal_null_expression(NullLiteral::new(SPAN)),
-                            ));
-                            for var in bind_vars.clone() {
-                                arguments.push(Argument::from(
-                                    ctx.ast.identifier_reference_expression(
-                                        ctx.ast.identifier_reference(SPAN, var.as_str()),
-                                    ),
-                                ))
-                            }
-                            new_expr = ctx.ast.call_expression(
-                                SPAN,
-                                ctx.ast.static_member_expression(
-                                    SPAN,
-                                    new_expr,
-                                    ctx.ast.identifier_name(SPAN, "bind"),
-                                    false,
-                                ),
-                                arguments,
-                                false,
-                                None,
-                            );
-                        }
+                        let new_expr = self.ast_register_action(ctx, &new_name, &bind_vars);
 
                         // const <name> = $$register(...)
                         let new_stmt =
