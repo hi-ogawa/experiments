@@ -31,15 +31,13 @@ impl<'a> HoistTransformer<'a> {
     }
 }
 
-//
-// collect references which are neither global nor in own scope
-// TODO: probably relying on "span" is not robust.
-//
+// collect references which are neither at top nor in own scope
 fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<Reference> {
     let mut bind_vars: Vec<Reference> = vec![];
     let ancestors: BTreeSet<ScopeId> = ctx.scopes().ancestors(ctx.current_scope_id()).collect();
     for reference in &ctx.symbols().references {
         // pick reference used inside
+        // TODO: probably relying on "span" is not robust.
         let ref_span = reference.span();
         if !(span.start <= ref_span.start && ref_span.end <= span.end) {
             continue;
