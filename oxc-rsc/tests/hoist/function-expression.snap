@@ -1,0 +1,14 @@
+---
+source: src/hoist.rs
+input_file: tests/hoist/function-expression.js
+---
+let count = 0;
+export function Counter() {
+	return {
+		type: 'form',
+		action: function(formData) {
+			'use server';
+			count += Number(formData.get('name'));
+		}
+	};
+}

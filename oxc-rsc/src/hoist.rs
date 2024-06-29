@@ -38,6 +38,9 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
         ctx: &mut oxc_traverse::TraverseCtx<'a>,
     ) {
         match expr {
+            Expression::FunctionExpression(_node) => {
+                // TODO
+            }
             Expression::ArrowFunctionExpression(node) => {
                 // check "use server"
                 if node
