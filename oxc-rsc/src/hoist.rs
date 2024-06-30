@@ -1,11 +1,15 @@
 use std::collections::BTreeSet;
 
 use oxc::{
-    ast::ast::{
-        Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind,
-        FormalParameters, FunctionBody, FunctionType, NullLiteral, Statement,
+    ast::{
+        ast::{
+            Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind,
+            FormalParameters, FunctionBody, FunctionType, IdentifierReference, NullLiteral,
+            Statement,
+        },
+        Visit,
     },
-    semantic::{Reference, ScopeId},
+    semantic::{Reference, ReferenceId, ScopeId},
     span::{Span, SPAN},
 };
 use oxc_traverse::Traverse;
@@ -29,19 +33,21 @@ impl<'a> HoistTransformer<'a> {
             hoisted_functions: vec![],
         }
     }
+
+    fn create_hoist_name(&mut self) -> String {
+        format!("$$hoist_{}", self.hoisted_functions.len())
+    }
 }
 
 // collect references which are neither at top nor in own scope
-fn get_bind_vars<'a>(ctx: &mut oxc_traverse::TraverseCtx<'a>, span: Span) -> Vec<Reference> {
+fn get_bind_vars<'a>(
+    ctx: &mut oxc_traverse::TraverseCtx<'a>,
+    reference_ids: &Vec<ReferenceId>,
+) -> Vec<Reference> {
     let mut bind_vars: Vec<Reference> = vec![];
     let ancestors: BTreeSet<ScopeId> = ctx.scopes().ancestors(ctx.current_scope_id()).collect();
-    for reference in &ctx.symbols().references {
-        // pick reference used inside
-        // TODO: probably relying on "span" is not robust.
-        let ref_span = reference.span();
-        if !(span.start <= ref_span.start && ref_span.end <= span.end) {
-            continue;
-        }
+    for &reference_id in reference_ids {
+        let reference = ctx.symbols().get_reference(reference_id);
         if let Some(symbol_id) = reference.symbol_id() {
             // pick symbol defined outside except top level one
             let scope_id = ctx.symbols().get_scope_id(symbol_id);
@@ -176,6 +182,26 @@ fn ast_hoist_declaration<'a>(
     ))
 }
 
+struct ReferenceCollector {
+    reference_ids: Vec<ReferenceId>,
+}
+
+impl ReferenceCollector {
+    fn new() -> Self {
+        Self {
+            reference_ids: vec![],
+        }
+    }
+}
+
+impl<'a> Visit<'a> for ReferenceCollector {
+    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
+        if let Some(id) = ident.reference_id.get() {
+            self.reference_ids.push(id);
+        }
+    }
+}
+
 impl<'a> Traverse<'a> for HoistTransformer<'a> {
     fn exit_expression(
         &mut self,
@@ -187,8 +213,11 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                 if has_directive(&node.body, &self.directive) {
                     // replace function definition with action register and bind
                     //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
-                    let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
-                    let bind_vars = get_bind_vars(ctx, node.span);
+                    let mut collector = ReferenceCollector::new();
+                    collector.visit_arrow_expression(&node);
+                    let bind_vars = get_bind_vars(ctx, &collector.reference_ids);
+
+                    let new_name = self.create_hoist_name();
                     let new_expr = ast_register_bind_expression(
                         ctx,
                         &self.id,
@@ -214,8 +243,11 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
             Expression::FunctionExpression(node) => {
                 if let Some(body) = &node.body {
                     if has_directive(&body, &self.directive) {
-                        let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
-                        let bind_vars = get_bind_vars(ctx, node.span);
+                        let mut collector = ReferenceCollector::new();
+                        collector.visit_function(&node, None);
+                        let bind_vars = get_bind_vars(ctx, &collector.reference_ids);
+
+                        let new_name = self.create_hoist_name();
                         let new_expr = ast_register_bind_expression(
                             ctx,
                             &self.id,
@@ -250,8 +282,11 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
             Statement::FunctionDeclaration(node) => {
                 if let (Some(body), Some(name)) = (&node.body, &node.id) {
                     if has_directive(&body, &self.directive) {
-                        let new_name = format!("$$hoist_{}", self.hoisted_functions.len());
-                        let bind_vars = get_bind_vars(ctx, node.span);
+                        let mut collector = ReferenceCollector::new();
+                        collector.visit_function(&node, None);
+                        let bind_vars = get_bind_vars(ctx, &collector.reference_ids);
+
+                        let new_name = self.create_hoist_name();
                         let new_expr = ast_register_bind_expression(
                             ctx,
                             &self.id,
