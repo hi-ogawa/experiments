@@ -4,7 +4,8 @@ use oxc::{
     ast::{
         ast::{
             Argument, BindingIdentifier, Declaration, Expression, FormalParameterKind,
-            FormalParameters, FunctionBody, FunctionType, NullLiteral, Statement,
+            FormalParameters, FunctionBody, FunctionType, IdentifierReference, NullLiteral,
+            Statement,
         },
         Visit,
     },
@@ -194,7 +195,7 @@ impl ReferenceCollector {
 }
 
 impl<'a> Visit<'a> for ReferenceCollector {
-    fn visit_identifier_reference(&mut self, ident: &oxc::ast::ast::IdentifierReference<'a>) {
+    fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
         if let Some(id) = ident.reference_id.get() {
             self.reference_ids.push(id);
         }
