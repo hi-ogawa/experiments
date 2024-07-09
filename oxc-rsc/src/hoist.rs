@@ -214,7 +214,7 @@ impl<'a> Traverse<'a> for HoistTransformer<'a> {
                     // replace function definition with action register and bind
                     //   $$register($$hoist, "<id>", "$$hoist").bind(null, <args>)
                     let mut collector = ReferenceCollector::new();
-                    collector.visit_arrow_expression(&node);
+                    collector.visit_arrow_function_expression(&node);
                     let bind_vars = get_bind_vars(ctx, &collector.reference_ids);
 
                     let new_name = self.create_hoist_name();
@@ -351,6 +351,7 @@ mod tests {
         allocator::Allocator,
         codegen::{CodeGenerator, CodegenReturn},
         parser::Parser,
+        semantic::SemanticBuilder,
         span::SourceType,
     };
     use oxc_traverse::traverse_mut;
@@ -369,14 +370,12 @@ mod tests {
             let parser_ret = parser.parse();
             assert_eq!(parser_ret.errors.len(), 0);
             let mut program = parser_ret.program;
+            let (symbols, scopes) = SemanticBuilder::new(&source_text, source_type)
+                .build(&mut program)
+                .semantic
+                .into_symbol_table_and_scope_tree();
             let mut traverser = HoistTransformer::new("use server", "$$register", "<id>");
-            traverse_mut(
-                &mut traverser,
-                &mut program,
-                &source_text,
-                source_type,
-                &allocator,
-            );
+            traverse_mut(&mut traverser, &allocator, &mut program, symbols, scopes);
             let codegen_ret = CodeGenerator::new()
                 .enable_source_map("test.js", &source_text)
                 .build(&program);

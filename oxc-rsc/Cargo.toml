@@ -5,8 +5,8 @@ edition = "2021"
 publish = false
 
 [dependencies]
-oxc = { version = "0.16.0", features = ["transformer", "codegen", "semantic"] }
-oxc_traverse = { version = "0.16.0" }
+oxc = { version = "0.17.2", features = ["transformer", "codegen", "semantic"] }
+oxc_traverse = { version = "0.17.2" }
 
 [dev-dependencies]
 base64 = "0.22.1"
