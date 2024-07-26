@@ -12,7 +12,6 @@ export function App() {
 				<button onClick={() => setCount((count) => count + 1)}>
 					count is {count}
 				</button>
-				{/* TODO: HMR */}
 				<p style={{ display: "none" }}>
 					Edit <code>src/app.tsx</code> and save to test HMR
 				</p>
