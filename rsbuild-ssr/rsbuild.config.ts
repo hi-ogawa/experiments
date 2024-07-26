@@ -21,6 +21,14 @@ export default defineConfig((env) => ({
 					"import.meta.env.SSR": false,
 				},
 			},
+			performance: {
+				bundleAnalyze:
+					env.command === "build"
+						? {
+								generateStatsFile: true,
+							}
+						: undefined,
+			},
 		},
 		ssr: {
 			output: {

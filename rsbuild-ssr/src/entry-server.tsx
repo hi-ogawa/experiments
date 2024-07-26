@@ -1,4 +1,4 @@
-import type { ServerAPIs } from "@rsbuild/core";
+import type { ServerAPIs, Rspack } from "@rsbuild/core";
 import { App } from "./app";
 import ReactDOMServer from "react-dom/server.edge";
 import { tinyassert } from "@hiogawa/utils";
@@ -6,22 +6,17 @@ import { tinyassert } from "@hiogawa/utils";
 declare let __rsbuild_server__: ServerAPIs;
 
 export default async function handler(_request: Request): Promise<Response> {
+	const statsJson = await getStatsJson();
 	let scripts: string[] = [];
 	let styles: string[] = [];
-	if (import.meta.env.DEV) {
-		const stats = await __rsbuild_server__.environments.web.getStats();
-		const statsJson = stats.toJson();
-		tinyassert(statsJson.assets);
-		for (const { name } of statsJson.assets) {
-			if (name.endsWith(".js") && !name.includes(".hot-update.js")) {
-				scripts.push(`/${name}`);
-			}
-			if (name.endsWith(".css")) {
-				styles.push(`/${name}`);
-			}
+	tinyassert(statsJson.assets);
+	for (const { name } of statsJson.assets) {
+		if (name.endsWith(".js") && !name.includes(".hot-update.js")) {
+			scripts.push(`/${name}`);
 		}
-	} else {
-		// TODO: build
+		if (name.endsWith(".css")) {
+			styles.push(`/${name}`);
+		}
 	}
 
 	const root = <Root styles={styles} />;
@@ -33,6 +28,19 @@ export default async function handler(_request: Request): Promise<Response> {
 			"content-type": "text/html",
 		},
 	});
+}
+
+async function getStatsJson(): Promise<Rspack.StatsCompilation> {
+	if (import.meta.env.DEV) {
+		const stats = await __rsbuild_server__.environments.web.getStats();
+		return stats.toJson();
+	} else {
+		const { default: statsJson } = await import(
+			/* webpackIgnore: true */ "../client/stats.json" as string,
+			{ with: { type: "json" } }
+		);
+		return statsJson;
+	}
 }
 
 function Root(props: { styles: string[] }) {
