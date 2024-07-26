@@ -1,0 +1,29 @@
+{
+	"name": "example-rsbuild-ssr",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "rsbuild dev",
+		"build": "rsbuild build",
+		"preview": "vite preview",
+		"lint": "biome format --write .",
+		"vc-build": "pnpm build && node misc/vercel/build.js",
+		"vc-release": "vercel deploy --prebuilt --prod"
+	},
+	"dependencies": {
+		"@hiogawa/utils": "^1.7.0",
+		"react": "rc",
+		"react-dom": "rc"
+	},
+	"devDependencies": {
+		"@hiogawa/utils-node": "^0.0.2",
+		"@rsbuild/core": "latest",
+		"@rsbuild/plugin-react": "latest",
+		"@types/node": "^20.14.12",
+		"@types/react": "latest",
+		"@types/react-dom": "latest",
+		"esbuild": "^0.23.0",
+		"vite": "^5.3.5"
+	},
+	"packageManager": "pnpm@9.6.0+sha512.38dc6fba8dba35b39340b9700112c2fe1e12f10b17134715a4aa98ccf7bb035e76fd981cf0bb384dfa98f8d6af5481c2bef2f4266a24bfa20c34eb7147ce0b5e"
+}
