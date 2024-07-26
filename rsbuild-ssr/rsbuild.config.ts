@@ -1,4 +1,4 @@
-import { defineConfig } from "@rsbuild/core";
+import { defineConfig, type RequestHandler } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 
@@ -46,8 +46,7 @@ export default defineConfig((env) => ({
 			(middlewares, server) => {
 				(globalThis as any).__rsbuild_server__ = server;
 
-				// TODO: how to disable rsbuild serving html at root?
-				middlewares.push(async (req, res) => {
+				const handleSsr: RequestHandler = async (req, res) => {
 					function handlerError(error: unknown) {
 						console.error(error);
 						res.write("Internal server error");
@@ -60,12 +59,21 @@ export default defineConfig((env) => ({
 					} catch (e) {
 						handlerError(e);
 					}
+				};
+
+				// need to intercept root html request
+				middlewares.unshift((req, res, next) => {
+					if (req.url === "/") {
+						handleSsr(req, res, next);
+					} else {
+						next();
+					}
+				});
+
+				middlewares.push((req, res, next) => {
+					handleSsr(req, res, next);
 				});
 			},
 		],
-	},
-	server: {
-		// TODO: not working?
-		htmlFallback: false,
 	},
 }));
