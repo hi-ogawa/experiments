@@ -1,6 +1,6 @@
 # rsbuild-rsc
 
-based on https://github.com/rspack-contrib/rspack-examples/tree/main/rsbuild/ssr-express
+Rsbuild port of [`webpack-react-ssr`](https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr)
 
 ## references
 

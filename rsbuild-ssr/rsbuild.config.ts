@@ -63,7 +63,8 @@ export default defineConfig((env) => ({
 
 				// need to intercept root html request
 				middlewares.unshift((req, res, next) => {
-					if (req.url === "/") {
+					const url = new URL(req.url ?? "/", "http://tmp.local");
+					if (url.pathname === "/") {
 						handleSsr(req, res, next);
 					} else {
 						next();
