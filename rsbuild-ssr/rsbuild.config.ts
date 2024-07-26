@@ -28,6 +28,10 @@ export default defineConfig((env) => ({
 				distPath: {
 					root: "dist/server",
 				},
+				filename: {
+					js: "index.cjs",
+				},
+				minify: false,
 			},
 			source: {
 				entry: {

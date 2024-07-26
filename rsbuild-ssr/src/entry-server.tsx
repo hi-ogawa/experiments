@@ -12,7 +12,6 @@ export default async function handler(_request: Request): Promise<Response> {
 		const stats = await __rsbuild_server__.environments.web.getStats();
 		const statsJson = stats.toJson();
 		tinyassert(statsJson.assets);
-		console.log(statsJson.assets);
 		for (const { name } of statsJson.assets) {
 			if (name.endsWith(".js") && !name.includes(".hot-update.js")) {
 				scripts.push(`/${name}`);
