@@ -64,4 +64,8 @@ export default defineConfig((env) => ({
 			},
 		],
 	},
+	server: {
+		// TODO: not working?
+		htmlFallback: false,
+	},
 }));
