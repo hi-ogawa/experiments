@@ -2,6 +2,8 @@
 
 Rsbuild port of [`webpack-react-ssr`](https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr)
 
+https://rsbuild-react-ssr-hiroshi.vercel.app
+
 ## references
 
 - https://github.com/web-infra-dev/rsbuild/issues/2620
