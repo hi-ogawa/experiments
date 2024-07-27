@@ -4,6 +4,7 @@ import ReactClient from "react-server-dom-webpack/client.edge";
 import type { FlightData } from "./entry-server";
 import { injectFlightStreamScript } from "./lib/flight-stream-script";
 import { tinyassert } from "@hiogawa/utils";
+import "./lib/virtual-client-references-ssr.js";
 
 // include entry (manually for now)
 () => import(/* webpackMode: "eager" */ "./routes/_client");

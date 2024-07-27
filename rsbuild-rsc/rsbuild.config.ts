@@ -1,4 +1,9 @@
-import { defineConfig, type RequestHandler, type Rspack } from "@rsbuild/core";
+import {
+	defineConfig,
+	type RequestHandler,
+	type Rspack,
+	type RspackRule,
+} from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import path from "node:path";
@@ -69,12 +74,32 @@ export default defineConfig((env) => {
 							: undefined,
 				},
 				tools: {
-					rspack: {
-						dependencies: ["server"],
-						plugins: [
+					rspack: (config, utils) => {
+						config.dependencies ??= [];
+						config.dependencies.push("server");
+
+						utils.addRules([
+							createVirtualModuleRule(
+								path.resolve("./src/lib/virtual-client-references-browser.js"),
+								() => {
+									// fake side effect to avoid tree shaking
+									return [
+										`export default Math.random() < 0 && [`,
+										...[...clientReferences].map(
+											(file) => `import(${JSON.stringify(file)}),`,
+										),
+										`]`,
+									].join("\n");
+								},
+							),
+						]);
+
+						utils.appendPlugins([
 							{
 								name: "rsc-plugin-browser",
 								apply(compiler: Rspack.Compiler) {
+									const NAME = "rsc-plugin-browser";
+
 									// generate browser client manifest
 									// NOTE: it looks like rspack is missing a few APIs
 									// - moduleGraph.getOutgoingConnectionsByModule
@@ -82,7 +107,7 @@ export default defineConfig((env) => {
 									// - chunkGraph.getModuleId
 									// but something similar seems possible by probing stats json
 
-									compiler.hooks.done.tap(this.name, (stats) => {
+									compiler.hooks.done.tap(NAME, (stats) => {
 										const preliminaryManifest: Record<
 											string,
 											{ id: string; chunks: string[] }
@@ -108,14 +133,11 @@ export default defineConfig((env) => {
 										}
 
 										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
-										writeFileSync(
-											"./dist/__client_reference_browser.mjs",
-											code,
-										);
+										writeFileSync("./dist/__client_manifest_browser.mjs", code);
 									});
 								},
 							},
-						],
+						]);
 					},
 				},
 			},
@@ -201,3 +223,18 @@ export default defineConfig((env) => {
 		},
 	};
 });
+
+function createVirtualModuleRule(
+	file: string,
+	getCode: () => string,
+): RspackRule {
+	return {
+		resource: file,
+		use: {
+			loader: path.resolve("./src/lib/webpack/virtual-module-loader.js"),
+			options: {
+				getCode,
+			},
+		},
+	};
+}

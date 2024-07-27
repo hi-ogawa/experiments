@@ -2,9 +2,10 @@ import React from "react";
 import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
+import "./lib/virtual-client-references-browser.js";
 
 // emit chunk (manually for now)
-() => import("./routes/_client");
+// () => import("./routes/_client");
 
 async function main() {
 	const url = new URL(window.location.href);
