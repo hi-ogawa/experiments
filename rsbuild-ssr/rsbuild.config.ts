@@ -1,6 +1,7 @@
 import { defineConfig, type RequestHandler, type Rspack } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
+import { mkdirSync, writeFileSync } from "fs";
 
 export default defineConfig((env) => ({
 	plugins: [pluginReact()],
@@ -33,9 +34,17 @@ export default defineConfig((env) => ({
 				rspack: {
 					plugins: [
 						{
-							name: "",
+							name: "client-assets",
 							apply(compiler: Rspack.Compiler) {
-								compiler.hooks;
+								if (env.command !== "build") return;
+
+								const NAME = this.name;
+								compiler.hooks.done.tap(NAME, (stats) => {
+									const statsJson = stats.toJson({ all: false, assets: true });
+									const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
+									mkdirSync("./dist", { recursive: true });
+									writeFileSync("./dist/__client_stats.mjs", code);
+								});
 							},
 						},
 					],
