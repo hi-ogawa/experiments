@@ -80,7 +80,7 @@ export default defineConfig((env) => {
 									// - moduleGraph.getOutgoingConnectionsByModule
 									// - chunkGraph.getModuleChunksIterable
 									// - chunkGraph.getModuleId
-									// but something similar seems possible from stats json
+									// but something similar seems possible by probing stats json
 
 									compiler.hooks.done.tap(this.name, (stats) => {
 										const preliminaryManifest: Record<
@@ -97,6 +97,7 @@ export default defineConfig((env) => {
 												if (clientReferences.has(mod.nameForCondition)) {
 													tinyassert(mod.id);
 													tinyassert(chunk.id);
+													// TODO: should also ensure chunk.parents (dependent chunks)?
 													const [file] = [...chunk.files];
 													preliminaryManifest[mod.nameForCondition] = {
 														id: mod.id,
