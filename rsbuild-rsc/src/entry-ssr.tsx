@@ -1,11 +1,31 @@
 import type { ServerAPIs, Rspack } from "@rsbuild/core";
 import { App } from "./app";
 import ReactDOMServer from "react-dom/server.edge";
+import ReactClient from "react-server-dom-webpack/client.edge";
 import { tinyassert } from "@hiogawa/utils";
+import type { FlightData } from "./entry-server";
 
 declare let __rsbuild_server__: ServerAPIs;
 
-export default async function handler(_request: Request): Promise<Response> {
+export default async function handler(request: Request): Promise<Response> {
+	if (1) {
+		const reactServer = await importReactServer();
+		const { flightStream } = await reactServer.handler(request);
+
+		const flightData = await ReactClient.createFromReadableStream<FlightData>(
+			flightStream,
+			{ ssrManifest: { moduleMap: {} } },
+		);
+
+		const ssrRoot = <>{flightData.node}</>;
+		const htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {});
+		return new Response(htmlStream, {
+			headers: {
+				"content-type": "text/html",
+			},
+		});
+	}
+
 	const statsJson = await getStatsJson();
 	let scripts: string[] = [];
 	let styles: string[] = [];
@@ -28,6 +48,14 @@ export default async function handler(_request: Request): Promise<Response> {
 			"content-type": "text/html",
 		},
 	});
+}
+
+async function importReactServer(): Promise<typeof import("./entry-server")> {
+	if (import.meta.env.DEV) {
+		return __rsbuild_server__.environments.server.loadBundle("index");
+	} else {
+		throw "todo";
+	}
 }
 
 async function getStatsJson(): Promise<Rspack.StatsCompilation> {

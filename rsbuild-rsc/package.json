@@ -13,7 +13,8 @@
 	"dependencies": {
 		"@hiogawa/utils": "^1.7.0",
 		"react": "rc",
-		"react-dom": "rc"
+		"react-dom": "rc",
+		"react-server-dom-webpack": "rc"
 	},
 	"devDependencies": {
 		"@hiogawa/utils-node": "^0.0.2",

@@ -40,7 +40,7 @@ export default defineConfig((env) => {
 						root: "dist/ssr",
 					},
 					filename: {
-						js: "index.cjs",
+						js: "[name].cjs",
 					},
 					minify: false,
 				},
@@ -54,14 +54,14 @@ export default defineConfig((env) => {
 					},
 				},
 			},
-			rsc: {
+			server: {
 				output: {
 					target: "node",
 					distPath: {
 						root: "dist/server",
 					},
 					filename: {
-						js: "index.cjs",
+						js: "[name].cjs",
 					},
 					minify: false,
 				},
@@ -72,6 +72,13 @@ export default defineConfig((env) => {
 					define: {
 						"import.meta.env.DEV": dev,
 						"import.meta.env.SSR": true,
+					},
+				},
+				tools: {
+					rspack: {
+						resolve: {
+							conditionNames: ["react-server", "..."],
+						},
 					},
 				},
 			},
@@ -113,5 +120,5 @@ export default defineConfig((env) => {
 				},
 			],
 		},
-	}
+	};
 });
