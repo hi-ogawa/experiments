@@ -3,6 +3,7 @@ import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import path from "node:path";
 import { writeFileSync } from "node:fs";
+import { tinyassert } from "@hiogawa/utils";
 
 export default defineConfig((env) => {
 	const dev = env.command === "dev";
@@ -70,72 +71,45 @@ export default defineConfig((env) => {
 				tools: {
 					rspack: {
 						dependencies: ["server"],
-						optimization: {
-							// TODO
-							// cannot get (production) module id via chunkGraph.getModuleId.
-							// for now, make it "named" which is relative path.
-							// moduleIds: "named",
-						},
 						plugins: [
 							{
 								name: "client-reference:browser",
 								apply(compiler: Rspack.Compiler) {
-									const NAME = this.name;
-
 									// generate browser client manifest
-									compiler.hooks.afterCompile.tapPromise(
-										NAME,
-										async (compilation) => {
-											compilation.getStats;
-											// TODO
-											// need to collect dependent chunks but these API missing?
-											// - moduleGraph.getOutgoingConnectionsByModule
-											// - chunkGraph.getModuleChunksIterable
+									// NOTE: it looks like rspack is missing a few APIs
+									// - moduleGraph.getOutgoingConnectionsByModule
+									// - chunkGraph.getModuleChunksIterable
+									// - chunkGraph.getModuleId
+									// but something similar seems possible from stats json
 
-											// TODO
-											// how to get (production) module id?
-											// - chunkGraph.getModuleId
+									compiler.hooks.done.tap(this.name, (stats) => {
+										const preliminaryManifest: Record<
+											string,
+											{ id: string; chunks: string[] }
+										> = {};
 
-											// TODO: it looks all these information are available in stats.json at least. e.g.
-											//  chunks.parents/children
-											//  chunks.modules.id
-
-											const data: Record<
-												string,
-												{ id: string; chunks: string[] }
-											> = {};
-
-											for (const chunk of compilation.chunks) {
-												for (const mod of compilation.chunkGraph.getChunkModules(
-													chunk,
-												)) {
-													const modName = mod.nameForCondition();
-													if (!modName) continue;
-													if (clientReferences.has(modName)) {
-														console.log({
-															modName,
-															mod,
-															chunk,
-														});
-														if (chunk.files.size !== 1 || !chunk.id) {
-															console.error(chunk);
-															throw new Error("todo?");
-														}
-														const id =
-															"./" + path.relative(process.cwd(), modName);
-														const [file] = [...chunk.files];
-														data[modName] = { id, chunks: [chunk.id, file] };
-													}
+										const statsJson = stats.toJson();
+										tinyassert(statsJson.chunks)
+										for (const chunk of statsJson.chunks) {
+											tinyassert(chunk.modules);
+											for (const mod of chunk.modules) {
+												if (!mod.nameForCondition) continue;
+												if (clientReferences.has(mod.nameForCondition)) {
+													tinyassert(mod.id);
+													tinyassert(chunk.id);
+													const [file] = [...chunk.files];
+													preliminaryManifest[mod.nameForCondition] = { id: mod.id, chunks: [chunk.id, file] };
 												}
-											}
 
-											const code = `module.exports = ${JSON.stringify(data, null, 2)}`;
-											writeFileSync(
-												"./dist/__client_reference_browser.cjs",
-												code,
-											);
-										},
-									);
+											}
+										}
+
+										const code = `module.exports = ${JSON.stringify(preliminaryManifest, null, 2)}`;
+										writeFileSync(
+											"./dist/__client_reference_browser.cjs",
+											code,
+										);
+									})
 								},
 							},
 						],
