@@ -14,6 +14,7 @@ export async function handler(request: Request): Promise<ServerResult> {
 	if (request.method === "POST") {
 	}
 
+	// [react node -> flight] react server
 	const node = <Router />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		{ node },
