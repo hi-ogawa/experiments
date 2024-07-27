@@ -3,6 +3,9 @@ import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
 
+// emit chunk (manually for now)
+() => import("./routes/_client");
+
 async function main() {
 	const url = new URL(window.location.href);
 	if (url.searchParams.has("__nojs")) {

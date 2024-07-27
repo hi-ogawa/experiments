@@ -138,6 +138,7 @@ export default defineConfig((env) => {
 		},
 		// https://rsbuild.dev/config/dev/setup-middlewares
 		dev: {
+			writeToDisk: true, // for debugging for now
 			setupMiddlewares: [
 				(middlewares, server) => {
 					(globalThis as any).__rsbuild_server__ = server;

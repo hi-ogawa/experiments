@@ -5,6 +5,9 @@ import type { FlightData } from "./entry-server";
 import { injectFlightStreamScript } from "./lib/flight-stream-script";
 import { tinyassert } from "@hiogawa/utils";
 
+// include entry (manually for now)
+() => import(/* webpackMode: "eager" */ "./routes/_client");
+
 declare let __rsbuild_server__: ServerAPIs;
 
 export default async function handler(request: Request): Promise<Response> {
@@ -25,7 +28,19 @@ export default async function handler(request: Request): Promise<Response> {
 	// [flight => react node] react client
 	const flightData = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
-		{ ssrManifest: { moduleMap: {} } },
+		{
+			ssrManifest: {
+				moduleMap: {
+					"./src/routes/_client.tsx": {
+						Counter: {
+							id: "./src/routes/_client.tsx",
+							name: "Counter",
+							chunks: [],
+						},
+					},
+				},
+			},
+		},
 	);
 	const ssrRoot = <>{flightData.node}</>;
 

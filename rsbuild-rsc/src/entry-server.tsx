@@ -18,7 +18,13 @@ export async function handler(request: Request): Promise<ServerResult> {
 	const node = <Router />;
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		{ node },
-		{},
+		{
+			"./src/routes/_client.tsx#Counter": {
+				id: "./src/routes/_client.tsx",
+				name: "Counter",
+				chunks: ["src_routes__client_tsx"],
+			},
+		},
 	);
 	return { flightStream };
 }
