@@ -22,7 +22,10 @@ export async function handler(request: Request): Promise<ServerResult> {
 			"./src/routes/_client.tsx#Counter": {
 				id: "./src/routes/_client.tsx",
 				name: "Counter",
-				chunks: ["src_routes__client_tsx"],
+				chunks: [
+					"src_routes__client_tsx",
+					"static/js/async/src_routes__client_tsx.js",
+				],
 			},
 		},
 	);

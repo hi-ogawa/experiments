@@ -89,7 +89,7 @@ export default defineConfig((env) => {
 										> = {};
 
 										const statsJson = stats.toJson();
-										tinyassert(statsJson.chunks)
+										tinyassert(statsJson.chunks);
 										for (const chunk of statsJson.chunks) {
 											tinyassert(chunk.modules);
 											for (const mod of chunk.modules) {
@@ -98,18 +98,20 @@ export default defineConfig((env) => {
 													tinyassert(mod.id);
 													tinyassert(chunk.id);
 													const [file] = [...chunk.files];
-													preliminaryManifest[mod.nameForCondition] = { id: mod.id, chunks: [chunk.id, file] };
+													preliminaryManifest[mod.nameForCondition] = {
+														id: mod.id,
+														chunks: [chunk.id, file],
+													};
 												}
-
 											}
 										}
 
-										const code = `module.exports = ${JSON.stringify(preliminaryManifest, null, 2)}`;
+										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
 										writeFileSync(
-											"./dist/__client_reference_browser.cjs",
+											"./dist/__client_reference_browser.mjs",
 											code,
 										);
-									})
+									});
 								},
 							},
 						],
