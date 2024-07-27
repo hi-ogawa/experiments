@@ -162,24 +162,72 @@ export default defineConfig((env) => {
 					},
 				},
 				tools: {
-					rspack: {
-						dependencies: ["server", "web"],
+					rspack: (config, utils) => {
+						config.dependencies ??= [];
+						config.dependencies.push("server", "web");
+
+						utils.addRules([
+							createVirtualModuleRule(
+								path.resolve("./src/lib/virtual-client-references-ssr.js"),
+								() => {
+									// fake side effect to avoid tree shaking
+									return [
+										`export default Math.random() < 0 && [`,
+										...[...clientReferences].map(
+											(file) =>
+												`import(/* webpackMode: "eager" */ ${JSON.stringify(file)}),`,
+										),
+										`]`,
+									].join("\n");
+								},
+							),
+						]);
+
+						// utils.appendPlugins([
+						// 	{
+						// 		name: "rsc-plugin-ssr",
+						// 		apply(compiler: Rspack.Compiler) {
+						// 			const NAME = "rsc-plugin-browser";
+
+						// 			// generate browser client manifest
+						// 			// NOTE: it looks like rspack is missing a few APIs
+						// 			// - moduleGraph.getOutgoingConnectionsByModule
+						// 			// - chunkGraph.getModuleChunksIterable
+						// 			// - chunkGraph.getModuleId
+						// 			// but something similar seems possible by probing stats json
+
+						// 			compiler.hooks.done.tap(NAME, (stats) => {
+						// 				const preliminaryManifest: Record<
+						// 					string,
+						// 					{ id: string; chunks: string[] }
+						// 				> = {};
+
+						// 				const statsJson = stats.toJson();
+						// 				tinyassert(statsJson.chunks);
+						// 				for (const chunk of statsJson.chunks) {
+						// 					tinyassert(chunk.modules);
+						// 					for (const mod of chunk.modules) {
+						// 						if (!mod.nameForCondition) continue;
+						// 						if (clientReferences.has(mod.nameForCondition)) {
+						// 							tinyassert(mod.id);
+						// 							tinyassert(chunk.id);
+						// 							// TODO: should also ensure chunk.parents (dependent chunks)?
+						// 							const [file] = [...chunk.files];
+						// 							preliminaryManifest[mod.nameForCondition] = {
+						// 								id: mod.id,
+						// 								chunks: [chunk.id, file],
+						// 							};
+						// 						}
+						// 					}
+						// 				}
+
+						// 				const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
+						// 				writeFileSync("./dist/__client_manifest_browser.mjs", code);
+						// 			});
+						// 		},
+						// 	},
+						// ]);
 					},
-					plugins: [
-						{
-							name: "rsc-plugin-ssr",
-							apply(compiler: Rspack.Compiler) {
-								const NAME = this.name;
-								compiler.hooks.finishMake.tapPromise(
-									NAME,
-									async (compilation) => {
-										// TODO: include reference entries
-										compilation;
-									},
-								);
-							},
-						},
-					],
 				},
 			},
 		},

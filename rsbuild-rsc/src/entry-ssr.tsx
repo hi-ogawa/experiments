@@ -6,9 +6,6 @@ import { injectFlightStreamScript } from "./lib/flight-stream-script";
 import { tinyassert } from "@hiogawa/utils";
 import "./lib/virtual-client-references-ssr.js";
 
-// include entry (manually for now)
-() => import(/* webpackMode: "eager" */ "./routes/_client");
-
 declare let __rsbuild_server__: ServerAPIs;
 
 export default async function handler(request: Request): Promise<Response> {
