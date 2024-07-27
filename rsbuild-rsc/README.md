@@ -2,11 +2,17 @@
 
 Rsbuild port of [`webpack-rsc`](https://github.com/hi-ogawa/experiments/tree/main/webpack-rsc)
 
+```sh
+pnpm dev
+pnpm build
+pnpm preview
+```
+
 ## todo
 
-- [x] flight server
-- [x] ssr
-- [ ] browser
+- [x] basic flight server
+- [x] basic ssr
+- [x] basic hydration
 - [ ] client reference
 - [ ] server reference
 - [ ] css
