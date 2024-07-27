@@ -73,7 +73,7 @@ export default defineConfig((env) => {
 						dependencies: ["server"],
 						plugins: [
 							{
-								name: "client-reference:browser",
+								name: "rsc-plugin-browser",
 								apply(compiler: Rspack.Compiler) {
 									// generate browser client manifest
 									// NOTE: it looks like rspack is missing a few APIs
@@ -145,7 +145,7 @@ export default defineConfig((env) => {
 					},
 					plugins: [
 						{
-							name: "client-reference:ssr",
+							name: "rsc-plugin-ssr",
 							apply(compiler: Rspack.Compiler) {
 								const NAME = this.name;
 								compiler.hooks.finishMake.tapPromise(
