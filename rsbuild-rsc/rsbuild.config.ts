@@ -70,6 +70,12 @@ export default defineConfig((env) => {
 				tools: {
 					rspack: {
 						dependencies: ["server"],
+						optimization: {
+							// TODO
+							// cannot get (production) module id via chunkGraph.getModuleId.
+							// for now, make it "named" which is relative path.
+							moduleIds: "named",
+						},
 						plugins: [
 							{
 								name: "client-reference:browser",
@@ -106,7 +112,14 @@ export default defineConfig((env) => {
 															mod,
 															chunk,
 														});
-														data[modName] = { id: "todo", chunks: [] };
+														if (chunk.files.size !== 1 || !chunk.id) {
+															console.error(chunk);
+															throw new Error("todo?");
+														}
+														const id =
+															"./" + path.relative(process.cwd(), modName);
+														const [file] = [...chunk.files];
+														data[modName] = { id, chunks: [chunk.id, file] };
 													}
 												}
 											}
