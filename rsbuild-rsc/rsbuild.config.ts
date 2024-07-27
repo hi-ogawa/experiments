@@ -1,4 +1,4 @@
-import { defineConfig, type RequestHandler } from "@rsbuild/core";
+import { defineConfig, type RequestHandler, type Rspack } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 
@@ -60,6 +60,11 @@ export default defineConfig((env) => {
 								}
 							: undefined,
 				},
+				tools: {
+					rspack: {
+						dependencies: ["server"],
+					},
+				},
 			},
 			ssr: {
 				output: {
@@ -79,6 +84,54 @@ export default defineConfig((env) => {
 					define: {
 						"import.meta.env.DEV": dev,
 						"import.meta.env.SSR": true,
+					},
+				},
+				tools: {
+					rspack: {
+						dependencies: ["server", "web"],
+					},
+				},
+			},
+			server: {
+				output: {
+					target: "node",
+					distPath: {
+						root: "dist/server",
+					},
+					filename: {
+						js: "[name].cjs",
+					},
+					minify: false,
+				},
+				source: {
+					entry: {
+						index: "./src/entry-server",
+					},
+					define: {
+						"import.meta.env.DEV": dev,
+						"import.meta.env.SSR": true,
+					},
+				},
+				tools: {
+					rspack: {
+						resolve: {
+							conditionNames: ["react-server", "..."],
+						},
+						plugins: [
+							{
+								name: "client-reference:server",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = this.name;
+									compiler.hooks.finishMake.tapPromise(
+										NAME,
+										async (compilation) => {
+											// TODO: include reference entries
+											compilation;
+										},
+									);
+								},
+							},
+						],
 					},
 				},
 			},
