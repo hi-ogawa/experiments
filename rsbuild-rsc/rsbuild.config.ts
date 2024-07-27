@@ -8,6 +8,34 @@ export default defineConfig((env) => {
 	return {
 		plugins: [pluginReact()],
 		environments: {
+			server: {
+				output: {
+					target: "node",
+					distPath: {
+						root: "dist/server",
+					},
+					filename: {
+						js: "[name].cjs",
+					},
+					minify: false,
+				},
+				source: {
+					entry: {
+						index: "./src/entry-server",
+					},
+					define: {
+						"import.meta.env.DEV": dev,
+						"import.meta.env.SSR": true,
+					},
+				},
+				tools: {
+					rspack: {
+						resolve: {
+							conditionNames: ["react-server", "..."],
+						},
+					},
+				},
+			},
 			web: {
 				output: {
 					target: "web",
@@ -51,34 +79,6 @@ export default defineConfig((env) => {
 					define: {
 						"import.meta.env.DEV": dev,
 						"import.meta.env.SSR": true,
-					},
-				},
-			},
-			server: {
-				output: {
-					target: "node",
-					distPath: {
-						root: "dist/server",
-					},
-					filename: {
-						js: "[name].cjs",
-					},
-					minify: false,
-				},
-				source: {
-					entry: {
-						index: "./src/entry-server",
-					},
-					define: {
-						"import.meta.env.DEV": dev,
-						"import.meta.env.SSR": true,
-					},
-				},
-				tools: {
-					rspack: {
-						resolve: {
-							conditionNames: ["react-server", "..."],
-						},
 					},
 				},
 			},
