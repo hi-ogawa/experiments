@@ -74,7 +74,7 @@ export default defineConfig((env) => {
 							// TODO
 							// cannot get (production) module id via chunkGraph.getModuleId.
 							// for now, make it "named" which is relative path.
-							moduleIds: "named",
+							// moduleIds: "named",
 						},
 						plugins: [
 							{
@@ -86,6 +86,7 @@ export default defineConfig((env) => {
 									compiler.hooks.afterCompile.tapPromise(
 										NAME,
 										async (compilation) => {
+											compilation.getStats;
 											// TODO
 											// need to collect dependent chunks but these API missing?
 											// - moduleGraph.getOutgoingConnectionsByModule
@@ -94,6 +95,10 @@ export default defineConfig((env) => {
 											// TODO
 											// how to get (production) module id?
 											// - chunkGraph.getModuleId
+
+											// TODO: it looks all these information are available in stats.json at least. e.g.
+											//  chunks.parents/children
+											//  chunks.modules.id
 
 											const data: Record<
 												string,
