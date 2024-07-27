@@ -183,50 +183,40 @@ export default defineConfig((env) => {
 							),
 						]);
 
-						// utils.appendPlugins([
-						// 	{
-						// 		name: "rsc-plugin-ssr",
-						// 		apply(compiler: Rspack.Compiler) {
-						// 			const NAME = "rsc-plugin-browser";
+						utils.appendPlugins([
+							{
+								name: "rsc-plugin-ssr",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = "rsc-plugin-ssr";
 
-						// 			// generate browser client manifest
-						// 			// NOTE: it looks like rspack is missing a few APIs
-						// 			// - moduleGraph.getOutgoingConnectionsByModule
-						// 			// - chunkGraph.getModuleChunksIterable
-						// 			// - chunkGraph.getModuleId
-						// 			// but something similar seems possible by probing stats json
+									compiler.hooks.done.tap(NAME, (stats) => {
+										const preliminaryManifest: Record<
+											string,
+											{ id: string; chunks: string[] }
+										> = {};
 
-						// 			compiler.hooks.done.tap(NAME, (stats) => {
-						// 				const preliminaryManifest: Record<
-						// 					string,
-						// 					{ id: string; chunks: string[] }
-						// 				> = {};
+										const statsJson = stats.toJson();
+										tinyassert(statsJson.chunks);
+										for (const chunk of statsJson.chunks) {
+											tinyassert(chunk.modules);
+											for (const mod of chunk.modules) {
+												if (!mod.nameForCondition) continue;
+												if (clientReferences.has(mod.nameForCondition)) {
+													tinyassert(mod.id);
+													preliminaryManifest[mod.nameForCondition] = {
+														id: mod.id,
+														chunks: [],
+													};
+												}
+											}
+										}
 
-						// 				const statsJson = stats.toJson();
-						// 				tinyassert(statsJson.chunks);
-						// 				for (const chunk of statsJson.chunks) {
-						// 					tinyassert(chunk.modules);
-						// 					for (const mod of chunk.modules) {
-						// 						if (!mod.nameForCondition) continue;
-						// 						if (clientReferences.has(mod.nameForCondition)) {
-						// 							tinyassert(mod.id);
-						// 							tinyassert(chunk.id);
-						// 							// TODO: should also ensure chunk.parents (dependent chunks)?
-						// 							const [file] = [...chunk.files];
-						// 							preliminaryManifest[mod.nameForCondition] = {
-						// 								id: mod.id,
-						// 								chunks: [chunk.id, file],
-						// 							};
-						// 						}
-						// 					}
-						// 				}
-
-						// 				const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
-						// 				writeFileSync("./dist/__client_manifest_browser.mjs", code);
-						// 			});
-						// 		},
-						// 	},
-						// ]);
+										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
+										writeFileSync("./dist/__client_manifest_ssr.mjs", code);
+									});
+								},
+							},
+						]);
 					},
 				},
 			},
