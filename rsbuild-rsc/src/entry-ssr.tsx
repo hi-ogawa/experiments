@@ -1,9 +1,9 @@
+import { tinyassert } from "@hiogawa/utils";
 import type { Rspack, ServerAPIs } from "@rsbuild/core";
 import ReactDOMServer from "react-dom/server.edge";
 import ReactClient from "react-server-dom-webpack/client.edge";
 import type { FlightData } from "./entry-server";
 import { injectFlightStreamScript } from "./lib/flight-stream-script";
-import { tinyassert } from "@hiogawa/utils";
 import "./lib/virtual-client-references-ssr.js";
 import { getClientManifest } from "./lib/client-manifest";
 

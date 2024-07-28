@@ -6,7 +6,7 @@
 		"dev": "rsbuild dev",
 		"build": "rsbuild build",
 		"preview": "vite preview",
-		"lint": "biome format --write --vcs-enabled=true --vcs-client-kind=git .",
+		"lint": "biome check --write --linter-enabled=false --vcs-enabled=true --vcs-client-kind=git .",
 		"vc-build": "pnpm build && node misc/vercel/build.js",
 		"vc-release": "vercel deploy --prebuilt --prod"
 	},

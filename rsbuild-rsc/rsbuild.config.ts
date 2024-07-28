@@ -1,14 +1,14 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { tinyassert } from "@hiogawa/utils";
+import { webToNodeHandler } from "@hiogawa/utils-node";
 import {
-	defineConfig,
 	type RequestHandler,
 	type Rspack,
 	type RspackRule,
+	defineConfig,
 } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
-import { webToNodeHandler } from "@hiogawa/utils-node";
-import path from "node:path";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { tinyassert } from "@hiogawa/utils";
 import type { PreliminaryManifest } from "./src/lib/client-manifest";
 
 export default defineConfig((env) => {
