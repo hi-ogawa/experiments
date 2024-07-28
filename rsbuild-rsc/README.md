@@ -16,7 +16,7 @@ pnpm preview
 - [x] basic ssr
 - [x] basic hydration
 - [x] basic client reference
-- [ ] server reference
+- [x] basic server reference
 - [ ] css
 - [ ] server hmr
 - [x] client hmr
