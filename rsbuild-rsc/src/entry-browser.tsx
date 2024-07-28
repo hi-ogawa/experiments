@@ -5,6 +5,7 @@ import type { FlightData } from "./entry-server";
 import "./lib/virtual-client-references-browser.js";
 import "./style.css";
 import { setupBrowserRouter } from "./lib/router/browser";
+import type { CallServerCallback } from "./types/react-types";
 
 async function main() {
 	const url = new URL(window.location.href);
@@ -12,8 +13,24 @@ async function main() {
 		return;
 	}
 
-	// TODO
-	const callServer = () => {};
+	let $__setFlight: (flight: Promise<FlightData>) => void;
+
+	const callServer: CallServerCallback = async (id, args) => {
+		const url = new URL(window.location.href);
+		url.searchParams.set("__f", "");
+		url.searchParams.set("__a", id);
+		const flight = ReactClient.createFromFetch<FlightData>(
+			fetch(url, {
+				method: "POST",
+				body: await ReactClient.encodeReply(args),
+			}),
+			{ callServer },
+		);
+		$__setFlight(flight);
+		return (await flight).actionResult;
+	};
+
+	(self as any).__f_call_server = callServer;
 
 	// [flight => react node] react client
 	const initialFlight = ReactClient.createFromReadableStream<FlightData>(
@@ -26,15 +43,15 @@ async function main() {
 			React.useState<Promise<FlightData>>(initialFlight);
 
 		React.useEffect(() => {
+			$__setFlight = (flight) => React.startTransition(() => setFlight(flight));
+
 			return setupBrowserRouter(() => {
 				const url = new URL(window.location.href);
 				url.searchParams.set("__f", "");
-				React.startTransition(() =>
-					setFlight(
-						ReactClient.createFromFetch<FlightData>(fetch(url), {
-							callServer,
-						}),
-					),
+				$__setFlight(
+					ReactClient.createFromFetch<FlightData>(fetch(url), {
+						callServer,
+					}),
 				);
 			});
 		}, []);
@@ -48,12 +65,22 @@ async function main() {
 	}
 
 	// [react node => html] react dom client
+	const formState = (await initialFlight).actionResult;
 	React.startTransition(() => {
 		ReactDOMClient.hydrateRoot(
 			document,
 			<React.StrictMode>{browserRoot}</React.StrictMode>,
+			{
+				formState,
+			},
 		);
 	});
 }
 
 main();
+
+declare module "react-dom/client" {
+	interface HydrationOptions {
+		formState?: unknown;
+	}
+}
