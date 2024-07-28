@@ -15,13 +15,54 @@ export default defineConfig((env) => {
 	const dev = env.command === "dev";
 
 	const clientReferences = new Set<string>();
+	const serverReferences = new Set<string>();
 
-	// ensure dist dir
+	// ensure dist dir since we need to write
 	mkdirSync("dist", { recursive: true });
 
 	return {
 		plugins: [pluginReact()],
 		environments: {
+			// extra build to scan server references
+			// since it doesn't look like it's possible to
+			// dynamically add entry (e.g. hooks.finishMake + compilation.addModuleTree)
+			scan: {
+				output: {
+					target: "node",
+					distPath: {
+						root: "dist/scan",
+					},
+				},
+				source: {
+					entry: {
+						index: "./src/entry-server",
+					},
+					define: {
+						"import.meta.env.DEV": dev,
+						"import.meta.env.SSR": true,
+					},
+				},
+				tools: {
+					rspack: (config, utils) => {
+						utils.addRules([
+							{
+								test: /\.tsx$/,
+								use: {
+									loader: path.resolve(
+										"./src/lib/webpack/use-server-server-loader.js",
+									),
+									options: { serverReferences },
+								},
+							},
+						]);
+						return utils.mergeConfig(config, {
+							resolve: {
+								conditionNames: ["react-server", "..."],
+							},
+						});
+					},
+				},
+			},
 			server: {
 				output: {
 					target: "node",
@@ -44,6 +85,9 @@ export default defineConfig((env) => {
 				},
 				tools: {
 					rspack: (config, utils) => {
+						config.dependencies ??= [];
+						config.dependencies.push("scan");
+
 						utils.addRules([
 							{
 								test: /\.tsx$/,
@@ -54,7 +98,63 @@ export default defineConfig((env) => {
 									options: { clientReferences },
 								},
 							},
+							{
+								test: /\.tsx$/,
+								use: {
+									loader: path.resolve(
+										"./src/lib/webpack/use-server-server-loader.js",
+									),
+									options: { serverReferences: new Set() },
+								},
+							},
+							createVirtualModuleRule(
+								path.resolve("./src/lib/virtual-server-references.js"),
+								() => {
+									// fake side effect to avoid tree shaking
+									return [
+										`export default Math.random() < 0 && [`,
+										...[...serverReferences].map(
+											(file) =>
+												`import(/* webpackMode: "eager" */ ${JSON.stringify(file)}),`,
+										),
+										`]`,
+									].join("\n");
+								},
+							),
 						]);
+
+						utils.appendPlugins([
+							{
+								name: "rsc-plugin-server",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = "rsc-plugin-server";
+
+									compiler.hooks.done.tap(NAME, (stats) => {
+										const preliminaryManifest: PreliminaryManifest = {};
+
+										const statsJson = stats.toJson();
+										tinyassert(statsJson.chunks);
+										for (const chunk of statsJson.chunks) {
+											tinyassert(chunk.modules);
+											for (const mod of chunk.modules) {
+												if (!mod.nameForCondition) continue;
+												if (serverReferences.has(mod.nameForCondition)) {
+													tinyassert(mod.id);
+													preliminaryManifest[mod.nameForCondition] = {
+														id: mod.id,
+														chunks: [],
+													};
+												}
+											}
+										}
+
+										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
+										writeFileSync("./dist/__server_manifest.mjs", code);
+									});
+								},
+							},
+						]);
+
 						return utils.mergeConfig(config, {
 							resolve: {
 								conditionNames: ["react-server", "..."],
@@ -99,6 +199,15 @@ export default defineConfig((env) => {
 									].join("\n");
 								},
 							),
+							{
+								test: /\.tsx?$/,
+								use: {
+									loader: path.resolve(
+										"./src/lib/webpack/use-server-client-loader.js",
+									),
+									options: { serverReferences },
+								},
+							},
 						]);
 
 						utils.appendPlugins([
@@ -141,9 +250,6 @@ export default defineConfig((env) => {
 									});
 								},
 							},
-						]);
-
-						utils.appendPlugins([
 							{
 								name: "client-assets",
 								apply(compiler: Rspack.Compiler) {
@@ -185,7 +291,7 @@ export default defineConfig((env) => {
 				tools: {
 					rspack: (config, utils) => {
 						config.dependencies ??= [];
-						config.dependencies.push("server", "web");
+						config.dependencies.push("web");
 
 						utils.addRules([
 							createVirtualModuleRule(
@@ -202,6 +308,15 @@ export default defineConfig((env) => {
 									].join("\n");
 								},
 							),
+							{
+								test: /\.tsx?$/,
+								use: {
+									loader: path.resolve(
+										"./src/lib/webpack/use-server-client-loader.js",
+									),
+									options: { serverReferences },
+								},
+							},
 						]);
 
 						utils.appendPlugins([
