@@ -10,8 +10,25 @@ export default function Layout(props: React.PropsWithChildren) {
 					rel="icon"
 					href="https://assets.rspack.dev/rsbuild/favicon-128x128.png"
 				/>
+				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 			</head>
-			<body>{props.children}</body>
+			<body>
+				<div
+					style={{
+						display: "flex",
+						gap: "1rem",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					Menu:
+					<a href="/">Home</a>
+					<a href="/stream">Stream</a>
+				</div>
+				<div id="root" style={{ display: "flex", placeContent: "center" }}>
+					{props.children}
+				</div>
+			</body>
 		</html>
 	);
 }
