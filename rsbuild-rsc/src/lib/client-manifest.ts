@@ -50,7 +50,6 @@ export async function getClientManifest() {
 				const [resource, name] = $$id.split("#");
 				const entry = browserRefs[resource];
 				tinyassert(entry, `invalid browser client reference '${resource}'`);
-				console.log(entry);
 				return {
 					id: entry.id,
 					name,

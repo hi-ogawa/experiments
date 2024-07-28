@@ -30,18 +30,6 @@ export default async function handler(request: Request): Promise<Response> {
 		flightStream1,
 		{
 			ssrManifest,
-			// ssrManifest: {
-			// 	moduleMap: {
-			// 		"./src/routes/_client.tsx": {
-			// 			Counter: {
-			// 				id: "./src/routes/_client.tsx",
-			// 				name: "Counter",
-			// 				chunks: [],
-			// 			},
-			// 		},
-			// 	},
-			// 	moduleLoading: null,
-			// },
 		},
 	);
 	const ssrRoot = <>{flightData.node}</>;
@@ -86,7 +74,11 @@ async function getClientAssets() {
 	const css: string[] = [];
 
 	for (const { name } of statsJson.assets) {
-		if (name.endsWith(".js") && !name.includes(".hot-update.js")) {
+		if (
+			name.endsWith(".js") &&
+			!name.includes(".hot-update.js") &&
+			!name.includes("/async/")
+		) {
 			js.push(`/${name}`);
 		}
 		if (name.endsWith(".css")) {
