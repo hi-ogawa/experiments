@@ -47,8 +47,6 @@ async function main() {
 		recursive: true,
 	});
 	await rm(join(outDir, "static/index.html"));
-	await rm(join(outDir, "static/report-web.html"));
-	await rm(join(outDir, "static/stats.json"));
 
 	// function
 	await mkdir(join(outDir, "functions/index.func"), { recursive: true });

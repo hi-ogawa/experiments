@@ -1,9 +1,23 @@
-import { defineConfig, type RequestHandler } from "@rsbuild/core";
-import { pluginReact } from "@rsbuild/plugin-react";
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { tinyassert } from "@hiogawa/utils";
 import { webToNodeHandler } from "@hiogawa/utils-node";
+import {
+	type RequestHandler,
+	type Rspack,
+	type RspackRule,
+	defineConfig,
+} from "@rsbuild/core";
+import { pluginReact } from "@rsbuild/plugin-react";
+import type { PreliminaryManifest } from "./src/lib/client-manifest";
 
 export default defineConfig((env) => {
 	const dev = env.command === "dev";
+
+	const clientReferences = new Set<string>();
+
+	// ensure dist dir
+	mkdirSync("dist", { recursive: true });
 
 	return {
 		plugins: [pluginReact()],
@@ -29,10 +43,23 @@ export default defineConfig((env) => {
 					},
 				},
 				tools: {
-					rspack: {
-						resolve: {
-							conditionNames: ["react-server", "..."],
-						},
+					rspack: (config, utils) => {
+						utils.addRules([
+							{
+								test: /\.tsx$/,
+								use: {
+									loader: path.resolve(
+										"./src/lib/webpack/use-client-loader.js",
+									),
+									options: { clientReferences },
+								},
+							},
+						]);
+						return utils.mergeConfig(config, {
+							resolve: {
+								conditionNames: ["react-server", "..."],
+							},
+						});
 					},
 				},
 			},
@@ -42,6 +69,7 @@ export default defineConfig((env) => {
 					distPath: {
 						root: "dist/browser",
 					},
+					minify: false,
 				},
 				source: {
 					entry: {
@@ -52,13 +80,86 @@ export default defineConfig((env) => {
 						"import.meta.env.SSR": false,
 					},
 				},
-				performance: {
-					bundleAnalyze:
-						env.command === "build"
-							? {
-									generateStatsFile: true,
-								}
-							: undefined,
+				tools: {
+					rspack: (config, utils) => {
+						config.dependencies ??= [];
+						config.dependencies.push("server");
+
+						utils.addRules([
+							createVirtualModuleRule(
+								path.resolve("./src/lib/virtual-client-references-browser.js"),
+								() => {
+									// fake side effect to avoid tree shaking
+									return [
+										`export default Math.random() < 0 && [`,
+										...[...clientReferences].map(
+											(file) => `import(${JSON.stringify(file)}),`,
+										),
+										`]`,
+									].join("\n");
+								},
+							),
+						]);
+
+						utils.appendPlugins([
+							{
+								name: "rsc-plugin-browser",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = "rsc-plugin-browser";
+
+									// generate browser client manifest
+									// NOTE: it looks like rspack is missing a few APIs
+									// - moduleGraph.getOutgoingConnectionsByModule
+									// - chunkGraph.getModuleChunksIterable
+									// - chunkGraph.getModuleId
+									// but something similar seems possible by probing stats json
+
+									compiler.hooks.done.tap(NAME, (stats) => {
+										const preliminaryManifest: PreliminaryManifest = {};
+
+										const statsJson = stats.toJson();
+										tinyassert(statsJson.chunks);
+										for (const chunk of statsJson.chunks) {
+											tinyassert(chunk.modules);
+											for (const mod of chunk.modules) {
+												if (!mod.nameForCondition) continue;
+												if (clientReferences.has(mod.nameForCondition)) {
+													tinyassert(mod.id);
+													tinyassert(chunk.id);
+													// TODO: should also ensure chunk.parents (dependent chunks)?
+													const [file] = [...chunk.files];
+													preliminaryManifest[mod.nameForCondition] = {
+														id: mod.id,
+														chunks: [chunk.id, file],
+													};
+												}
+											}
+										}
+
+										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
+										writeFileSync("./dist/__client_manifest_browser.mjs", code);
+									});
+								},
+							},
+						]);
+
+						utils.appendPlugins([
+							{
+								name: "client-assets",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = "client-assets";
+									compiler.hooks.done.tap(NAME, (stats) => {
+										const statsJson = stats.toJson({
+											all: false,
+											assets: true,
+										});
+										const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
+										writeFileSync("./dist/__client_stats.mjs", code);
+									});
+								},
+							},
+						]);
+					},
 				},
 			},
 			ssr: {
@@ -81,10 +182,66 @@ export default defineConfig((env) => {
 						"import.meta.env.SSR": true,
 					},
 				},
+				tools: {
+					rspack: (config, utils) => {
+						config.dependencies ??= [];
+						config.dependencies.push("server", "web");
+
+						utils.addRules([
+							createVirtualModuleRule(
+								path.resolve("./src/lib/virtual-client-references-ssr.js"),
+								() => {
+									// fake side effect to avoid tree shaking
+									return [
+										`export default Math.random() < 0 && [`,
+										...[...clientReferences].map(
+											(file) =>
+												`import(/* webpackMode: "eager" */ ${JSON.stringify(file)}),`,
+										),
+										`]`,
+									].join("\n");
+								},
+							),
+						]);
+
+						utils.appendPlugins([
+							{
+								name: "rsc-plugin-ssr",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = "rsc-plugin-ssr";
+
+									compiler.hooks.done.tap(NAME, (stats) => {
+										const preliminaryManifest: PreliminaryManifest = {};
+
+										const statsJson = stats.toJson();
+										tinyassert(statsJson.chunks);
+										for (const chunk of statsJson.chunks) {
+											tinyassert(chunk.modules);
+											for (const mod of chunk.modules) {
+												if (!mod.nameForCondition) continue;
+												if (clientReferences.has(mod.nameForCondition)) {
+													tinyassert(mod.id);
+													preliminaryManifest[mod.nameForCondition] = {
+														id: mod.id,
+														chunks: [],
+													};
+												}
+											}
+										}
+
+										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
+										writeFileSync("./dist/__client_manifest_ssr.mjs", code);
+									});
+								},
+							},
+						]);
+					},
+				},
 			},
 		},
 		// https://rsbuild.dev/config/dev/setup-middlewares
 		dev: {
+			// writeToDisk: true, // for debugging
 			setupMiddlewares: [
 				(middlewares, server) => {
 					(globalThis as any).__rsbuild_server__ = server;
@@ -122,3 +279,13 @@ export default defineConfig((env) => {
 		},
 	};
 });
+
+function createVirtualModuleRule(file: string, load: () => string): RspackRule {
+	return {
+		resource: file,
+		use: {
+			loader: path.resolve("./src/lib/webpack/virtual-module-loader.js"),
+			options: { load },
+		},
+	};
+}

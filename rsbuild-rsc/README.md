@@ -2,6 +2,8 @@
 
 Rsbuild port of [`webpack-rsc`](https://github.com/hi-ogawa/experiments/tree/main/webpack-rsc)
 
+https://rsbuild-rsc-hiroshi.vercel.app
+
 ```sh
 pnpm dev
 pnpm build
@@ -13,11 +15,11 @@ pnpm preview
 - [x] basic flight server
 - [x] basic ssr
 - [x] basic hydration
-- [ ] client reference
+- [x] basic client reference
 - [ ] server reference
 - [ ] css
 - [ ] server hmr
-- [ ] client hmr
+- [x] client hmr
 - [ ] package
 
 ## related works

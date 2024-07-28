@@ -1,5 +1,6 @@
 import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
+import { getClientManifest } from "./lib/client-manifest";
 
 export type FlightData = {
 	node: React.ReactNode;
@@ -16,9 +17,10 @@ export async function handler(request: Request): Promise<ServerResult> {
 
 	// [react node -> flight] react server
 	const node = <Router />;
+	const { browserManifest } = await getClientManifest();
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		{ node },
-		{},
+		browserManifest,
 	);
 	return { flightStream };
 }
