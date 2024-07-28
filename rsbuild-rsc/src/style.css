@@ -1,3 +1,5 @@
+/* based on https://github.com/vitejs/vite/blob/86cf1b4b497557f09a0d9a81dc304e7a081d6198/packages/create-vite/template-react/src/index.css */
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -25,9 +27,10 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  flex-direction: column;
+  padding: 1rem 0;
+  gap: 1rem 0;
   min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
@@ -70,7 +73,6 @@ button:focus-visible {
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -103,7 +105,7 @@ button:focus-visible {
 }
 
 .card {
-  padding: 2em;
+  padding: 1rem;
 }
 
 .read-the-docs {

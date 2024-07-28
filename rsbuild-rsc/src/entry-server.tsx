@@ -16,7 +16,7 @@ export async function handler(request: Request): Promise<ServerResult> {
 	}
 
 	// [react node -> flight] react server
-	const node = <Router />;
+	const node = <Router request={request} />;
 	const { browserManifest } = await getClientManifest();
 	const flightStream = ReactServer.renderToReadableStream<FlightData>(
 		{ node },
@@ -25,12 +25,17 @@ export async function handler(request: Request): Promise<ServerResult> {
 	return { flightStream };
 }
 
-async function Router() {
+async function Router(props: { request: Request }) {
+	const url = new URL(props.request.url);
 	const { default: Layout } = await import("./routes/layout");
-	const { default: Page } = await import("./routes/page");
-	return (
-		<Layout>
-			<Page />
-		</Layout>
-	);
+	let page = <h1>Not Found</h1>; // TODO: 404 status
+	if (url.pathname === "/") {
+		const { default: Page } = await import("./routes/page");
+		page = <Page />;
+	}
+	if (url.pathname === "/stream") {
+		const { default: Page } = await import("./routes/stream/page");
+		page = <Page />;
+	}
+	return <Layout>{page}</Layout>;
 }

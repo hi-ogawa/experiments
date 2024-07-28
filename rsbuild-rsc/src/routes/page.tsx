@@ -3,7 +3,7 @@ import { Counter, Hydrated } from "./_client";
 
 export default function Page() {
 	return (
-		<div id="root">
+		<div>
 			<h1>Rsbuild RSC</h1>
 			<pre>{React.version}</pre>
 			<Hydrated />

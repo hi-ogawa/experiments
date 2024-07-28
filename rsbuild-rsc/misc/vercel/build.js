@@ -60,6 +60,7 @@ async function main() {
 		entryPoints: [join(import.meta.dirname, "entry.js")],
 		outfile: join(outDir, "functions/index.func/index.js"),
 		bundle: true,
+		minify: true,
 		format: "esm",
 		platform: "browser",
 	});
