@@ -17,7 +17,7 @@ export default defineConfig((env) => {
 	const clientReferences = new Set<string>();
 	const serverReferences = new Set<string>();
 
-	// ensure dist dir since we need to write
+	// ensure dist dir since we save some build artifact even during dev
 	mkdirSync("dist", { recursive: true });
 
 	return {
