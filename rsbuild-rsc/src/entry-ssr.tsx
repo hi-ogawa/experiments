@@ -71,7 +71,8 @@ async function importReactServer(): Promise<typeof import("./entry-server")> {
 		const mod = await import(
 			/* webpackIgnore: true */ "../server/index.cjs" as string
 		);
-		return mod.default;
+		// workaround cjs interop in NodeJs, Esbuild, etc...
+		return mod.handler ? mod : mod.default;
 	}
 }
 
