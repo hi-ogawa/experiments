@@ -32,9 +32,18 @@ export default async function handler(request: Request): Promise<Response> {
 			ssrManifest,
 		},
 	);
-	const ssrRoot = <>{flightData.node}</>;
 
 	const assets = await getClientAssets();
+	const ssrRoot = (
+		<>
+			{flightData.node}
+			{assets.css.map((href) => (
+				// @ts-expect-error precedence to force head rendering
+				// https://react.dev/reference/react-dom/components/link#special-rendering-behavior
+				<link key={href} rel="stylesheet" href={href} precedence="" />
+			))}
+		</>
+	);
 
 	// [react node => html] react dom server
 	const htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {

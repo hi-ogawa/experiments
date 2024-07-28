@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
 
 const Counter = ReactServer.registerClientReference(
@@ -9,8 +9,9 @@ const Counter = ReactServer.registerClientReference(
 
 export default function Page() {
 	return (
-		<div>
+		<div id="root">
 			<h1>Rsbuild RSC</h1>
+			<pre>{React.version}</pre>
 			<Counter />
 		</div>
 	);

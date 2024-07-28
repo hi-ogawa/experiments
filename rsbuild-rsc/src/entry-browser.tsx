@@ -3,6 +3,7 @@ import ReactDOMClient from "react-dom/client";
 import ReactClient from "react-server-dom-webpack/client.browser";
 import type { FlightData } from "./entry-server";
 import "./lib/virtual-client-references-browser.js";
+import "./style.css";
 
 async function main() {
 	const url = new URL(window.location.href);
