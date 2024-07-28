@@ -205,7 +205,10 @@ export default defineConfig((env) => {
 									loader: path.resolve(
 										"./src/lib/webpack/use-server-client-loader.js",
 									),
-									options: { serverReferences },
+									options: {
+										serverReferences,
+										runtime: "react-server-dom-webpack/client.browser",
+									},
 								},
 							},
 						]);
@@ -314,7 +317,10 @@ export default defineConfig((env) => {
 									loader: path.resolve(
 										"./src/lib/webpack/use-server-client-loader.js",
 									),
-									options: { serverReferences },
+									options: {
+										serverReferences,
+										runtime: "react-server-dom-webpack/client.edge",
+									},
 								},
 							},
 						]);

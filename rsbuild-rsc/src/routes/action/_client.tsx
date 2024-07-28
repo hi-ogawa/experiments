@@ -21,9 +21,9 @@ export function ServerCounter(props: { value: number }) {
 				</button>
 			</div>
 			<pre>
-				state = {JSON.stringify(state)}
-				<br />
 				{`isPending = ${String(isPending).padEnd(5, " ")}`}
+				<br />
+				state = {JSON.stringify(state)}
 			</pre>
 		</form>
 	);

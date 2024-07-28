@@ -3,6 +3,7 @@ import React from "react";
 import ReactServer from "react-server-dom-webpack/server.edge";
 import { getClientManifest } from "./lib/client-manifest";
 import { getServerManifest } from "./lib/server-manifest";
+import "./lib/virtual-server-references.js";
 
 export type FlightData = {
 	node: React.ReactNode;
