@@ -36,8 +36,7 @@ async function getStatsJson(): Promise<Rspack.StatsCompilation> {
 		return stats.toJson();
 	} else {
 		const { default: statsJson } = await import(
-			/* webpackIgnore: true */ "../client/stats.json" as string,
-			{ with: { type: "json" } }
+			/* webpackMode: "eager" */ "../dist/__client_stats.mjs" as string
 		);
 		return statsJson;
 	}

@@ -1,6 +1,7 @@
-import { defineConfig, type RequestHandler } from "@rsbuild/core";
+import { defineConfig, type RequestHandler, type Rspack } from "@rsbuild/core";
 import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
+import { mkdirSync, writeFileSync } from "fs";
 
 export default defineConfig((env) => ({
 	plugins: [pluginReact()],
@@ -29,6 +30,26 @@ export default defineConfig((env) => ({
 							}
 						: undefined,
 			},
+			tools: {
+				rspack: {
+					plugins: [
+						{
+							name: "client-assets",
+							apply(compiler: Rspack.Compiler) {
+								if (env.command !== "build") return;
+
+								const NAME = this.name;
+								compiler.hooks.done.tap(NAME, (stats) => {
+									const statsJson = stats.toJson({ all: false, assets: true });
+									const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
+									mkdirSync("./dist", { recursive: true });
+									writeFileSync("./dist/__client_stats.mjs", code);
+								});
+							},
+						},
+					],
+				},
+			},
 		},
 		ssr: {
 			output: {
@@ -37,7 +58,7 @@ export default defineConfig((env) => ({
 					root: "dist/server",
 				},
 				filename: {
-					js: "index.cjs",
+					js: "[name].cjs",
 				},
 				minify: false,
 			},
@@ -48,6 +69,11 @@ export default defineConfig((env) => ({
 				define: {
 					"import.meta.env.DEV": env.command === "dev",
 					"import.meta.env.SSR": true,
+				},
+			},
+			tools: {
+				rspack: {
+					dependencies: ["web"],
 				},
 			},
 		},
