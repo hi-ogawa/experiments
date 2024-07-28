@@ -2,6 +2,8 @@
 
 Rsbuild port of [`webpack-rsc`](https://github.com/hi-ogawa/experiments/tree/main/webpack-rsc)
 
+https://rsbuild-rsc-hiroshi.vercel.app
+
 ```sh
 pnpm dev
 pnpm build
