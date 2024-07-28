@@ -11,7 +11,7 @@ declare let __rsbuild_server__: ServerAPIs;
 
 export default async function handler(request: Request): Promise<Response> {
 	const reactServer = await importReactServer();
-	const { flightStream } = await reactServer.handler(request);
+	const { flightStream, actionResult } = await reactServer.handler(request);
 
 	const url = new URL(request.url);
 	if (url.searchParams.has("__f")) {
@@ -47,8 +47,8 @@ export default async function handler(request: Request): Promise<Response> {
 
 	// [react node => html] react dom server
 	const htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
-		// TODO
 		bootstrapModules: assets.js,
+		formState: actionResult,
 	});
 
 	const htmlStreamFinal = htmlStream
@@ -111,5 +111,11 @@ async function getStatsJson(): Promise<Rspack.StatsCompilation> {
 		return (
 			await import(/* webpackIgnore: true */ "../__client_stats.mjs" as string)
 		).default;
+	}
+}
+
+declare module "react-dom/server" {
+	interface RenderToReadableStreamOptions {
+		formState?: unknown;
 	}
 }

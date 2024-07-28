@@ -65,12 +65,22 @@ async function main() {
 	}
 
 	// [react node => html] react dom client
+	const formState = (await initialFlight).actionResult;
 	React.startTransition(() => {
 		ReactDOMClient.hydrateRoot(
 			document,
 			<React.StrictMode>{browserRoot}</React.StrictMode>,
+			{
+				formState,
+			},
 		);
 	});
 }
 
 main();
+
+declare module "react-dom/client" {
+	interface HydrationOptions {
+		formState?: unknown;
+	}
+}
