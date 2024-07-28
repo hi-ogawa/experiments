@@ -37,5 +37,9 @@ async function Router(props: { request: Request }) {
 		const { default: Page } = await import("./routes/stream/page");
 		page = <Page />;
 	}
+	if (url.pathname === "/action") {
+		const { default: Page } = await import("./routes/action/page");
+		page = <Page />;
+	}
 	return <Layout>{page}</Layout>;
 }
