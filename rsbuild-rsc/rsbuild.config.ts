@@ -269,17 +269,12 @@ export default defineConfig((env) => {
 	};
 });
 
-function createVirtualModuleRule(
-	file: string,
-	getCode: () => string,
-): RspackRule {
+function createVirtualModuleRule(file: string, load: () => string): RspackRule {
 	return {
 		resource: file,
 		use: {
 			loader: path.resolve("./src/lib/webpack/virtual-module-loader.js"),
-			options: {
-				getCode,
-			},
+			options: { load },
 		},
 	};
 }
