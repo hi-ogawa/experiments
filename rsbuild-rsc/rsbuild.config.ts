@@ -7,7 +7,7 @@ import {
 import { pluginReact } from "@rsbuild/plugin-react";
 import { webToNodeHandler } from "@hiogawa/utils-node";
 import path from "node:path";
-import { writeFileSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { tinyassert } from "@hiogawa/utils";
 import type { PreliminaryManifest } from "./src/lib/client-manifest";
 
@@ -17,6 +17,9 @@ export default defineConfig((env) => {
 	const clientReferences = new Set<string>();
 	// for now manually added
 	clientReferences.add(path.resolve("./src/routes/_client.tsx"));
+
+	// ensure dist dir
+	mkdirSync("dist", { recursive: true });
 
 	return {
 		plugins: [pluginReact()],
@@ -227,7 +230,7 @@ export default defineConfig((env) => {
 		},
 		// https://rsbuild.dev/config/dev/setup-middlewares
 		dev: {
-			writeToDisk: true, // for debugging for now
+			// writeToDisk: true, // for debugging
 			setupMiddlewares: [
 				(middlewares, server) => {
 					(globalThis as any).__rsbuild_server__ = server;
