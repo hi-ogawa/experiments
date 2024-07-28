@@ -13,11 +13,11 @@ pnpm preview
 - [x] basic flight server
 - [x] basic ssr
 - [x] basic hydration
-- [ ] client reference
+- [x] basic client reference
 - [ ] server reference
 - [ ] css
 - [ ] server hmr
-- [ ] client hmr
+- [x] client hmr
 - [ ] package
 
 ## related works
