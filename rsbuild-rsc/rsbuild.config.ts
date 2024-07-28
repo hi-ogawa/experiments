@@ -15,8 +15,6 @@ export default defineConfig((env) => {
 	const dev = env.command === "dev";
 
 	const clientReferences = new Set<string>();
-	// for now manually added
-	clientReferences.add(path.resolve("./src/routes/_client.tsx"));
 
 	// ensure dist dir
 	mkdirSync("dist", { recursive: true });
@@ -45,10 +43,23 @@ export default defineConfig((env) => {
 					},
 				},
 				tools: {
-					rspack: {
-						resolve: {
-							conditionNames: ["react-server", "..."],
-						},
+					rspack: (config, utils) => {
+						utils.addRules([
+							{
+								test: /\.tsx$/,
+								use: {
+									loader: path.resolve(
+										"./src/lib/webpack/use-client-loader.js",
+									),
+									options: { clientReferences },
+								},
+							},
+						]);
+						return utils.mergeConfig(config, {
+							resolve: {
+								conditionNames: ["react-server", "..."],
+							},
+						});
 					},
 				},
 			},

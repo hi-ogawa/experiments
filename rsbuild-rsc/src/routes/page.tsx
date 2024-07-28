@@ -1,17 +1,5 @@
 import React from "react";
-import ReactServer from "react-server-dom-webpack/server.edge";
-
-const Counter = ReactServer.registerClientReference(
-	{},
-	"/home/hiroshi/code/personal/experiments/rsbuild-rsc/src/routes/_client.tsx",
-	"Counter",
-) as React.ComponentType;
-
-const Hydrated = ReactServer.registerClientReference(
-	{},
-	"/home/hiroshi/code/personal/experiments/rsbuild-rsc/src/routes/_client.tsx",
-	"Hydrated",
-) as React.ComponentType;
+import { Counter, Hydrated } from "./_client";
 
 export default function Page() {
 	return (
