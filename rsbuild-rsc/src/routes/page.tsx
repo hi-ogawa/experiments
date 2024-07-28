@@ -3,7 +3,7 @@ import ReactServer from "react-server-dom-webpack/server.edge";
 
 const Counter = ReactServer.registerClientReference(
 	{},
-	"./src/routes/_client.tsx",
+	"/home/hiroshi/code/personal/experiments/rsbuild-rsc/src/routes/_client.tsx",
 	"Counter",
 ) as React.ComponentType;
 

@@ -9,6 +9,7 @@ import { webToNodeHandler } from "@hiogawa/utils-node";
 import path from "node:path";
 import { writeFileSync } from "node:fs";
 import { tinyassert } from "@hiogawa/utils";
+import type { PreliminaryManifest } from "./src/lib/client-manifest";
 
 export default defineConfig((env) => {
 	const dev = env.command === "dev";
@@ -108,10 +109,7 @@ export default defineConfig((env) => {
 									// but something similar seems possible by probing stats json
 
 									compiler.hooks.done.tap(NAME, (stats) => {
-										const preliminaryManifest: Record<
-											string,
-											{ id: string; chunks: string[] }
-										> = {};
+										const preliminaryManifest: PreliminaryManifest = {};
 
 										const statsJson = stats.toJson();
 										tinyassert(statsJson.chunks);
@@ -190,10 +188,7 @@ export default defineConfig((env) => {
 									const NAME = "rsc-plugin-ssr";
 
 									compiler.hooks.done.tap(NAME, (stats) => {
-										const preliminaryManifest: Record<
-											string,
-											{ id: string; chunks: string[] }
-										> = {};
+										const preliminaryManifest: PreliminaryManifest = {};
 
 										const statsJson = stats.toJson();
 										tinyassert(statsJson.chunks);

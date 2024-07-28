@@ -5,6 +5,7 @@ import type { FlightData } from "./entry-server";
 import { injectFlightStreamScript } from "./lib/flight-stream-script";
 import { tinyassert } from "@hiogawa/utils";
 import "./lib/virtual-client-references-ssr.js";
+import { getClientManifest } from "./lib/client-manifest";
 
 declare let __rsbuild_server__: ServerAPIs;
 
@@ -24,21 +25,23 @@ export default async function handler(request: Request): Promise<Response> {
 	const [flightStream1, flightStream2] = flightStream.tee();
 
 	// [flight => react node] react client
+	const { ssrManifest } = await getClientManifest();
 	const flightData = await ReactClient.createFromReadableStream<FlightData>(
 		flightStream1,
 		{
-			ssrManifest: {
-				moduleMap: {
-					"./src/routes/_client.tsx": {
-						Counter: {
-							id: "./src/routes/_client.tsx",
-							name: "Counter",
-							chunks: [],
-						},
-					},
-				},
-				moduleLoading: null,
-			},
+			ssrManifest,
+			// ssrManifest: {
+			// 	moduleMap: {
+			// 		"./src/routes/_client.tsx": {
+			// 			Counter: {
+			// 				id: "./src/routes/_client.tsx",
+			// 				name: "Counter",
+			// 				chunks: [],
+			// 			},
+			// 		},
+			// 	},
+			// 	moduleLoading: null,
+			// },
 		},
 	);
 	const ssrRoot = <>{flightData.node}</>;
