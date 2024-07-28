@@ -91,13 +91,15 @@ async function getClientAssets() {
 
 async function getStatsJson(): Promise<Rspack.StatsCompilation> {
 	if (import.meta.env.DEV) {
-		const stats = await __rsbuild_server__.environments.web.getStats();
-		return stats.toJson();
-	} else {
-		const { default: statsJson } = await import(
-			/* webpackIgnore: true */ "../browser/stats.json" as string,
-			{ with: { type: "json" } }
+		const fs = await import("fs");
+		return JSON.parse(
+			fs
+				.readFileSync("dist/__client_stats.mjs", "utf-8")
+				.slice("export default".length),
 		);
-		return statsJson;
+	} else {
+		return (
+			await import(/* webpackIgnore: true */ "../__client_stats.mjs" as string)
+		).default;
 	}
 }

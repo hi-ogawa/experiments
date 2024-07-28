@@ -66,14 +66,6 @@ export default defineConfig((env) => {
 						"import.meta.env.SSR": false,
 					},
 				},
-				performance: {
-					bundleAnalyze:
-						env.command === "build"
-							? {
-									generateStatsFile: true,
-								}
-							: undefined,
-				},
 				tools: {
 					rspack: (config, utils) => {
 						config.dependencies ??= [];
@@ -132,6 +124,23 @@ export default defineConfig((env) => {
 
 										const code = `export default ${JSON.stringify(preliminaryManifest, null, 2)}`;
 										writeFileSync("./dist/__client_manifest_browser.mjs", code);
+									});
+								},
+							},
+						]);
+
+						utils.appendPlugins([
+							{
+								name: "client-assets",
+								apply(compiler: Rspack.Compiler) {
+									const NAME = "client-assets";
+									compiler.hooks.done.tap(NAME, (stats) => {
+										const statsJson = stats.toJson({
+											all: false,
+											assets: true,
+										});
+										const code = `export default ${JSON.stringify(statsJson, null, 2)}`;
+										writeFileSync("./dist/__client_stats.mjs", code);
 									});
 								},
 							},
