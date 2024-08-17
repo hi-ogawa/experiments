@@ -1,0 +1,16 @@
+[package]
+name = "oxc-nft"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+oxc = { version = "0.24.2", features = ["transformer", "codegen", "semantic"] }
+oxc_traverse = { version = "0.24.2" }
+
+[dev-dependencies]
+insta = { version = "1.39.0", features = ["glob"] }
+
+[profile.dev.package]
+insta.opt-level = 3
+similar.opt-level = 3
