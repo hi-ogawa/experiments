@@ -403,15 +403,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "oxc-nft"
-version = "0.0.0"
-dependencies = [
- "insta",
- "oxc",
- "oxc_traverse",
-]
-
-[[package]]
 name = "oxc_allocator"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -508,6 +499,15 @@ dependencies = [
  "oxc_index",
  "oxc_semantic",
  "oxc_span",
+]
+
+[[package]]
+name = "oxc_nft"
+version = "0.0.0"
+dependencies = [
+ "insta",
+ "oxc",
+ "oxc_traverse",
 ]
 
 [[package]]
