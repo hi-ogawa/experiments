@@ -7,16 +7,24 @@ async function main() {
 		name: "host",
 		remotes: [
 			{
-				name: "remote-simple",
-				entry: "http://localhost:5000/simple.js",
+				name: "simple-esm",
+				entry: "http://localhost:5000/simple/esm.js",
+				// RemoteEntryType
+				// https://github.com/module-federation/core/blob/b90fa7ded8786022d900081dd7c871f317c5e4b9/packages/runtime/src/type/config.ts#L17
+				type: "module",
 			},
 		],
 		shared: {},
 	});
-	await loadRemote("remote-simple");
+	const remoteSimpleEsm = await loadRemote<any>("simple-esm");
 
 	const el = document.getElementById("app")!;
-	ReactDOMClient.createRoot(el).render(<App />);
+	ReactDOMClient.createRoot(el).render(
+		<>
+			<App />
+			<pre>remoteSimpleEsm.add(1, 2) = {remoteSimpleEsm.add(1, 2)}</pre>
+		</>,
+	);
 }
 
 main().catch((e) => {
@@ -24,4 +32,5 @@ main().catch((e) => {
 	el.style.color = "red";
 	el.textContent = e.stack;
 	document.body.appendChild(el);
+	throw e;
 });
