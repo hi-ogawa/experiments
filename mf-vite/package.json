@@ -1,5 +1,5 @@
 {
-	"name": "@hiogawa/mf2-vite",
+	"name": "@hiogawa/mf-vite",
 	"private": true,
 	"type": "module",
 	"scripts": {

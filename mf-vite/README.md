@@ -1,7 +1,6 @@
 Experimenting with [Module Federation](https://module-federation.io)
 
 ```sh
-pnpm i
 pnpm dev
 ```
 
