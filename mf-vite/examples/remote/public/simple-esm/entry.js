@@ -5,7 +5,7 @@
 export async function init(shareScope, initScope, remoteEntryInitOptions) {}
 
 export function get(id) {
-	return () => ({ add });
+	return async () => ({ add });
 }
 
 function add(x, y) {

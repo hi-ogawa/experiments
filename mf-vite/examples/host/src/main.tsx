@@ -23,6 +23,11 @@ async function main() {
 				entry: "http://localhost:5000/simple-shared/entry.js",
 				type: "module",
 			},
+			{
+				name: "simple-vite",
+				entry: "http://localhost:5000/src/simple-vite/mf-manifest.json",
+				type: "module",
+			},
 		],
 		shared: {
 			react: {
@@ -30,10 +35,11 @@ async function main() {
 			},
 		},
 	});
+
 	const remoteSimpleEsm = await loadRemote<any>("simple-esm");
 	const remoteSimpleManifest = await loadRemote<any>("simple-manifest");
 	const remoteSimpleShared = await loadRemote<any>("simple-shared");
-	console.log(remoteSimpleShared);
+	const remoteSimpleVite = await loadRemote<any>("simple-vite");
 
 	const el = document.getElementById("app")!;
 	ReactDOMClient.createRoot(el).render(
@@ -47,6 +53,7 @@ async function main() {
 				remoteSimpleShared.Component:{" "}
 				{<remoteSimpleShared.Component test="hello" />}
 			</pre>
+			<pre>remoteSimpleVite.App: {<remoteSimpleVite.App test="hello" />}</pre>
 		</>,
 	);
 }

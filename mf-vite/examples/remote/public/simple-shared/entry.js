@@ -5,10 +5,12 @@
 /** @type {import("react")} */
 let React;
 
+/** @type {import("@module-federation/runtime/types").RemoteEntryExports['init']} */
 export async function init(shareScope, initScope, remoteEntryInitOptions) {
 	React = (await shareScope.react[0].get())();
 }
 
+/** @type {import("@module-federation/runtime/types").RemoteEntryExports['get']} */
 export function get(id) {
 	return () => ({ Component });
 }
