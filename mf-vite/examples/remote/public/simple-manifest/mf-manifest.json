@@ -1,1 +1,24 @@
-{}
+{
+	"// based on https://github.com/module-federation/core/blob/b90fa7ded8786022d900081dd7c871f317c5e4b9/packages/runtime/__tests__/resources/snapshot/remote1/federation-manifest.json": "",
+	"id": "simple-manifest",
+	"name": "simple-manifest",
+	"metaData": {
+		"name": "simple-manifest",
+		"publicPath": "http://localhost:5000/",
+		"buildInfo": {
+			"buildVersion": "custom"
+		},
+		"remoteEntry": {
+			"name": "entry.js",
+			"path": "simple-manifest",
+			"type": "module"
+		},
+		"types": {
+			"name": "index.d.ts",
+			"path": "./"
+		}
+	},
+	"remotes": [],
+	"shared": [],
+	"exposes": []
+}

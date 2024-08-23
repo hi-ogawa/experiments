@@ -21,15 +21,16 @@ async function main() {
 		shared: {},
 	});
 	const remoteSimpleEsm = await loadRemote<any>("simple-esm");
-	// const remoteSimpleManifest = await loadRemote<any>("simple-manifest");
-	// console.log(remoteSimpleManifest);
+	const remoteSimpleManifest = await loadRemote<any>("simple-manifest");
 
 	const el = document.getElementById("app")!;
 	ReactDOMClient.createRoot(el).render(
 		<>
 			<App />
 			<pre>remoteSimpleEsm.add(1, 2) = {remoteSimpleEsm.add(1, 2)}</pre>
-			{/* <pre>remoteSimpleManifest.add(1, 2) = {remoteSimpleManifest.add(1, 2)}</pre> */}
+			<pre>
+				remoteSimpleManifest.mul(2, 3) = {remoteSimpleManifest.mul(2, 3)}
+			</pre>
 		</>,
 	);
 }
