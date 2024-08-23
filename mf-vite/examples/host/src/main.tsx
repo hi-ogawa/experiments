@@ -44,7 +44,8 @@ async function main() {
 				remoteSimpleManifest.mul(2, 3) = {remoteSimpleManifest.mul(2, 3)}
 			</pre>
 			<pre>
-				remoteSimpleShared.Component: {<remoteSimpleShared.Component />}
+				remoteSimpleShared.Component:{" "}
+				{<remoteSimpleShared.Component test="hello" />}
 			</pre>
 		</>,
 	);

@@ -17,6 +17,7 @@ function Component(props) {
 	return React.createElement(
 		React.Fragment,
 		null,
-		`import.meta.url = ${import.meta.url}`,
+		`\n  props = ${JSON.stringify(props)}`,
+		`\n  import.meta.url = ${import.meta.url}`,
 	);
 }
