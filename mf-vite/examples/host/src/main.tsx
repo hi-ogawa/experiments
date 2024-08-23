@@ -1,4 +1,5 @@
 import { init, loadRemote } from "@module-federation/runtime";
+import React from "react";
 import ReactDOMClient from "react-dom/client";
 import { App } from "./app";
 
@@ -17,11 +18,22 @@ async function main() {
 				name: "simple-manifest",
 				entry: "http://localhost:5000/simple-manifest/mf-manifest.json",
 			},
+			{
+				name: "simple-shared",
+				entry: "http://localhost:5000/simple-shared/entry.js",
+				type: "module",
+			},
 		],
-		shared: {},
+		shared: {
+			react: {
+				lib: () => React,
+			},
+		},
 	});
 	const remoteSimpleEsm = await loadRemote<any>("simple-esm");
 	const remoteSimpleManifest = await loadRemote<any>("simple-manifest");
+	const remoteSimpleShared = await loadRemote<any>("simple-shared");
+	console.log(remoteSimpleShared);
 
 	const el = document.getElementById("app")!;
 	ReactDOMClient.createRoot(el).render(
@@ -30,6 +42,9 @@ async function main() {
 			<pre>remoteSimpleEsm.add(1, 2) = {remoteSimpleEsm.add(1, 2)}</pre>
 			<pre>
 				remoteSimpleManifest.mul(2, 3) = {remoteSimpleManifest.mul(2, 3)}
+			</pre>
+			<pre>
+				remoteSimpleShared.Component: {<remoteSimpleShared.Component />}
 			</pre>
 		</>,
 	);
