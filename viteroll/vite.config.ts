@@ -34,7 +34,7 @@ function viteroll(): Plugin {
 		rolldownBuild = await rolldown.rolldown({
 			dev: true,
 			input: {
-				main: "./src/main.ts",
+				index: "./src/index.ts",
 			},
 			// TODO: reuse plugins via loadConfigFromFile?
 			plugins: [],
@@ -72,15 +72,15 @@ function viteroll(): Plugin {
 								<script src="/@vite/client" type="module"></script>
 							</head>
 							<body>
-								<script src="/main.js"></script>
+								<script src="/index.js"></script>
 							</body>
 						</html>
 					`);
 					return;
 				}
 				// js
-				if (url.pathname === "/main.js") {
-					let content = fs.readFileSync("dist/rolldown/main.js", "utf-8");
+				if (url.pathname === "/index.js") {
+					let content = fs.readFileSync("dist/rolldown/index.js", "utf-8");
 					// patch runtime to remove WebSocket(`ws://localhost:8080`)
 					content = content.replace(/const socket =.*};/s, "");
 					send(req, res, content, "js", {});
