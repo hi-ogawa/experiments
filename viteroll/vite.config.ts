@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import * as rolldown from "rolldown";
 import {
 	type Plugin,
@@ -39,6 +38,7 @@ function viteroll(): Plugin {
 			// TODO: reuse plugins via loadConfigFromFile?
 			plugins: [],
 		});
+		// TODO: use `write` instead of `generate` so it's easier to debug
 		rolldownOutput = await rolldownBuild.write({
 			dir: "dist/rolldown",
 			format: "app",
@@ -80,8 +80,8 @@ function viteroll(): Plugin {
 				}
 				// js
 				if (url.pathname === "/index.js") {
-					let content = fs.readFileSync("dist/rolldown/index.js", "utf-8");
 					// patch runtime to remove WebSocket(`ws://localhost:8080`)
+					let content = rolldownOutput.output[0].code;
 					content = content.replace(/const socket =.*};/s, "");
 					send(req, res, content, "js", {});
 					return;
