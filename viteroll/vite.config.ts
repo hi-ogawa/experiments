@@ -38,12 +38,12 @@ function viteroll(): Plugin {
 			// TODO: reuse plugins via loadConfigFromFile?
 			plugins: [],
 		});
-		// TODO: use `write` instead of `generate` so it's easier to debug
+		// `generate` works but uses `write` so it's easier to see output and debug
 		rolldownOutput = await rolldownBuild.write({
 			dir: "dist/rolldown",
 			format: "app",
 		});
-		// TODO: some getter access freezes if done later?
+		// TODO: crashes on getter access later?
 		rolldownOutput = JSON.parse(JSON.stringify(rolldownOutput, null, 2));
 	}
 
