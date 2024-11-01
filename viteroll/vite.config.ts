@@ -72,6 +72,7 @@ function viteroll(): Plugin {
 								<script src="/@vite/client" type="module"></script>
 							</head>
 							<body>
+								<div id="root"></div>
 								<script src="/index.js"></script>
 							</body>
 						</html>
@@ -82,7 +83,7 @@ function viteroll(): Plugin {
 				if (url.pathname === "/index.js") {
 					// patch runtime to remove WebSocket(`ws://localhost:8080`)
 					let content = rolldownOutput.output[0].code;
-					content = content.replace(/const socket =.*};/s, "");
+					content = content.replace(/const socket =.*?\n};/s, "");
 					send(req, res, content, "js", {});
 					return;
 				}
@@ -96,15 +97,25 @@ function viteroll(): Plugin {
 			await rolldownBuild.close();
 		},
 		async handleHotUpdate(ctx) {
-			// full reload
-			if (rolldownOutput.output[0].moduleIds.includes(ctx.file)) {
+			const moduleIds = rolldownOutput.output[0].moduleIds;
+			if (moduleIds.includes(ctx.file)) {
+				// hmr
+				if (process.env["VITEROLL_HMR"]) {
+					const content = await ctx.read();
+					if (content.includes("module.hot.accept")) {
+						logger.info(`hmr '${ctx.file}'`, { timestamp: true });
+						const result = await rolldownBuild.experimental_hmr_rebuild([
+							ctx.file,
+						]);
+						server.ws.send("rolldown-hmr-update", result);
+						return [];
+					}
+				}
+				// full reload
 				logger.info(`full-reload '${ctx.file}'`, { timestamp: true });
 				await fullBuild();
 				server.ws.send({ type: "full-reload", path: ctx.file });
 			}
-
-			// TODO: hmr
-			rolldownBuild.experimental_hmr_rebuild;
 		},
 	};
 }
