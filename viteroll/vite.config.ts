@@ -16,6 +16,9 @@ export default defineConfig({
 		noDiscovery: true,
 	},
 	plugins: [viteroll()],
+	define: {
+		__TEST_DEFINE__: `"ok"`,
+	},
 });
 
 function viteroll(): Plugin {
@@ -108,6 +111,11 @@ function viteroll(): Plugin {
 					let content = rolldownOutput.output[0].code;
 					content = content.replace(/const socket =.*?\n};/s, "");
 					send(req, res, content, "js", {});
+					return;
+				}
+				// patch out /@vite/env
+				if (url.pathname.includes("/vite/dist/client/env.mjs")) {
+					send(req, res, "/* patch no-op */", "js", {});
 					return;
 				}
 				next();

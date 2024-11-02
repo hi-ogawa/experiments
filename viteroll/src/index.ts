@@ -2,6 +2,8 @@ import { h, render } from "preact";
 import { useState } from "preact/hooks";
 import { depHmr } from "./dep-hmr";
 
+declare let __TEST_DEFINE__: any;
+
 function App() {
 	const [count, setCount] = useState(0);
 	return h(
@@ -10,6 +12,12 @@ function App() {
 		h("h3", {}, "Test"),
 		h("button", { onClick: () => setCount((c) => c + 1) }, `Count: ${count}`),
 		h("p", {}, `[dep-hmr.ts] `, depHmr),
+		h(
+			"p",
+			{},
+			`[define] `,
+			typeof __TEST_DEFINE__ !== "undefined" ? __TEST_DEFINE__ : "NOT OK",
+		),
 	);
 }
 
