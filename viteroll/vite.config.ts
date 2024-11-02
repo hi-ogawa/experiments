@@ -95,9 +95,11 @@ function viteroll(): Plugin {
 				mainFields: config.resolve.mainFields,
 				symlinks: config.resolve.preserveSymlinks,
 			},
+			define: config.define,
 			plugins: [
-				rolldownExperimental.transformPlugin(),
-				rolldownExperimental.replacePlugin(config.define),
+				// TODO: not necessary?
+				// rolldownExperimental.transformPlugin(),
+				// rolldownExperimental.replacePlugin(config.define),
 				rolldownExperimental.aliasPlugin({
 					entries: config.resolve.alias,
 				}),

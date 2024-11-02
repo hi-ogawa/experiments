@@ -4,7 +4,9 @@ import { h, render } from "preact";
 import { useState } from "preact/hooks";
 import { depHmr } from "./dep-hmr";
 
-declare let __TEST_DEFINE__: any;
+// TODO: `declare` prevents define replacement
+// https://github.com/oxc-project/oxc/issues/7090
+// declare let __TEST_DEFINE__: any;
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -18,6 +20,7 @@ function App() {
 			"p",
 			{},
 			`[define] `,
+			// @ts-expect-error
 			typeof __TEST_DEFINE__ !== "undefined" ? __TEST_DEFINE__ : "NOT OK",
 		),
 		h("p", {}, `[virtual:test] `, virtualTest),
