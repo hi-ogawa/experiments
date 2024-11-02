@@ -12,6 +12,6 @@ if (module.hot) {
 
 	module.hot.accept(() => {
 		registry.updators.forEach((f: any) => f());
-		(globalThis as any).__main();
+		(globalThis as any).__hmr();
 	});
 }

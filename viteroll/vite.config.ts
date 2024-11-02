@@ -104,7 +104,13 @@ function viteroll(): Plugin {
 								<meta charset="UTF-8" />
 								<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 								<title>vite bundled dev</title>
-								<script src="/@vite/client" type="module"></script>
+								<script type="module">
+									import { createHotContext } from "/@vite/client";
+									const hot = createHotContext("/__rolldown");
+									hot.on("rolldown:hmr", (data) => {
+										(0, eval)(data[1]);
+									});
+								</script>
 							</head>
 							<body>
 								<div id="root"></div>
@@ -147,7 +153,7 @@ function viteroll(): Plugin {
 						const result = await rolldownBuild.experimental_hmr_rebuild([
 							ctx.file,
 						]);
-						server.ws.send("rolldown-hmr-update", result);
+						server.ws.send("rolldown:hmr", result);
 						return [];
 					}
 				}

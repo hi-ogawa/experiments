@@ -28,13 +28,4 @@ function main() {
 main();
 
 // quick and dirty HMR
-(globalThis as any).__main = main;
-
-// TODO: no top level await?
-(async () => {
-	const { createHotContext } = await import(String("/@vite/client"));
-	const hot = createHotContext("/__rolldown");
-	hot.on("rolldown-hmr-update", (data: any) => {
-		(0, eval)(data[1]);
-	});
-})();
+(globalThis as any).__hmr = main;
