@@ -1,9 +1,12 @@
+import assert from "node:assert";
 import * as rolldown from "rolldown";
 import {
 	type Plugin,
+	type ResolvedConfig,
 	type ViteDevServer,
 	createLogger,
 	defineConfig,
+	loadConfigFromFile,
 	send,
 } from "vite";
 
@@ -19,6 +22,9 @@ function viteroll(): Plugin {
 	let rolldownBuild: rolldown.RolldownBuild;
 	let rolldownOutput: rolldown.RolldownOutput;
 	let server: ViteDevServer;
+	let config: ResolvedConfig;
+
+	// TODO: log build time
 	const logger = createLogger("info", {
 		prefix: "[rolldown]",
 		allowClearScreen: false,
@@ -29,16 +35,30 @@ function viteroll(): Plugin {
 			await rolldownBuild?.close();
 		}
 
-		// TODO: log build time
+		// load fresh user plugins
+		assert(config.configFile);
+		const loaded = await loadConfigFromFile(
+			{ command: "serve", mode: "development" },
+			config.configFile,
+			config.root,
+		);
+		assert(loaded);
+		const plugins = loaded.config.plugins?.filter(
+			(v) => v && "name" in v && v.name !== viteroll.name,
+		);
+
 		rolldownBuild = await rolldown.rolldown({
 			dev: true,
 			input: {
 				index: "./src/index.ts",
 			},
-			// TODO: reuse plugins via loadConfigFromFile?
-			plugins: [],
+			// TODO: reuse more vite configs?
+			define: config.define,
+			cwd: config.root,
+			plugins: plugins as any,
 		});
-		// `generate` works but uses `write` so it's easier to see output and debug
+
+		// `generate` works but we use `write` so it's easier to see output and debug
 		rolldownOutput = await rolldownBuild.write({
 			dir: "dist/rolldown",
 			format: "app",
@@ -53,6 +73,9 @@ function viteroll(): Plugin {
 			return {
 				appType: "custom",
 			};
+		},
+		configResolved(config_) {
+			config = config_;
 		},
 		configureServer(server_) {
 			server = server_;
