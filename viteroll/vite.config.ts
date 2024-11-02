@@ -65,6 +65,7 @@ function viteroll(): Plugin {
 		rolldownOutput = await rolldownBuild.write({
 			dir: "dist/rolldown",
 			format: "app",
+			sourcemap: "inline",
 		});
 		// TODO: crashes on getter access later?
 		rolldownOutput = JSON.parse(JSON.stringify(rolldownOutput, null, 2));
@@ -131,7 +132,7 @@ function viteroll(): Plugin {
 			const moduleIds = rolldownOutput.output[0].moduleIds;
 			if (moduleIds.includes(ctx.file)) {
 				// hmr
-				if (process.env["VITEROLL_HMR"]) {
+				if (process.env["VITEROLL_HMR"] !== "false") {
 					const content = await ctx.read();
 					if (content.includes("module.hot.accept")) {
 						logger.info(`hmr '${ctx.file}'`, { timestamp: true });

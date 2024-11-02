@@ -1,4 +1,4 @@
-export let depHmr = "Edit Me!";
+export let depHmr = "Edit me!";
 
 if (module.hot) {
 	// quick and dirty HMR runtime similar to
