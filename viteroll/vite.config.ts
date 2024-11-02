@@ -60,7 +60,6 @@ function viteroll(): Plugin {
 	let server: ViteDevServer;
 	let config: ResolvedConfig;
 
-	// TODO: log build time
 	const logger = createLogger("info", {
 		prefix: "[rolldown]",
 		allowClearScreen: false,
@@ -83,6 +82,7 @@ function viteroll(): Plugin {
 			(v) => v && "name" in v && v.name !== viteroll.name,
 		);
 
+		console.time("[rolldown:build]");
 		rolldownBuild = await rolldown.rolldown({
 			dev: true,
 			input: {
@@ -115,6 +115,7 @@ function viteroll(): Plugin {
 		});
 		// TODO: crashes on getter access later?
 		rolldownOutput = JSON.parse(JSON.stringify(rolldownOutput, null, 2));
+		console.timeEnd("[rolldown:build]");
 	}
 
 	return {
@@ -188,9 +189,11 @@ function viteroll(): Plugin {
 					const content = await ctx.read();
 					if (content.includes("module.hot.accept")) {
 						logger.info(`hmr '${ctx.file}'`, { timestamp: true });
+						console.time("[rolldown:hmr]");
 						const result = await rolldownBuild.experimental_hmr_rebuild([
 							ctx.file,
 						]);
+						console.timeEnd("[rolldown:hmr]");
 						server.ws.send("rolldown:hmr", result);
 						return [];
 					}
