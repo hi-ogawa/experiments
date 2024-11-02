@@ -141,7 +141,7 @@ function viteroll(): Plugin {
 							<head>
 								<meta charset="UTF-8" />
 								<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-								<title>vite bundled dev</title>
+								<title>viteroll</title>
 								<script type="module">
 									import { createHotContext } from "/@vite/client";
 									const hot = createHotContext("/__rolldown");
