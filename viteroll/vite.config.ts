@@ -55,9 +55,17 @@ function viteroll(): Plugin {
 			input: {
 				index: "./src/index.ts",
 			},
-			// TODO: reuse more vite configs?
+			// TODO: define not working?
 			define: config.define,
 			cwd: config.root,
+			platform: "browser",
+			resolve: {
+				conditionNames: config.resolve.conditions,
+				mainFields: config.resolve.mainFields,
+				symlinks: config.resolve.preserveSymlinks,
+				// TODO: rollup alias
+				// alias: config.resolve.alias as any,
+			},
 			plugins: plugins as any,
 		});
 
