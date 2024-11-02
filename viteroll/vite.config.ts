@@ -113,7 +113,8 @@ function viteroll(): Plugin {
 			format: "app",
 			sourcemap: "inline",
 		});
-		// TODO: crashes on getter access later?
+		// TODO: it freezes when accessing getter later so serialize it early.
+		// (it looks like this doesn't happen anymore on latest rolldown)
 		rolldownOutput = JSON.parse(JSON.stringify(rolldownOutput, null, 2));
 		console.timeEnd("[rolldown:build]");
 	}
@@ -187,6 +188,8 @@ function viteroll(): Plugin {
 				// hmr
 				if (process.env["VITEROLL_HMR"] !== "false") {
 					const content = await ctx.read();
+					// TODO: fow now target only self-accepting.
+					// `rolldown_runtime.patch` crashes when patching non self-accepting entry.
 					if (content.includes("module.hot.accept")) {
 						logger.info(`hmr '${ctx.file}'`, { timestamp: true });
 						console.time("[rolldown:hmr]");
