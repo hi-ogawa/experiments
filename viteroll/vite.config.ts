@@ -1,5 +1,6 @@
 import assert from "node:assert";
 import * as rolldown from "rolldown";
+import * as rolldownExperimental from "rolldown/experimental";
 import {
 	type Plugin,
 	type ResolvedConfig,
@@ -48,6 +49,9 @@ export default defineConfig({
 	define: {
 		__TEST_DEFINE__: `"ok"`,
 	},
+	resolve: {
+		alias: {},
+	},
 });
 
 function viteroll(): Plugin {
@@ -84,19 +88,19 @@ function viteroll(): Plugin {
 			input: {
 				index: "./src/index.ts",
 			},
-			// TODO: define not working?
-			define: config.define,
 			cwd: config.root,
 			platform: "browser",
 			resolve: {
 				conditionNames: config.resolve.conditions,
 				mainFields: config.resolve.mainFields,
 				symlinks: config.resolve.preserveSymlinks,
-				// TODO: need rollup alias?
-				// alias: config.resolve.alias as any,
 			},
 			plugins: [
-				// ...config.plugins.filter(p => p.name === 'alias'),
+				rolldownExperimental.transformPlugin(),
+				rolldownExperimental.replacePlugin(config.define),
+				rolldownExperimental.aliasPlugin({
+					entries: config.resolve.alias,
+				}),
 				...(plugins as any),
 			],
 		});
