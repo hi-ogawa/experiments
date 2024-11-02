@@ -92,10 +92,13 @@ function viteroll(): Plugin {
 				conditionNames: config.resolve.conditions,
 				mainFields: config.resolve.mainFields,
 				symlinks: config.resolve.preserveSymlinks,
-				// TODO: rollup alias
+				// TODO: need rollup alias?
 				// alias: config.resolve.alias as any,
 			},
-			plugins: plugins as any,
+			plugins: [
+				// ...config.plugins.filter(p => p.name === 'alias'),
+				...(plugins as any),
+			],
 		});
 
 		// `generate` works but we use `write` so it's easier to see output and debug
