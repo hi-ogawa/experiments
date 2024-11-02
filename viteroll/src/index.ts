@@ -1,3 +1,5 @@
+// @ts-ignore
+import virtualTest from "virtual:test";
 import { h, render } from "preact";
 import { useState } from "preact/hooks";
 import { depHmr } from "./dep-hmr";
@@ -18,6 +20,7 @@ function App() {
 			`[define] `,
 			typeof __TEST_DEFINE__ !== "undefined" ? __TEST_DEFINE__ : "NOT OK",
 		),
+		h("p", {}, `[virtual:test] `, virtualTest),
 	);
 }
 

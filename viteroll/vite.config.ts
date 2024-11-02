@@ -15,7 +15,36 @@ export default defineConfig({
 	optimizeDeps: {
 		noDiscovery: true,
 	},
-	plugins: [viteroll()],
+	plugins: [
+		viteroll(),
+		{
+			name: "test-virtual",
+			resolveId: {
+				filter: {
+					id: {
+						include: ["virtual:test"],
+					},
+				},
+				handler(source) {
+					if (source === "virtual:test") {
+						return `\0virtual:test`;
+					}
+				},
+			},
+			load: {
+				filter: {
+					id: {
+						include: ["\0virtual:test"],
+					},
+				},
+				handler(id) {
+					if (id === "\0virtual:test") {
+						return `export default "ok"`;
+					}
+				},
+			},
+		} satisfies rolldown.Plugin as Plugin,
+	],
 	define: {
 		__TEST_DEFINE__: `"ok"`,
 	},
