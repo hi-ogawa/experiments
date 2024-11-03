@@ -3,13 +3,14 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "NODE_OPTIONS=--experimental-strip-types vite dev",
 		"lint": "biome check --write ."
 	},
 	"dependencies": {
 		"preact": "^10.24.3"
 	},
 	"devDependencies": {
+		"@hiogawa/viteroll": "workspace:*",
 		"@biomejs/biome": "^1.9.4",
 		"@types/node": "^22.8.5",
 		"magic-string": "^0.30.12",
@@ -17,6 +18,12 @@
 		"sirv": "^3.0.0",
 		"typescript": "^5.6.3",
 		"vite": "^5.4.10"
+	},
+	"pnpm": {
+		"overrides": {
+			"rolldown": "$rolldown",
+			"vite": "$vite"
+		}
 	},
 	"packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }

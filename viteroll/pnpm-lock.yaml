@@ -4,6 +4,10 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  rolldown: file:rolldown-0.13.2.tgz
+  vite: ^5.4.10
+
 importers:
 
   .:
@@ -15,6 +19,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.9.4
         version: 1.9.4
+      '@hiogawa/viteroll':
+        specifier: workspace:*
+        version: link:packages/viteroll
       '@types/node':
         specifier: ^22.8.5
         version: 22.8.5
@@ -30,6 +37,22 @@ importers:
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
+      vite:
+        specifier: ^5.4.10
+        version: 5.4.10(@types/node@22.8.5)
+
+  packages/viteroll:
+    dependencies:
+      magic-string:
+        specifier: ^0.30.8
+        version: 0.30.12
+      sirv:
+        specifier: ^3.0.0
+        version: 3.0.0
+    devDependencies:
+      rolldown:
+        specifier: file:../../rolldown-0.13.2.tgz
+        version: file:rolldown-0.13.2.tgz
       vite:
         specifier: ^5.4.10
         version: 5.4.10(@types/node@22.8.5)
