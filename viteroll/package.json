@@ -4,6 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"test-e2e": "playwright test",
 		"lint": "biome check --write ."
 	},
 	"dependencies": {
@@ -13,6 +14,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.48.2",
 		"@types/node": "^22.8.5",
 		"preact": "^10.24.3",
 		"rolldown": "file:rolldown-0.13.2.tgz",
