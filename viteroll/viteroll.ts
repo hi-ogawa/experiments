@@ -51,7 +51,7 @@ export function viteroll(): Plugin {
 			resolve: {
 				conditionNames: config.resolve.conditions,
 				mainFields: config.resolve.mainFields,
-				symlinks: config.resolve.preserveSymlinks,
+				symlinks: !config.resolve.preserveSymlinks,
 			},
 			define: config.define,
 			plugins: [
