@@ -1,6 +1,6 @@
-import { viteroll } from "@hiogawa/viteroll";
 import * as rolldown from "rolldown";
 import { type Plugin, defineConfig } from "vite";
+import { viteroll } from "./node_modules/@hiogawa/viteroll";
 
 export default defineConfig({
 	clearScreen: false,
