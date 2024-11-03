@@ -101,6 +101,8 @@ jobs:
 
   viteroll:
     runs-on: ubuntu-latest
+    # TODO: probably need a proper rolldown napi-rs build?
+    # if: false
     defaults:
       run:
         working-directory: ./viteroll

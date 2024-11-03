@@ -2,6 +2,7 @@
 	"name": "@hiogawa/viteroll",
 	"version": "0.0.0-pre.0",
 	"type": "module",
+	"files": ["viteroll.ts"],
 	"scripts": {
 		"dev": "vite dev",
 		"test-e2e": "playwright test",
