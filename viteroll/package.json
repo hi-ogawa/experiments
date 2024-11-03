@@ -5,7 +5,9 @@
 	"scripts": {
 		"dev": "vite dev",
 		"test-e2e": "playwright test",
-		"lint": "biome check --write ."
+		"tsc": "tsc -b",
+		"lint": "biome check --write .",
+		"lint-check": "biome check ."
 	},
 	"dependencies": {
 		"magic-string": "^0.30.12",

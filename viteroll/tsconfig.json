@@ -9,6 +9,7 @@
 		"module": "ESNext",
 		"target": "ESNext",
 		"lib": ["ESNext", "DOM"],
+		"skipLibCheck": true,
 		"noEmit": true
 	}
 }
