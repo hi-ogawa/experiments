@@ -22,6 +22,8 @@ export default defineConfig({
 	webServer: {
 		command,
 		port,
+		stdout: "pipe",
+		stderr: "pipe",
 	},
 	forbidOnly: !!process.env["CI"],
 	retries: process.env["CI"] ? 2 : 0,
