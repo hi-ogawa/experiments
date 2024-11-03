@@ -1,0 +1,15 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite"
+	},
+	"dependencies": {
+		"react": "latest",
+		"react-dom": "latest"
+	},
+	"devDependencies": {
+		"@types/react": "latest",
+		"@types/react-dom": "latest"
+	}
+}
