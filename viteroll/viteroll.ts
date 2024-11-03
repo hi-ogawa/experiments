@@ -110,6 +110,29 @@ export function viteroll(viterollOptions?: {
 			server.middlewares.use(
 				sirv(config.build.outDir, { dev: true, extensions: ["html"] }),
 			);
+
+			// full build on non self accepting entry
+			server.ws.on("rolldown:hmr-deadend", async (data) => {
+				logger.info(`hmr-deadend '${data.moduleId}'`, { timestamp: true });
+				await fullBuild();
+				server.ws.send({ type: "full-reload" });
+			});
+
+			// disable automatic html reload
+			// https://github.com/vitejs/vite/blob/01cf7e14ca63988c05627907e72b57002ffcb8d5/packages/vite/src/node/server/hmr.ts#L590-L595
+			const oldSend = server.ws.send;
+			server.ws.send = function (...args: any) {
+				const arg = args[0];
+				if (
+					arg &&
+					typeof arg === "object" &&
+					arg.type === "full-reload" &&
+					arg.path === "/index.html"
+				) {
+					return;
+				}
+				oldSend.apply(this, args);
+			};
 		},
 		async buildStart() {
 			await fullBuild();
@@ -118,23 +141,13 @@ export function viteroll(viterollOptions?: {
 			await rolldownBuild.close();
 		},
 		async handleHotUpdate(ctx) {
-			const moduleIds = rolldownOutput.output[0].moduleIds;
-			if (moduleIds.includes(ctx.file)) {
-				// hmr
-				if (process.env["VITEROLL_HMR"] !== "false") {
-					logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-					console.time("[rolldown:hmr]");
-					const result = await rolldownBuild.experimental_hmr_rebuild([
-						ctx.file,
-					]);
-					console.timeEnd("[rolldown:hmr]");
-					server.ws.send("rolldown:hmr", result);
-					return [];
-				}
-				// full reload
-				logger.info(`full-reload '${ctx.file}'`, { timestamp: true });
-				await fullBuild();
-				server.ws.send({ type: "full-reload", path: ctx.file });
+			const output = rolldownOutput.output[0];
+			if (output.moduleIds.includes(ctx.file)) {
+				logger.info(`hmr '${ctx.file}'`, { timestamp: true });
+				console.time("[rolldown:hmr]");
+				const result = await rolldownBuild.experimental_hmr_rebuild([ctx.file]);
+				console.timeEnd("[rolldown:hmr]");
+				server.ws.send("rolldown:hmr", result);
 				return [];
 			}
 		},
@@ -200,6 +213,12 @@ function viterollEntryPlugin(viterollOptions?: {
 						hot.on("rolldown:hmr", (data) => {
 							(0, eval)(data[1]);
 						});
+						hot.on("vite:beforeFullReload", (data) => {
+							if (data.path === '/index.html') {
+								throw new Error("boom");
+							}
+						});
+						window.__rolldown_hot = hot;
 					</script>
 					`,
 				);
@@ -219,10 +238,22 @@ function viterollEntryPlugin(viterollOptions?: {
 			},
 		},
 		generateBundle(_options, bundle) {
-			// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
 			const entry = bundle["index.js"];
 			assert(entry.type === "chunk");
+			// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
 			entry.code = entry.code.replace(/const socket =.*?\n};/s, "");
+			// trigger full rebuild on non-accepting entry invalidation
+			entry.code = entry.code
+				.replace("parents: [parent],", "parents: parent ? [parent] : [],")
+				.replace(
+					"for (var i = 0; i < module.parents.length; i++) {",
+					`
+					if (module.parents.length === 0) {
+						__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
+						break;
+					}
+					for (var i = 0; i < module.parents.length; i++) {`,
+				);
 		},
 	};
 }
