@@ -11,7 +11,9 @@ import {
 	loadConfigFromFile,
 } from "vite";
 
-export function viteroll(): Plugin {
+export function viteroll(viterollOptions?: {
+	reactRefresh?: boolean;
+}): Plugin {
 	let rolldownBuild: rolldown.RolldownBuild;
 	let rolldownOutput: rolldown.RolldownOutput;
 	let server: ViteDevServer;
@@ -42,7 +44,7 @@ export function viteroll(): Plugin {
 		console.time("[rolldown:build]");
 		rolldownBuild = await rolldown.rolldown({
 			dev: true,
-			// TODO: reuse config.build.rollupOptions.input
+			// TODO: reuse config.build.rollupOptions.input (MPA?)
 			input: {
 				index: "./index.html",
 			},
@@ -55,9 +57,11 @@ export function viteroll(): Plugin {
 			},
 			define: config.define,
 			plugins: [
-				// TODO: not necessary?
-				// rolldownExperimental.transformPlugin(),
-				// rolldownExperimental.replacePlugin(config.define),
+				// TODO: it doesn't use jsx-dev-runtime?
+				rolldownExperimental.transformPlugin({
+					reactRefresh: viterollOptions?.reactRefresh,
+				}),
+				viterollOptions?.reactRefresh && rolldownExperimental.reactPlugin(),
 				rolldownExperimental.aliasPlugin({
 					entries: config.resolve.alias,
 				}),
@@ -86,6 +90,10 @@ export function viteroll(): Plugin {
 				appType: "custom",
 				optimizeDeps: {
 					noDiscovery: true,
+				},
+				define: {
+					// TODO: copy vite:define plugin
+					"process.env.NODE_ENV": "'development'",
 				},
 			};
 		},
