@@ -1,4 +1,5 @@
 import assert from "node:assert";
+import { createRequire } from "node:module";
 import MagicString from "magic-string";
 import * as rolldown from "rolldown";
 import * as rolldownExperimental from "rolldown/experimental";
@@ -10,6 +11,8 @@ import {
 	createLogger,
 	loadConfigFromFile,
 } from "vite";
+
+const require = createRequire(import.meta.url);
 
 export function viteroll(viterollOptions?: {
 	reactRefresh?: boolean;
@@ -57,15 +60,15 @@ export function viteroll(viterollOptions?: {
 			},
 			define: config.define,
 			plugins: [
-				// TODO: it doesn't use jsx-dev-runtime?
+				viterollEntryPlugin(viterollOptions),
+				// TODO: how to use jsx-dev-runtime?
 				rolldownExperimental.transformPlugin({
 					reactRefresh: viterollOptions?.reactRefresh,
 				}),
-				viterollOptions?.reactRefresh && rolldownExperimental.reactPlugin(),
+				viterollOptions?.reactRefresh ? reactRefreshPlugin() : [],
 				rolldownExperimental.aliasPlugin({
 					entries: config.resolve.alias,
 				}),
-				viterollEntryPlugin(),
 				...(plugins as any),
 			],
 		});
@@ -74,7 +77,7 @@ export function viteroll(viterollOptions?: {
 		rolldownOutput = await rolldownBuild.write({
 			dir: config.build.outDir,
 			format: "app",
-			// TODO: hmr_rebuild returns source map when `sourcemap: true`
+			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
 		});
 		// TODO: rolldown freezes when accessing getter later so serialize it early.
@@ -119,24 +122,20 @@ export function viteroll(viterollOptions?: {
 			if (moduleIds.includes(ctx.file)) {
 				// hmr
 				if (process.env["VITEROLL_HMR"] !== "false") {
-					const content = await ctx.read();
-					// TODO: fow now target only self-accepting.
-					// `rolldown_runtime.patch` crashes when patching non self-accepting entry.
-					if (content.includes("module.hot.accept")) {
-						logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-						console.time("[rolldown:hmr]");
-						const result = await rolldownBuild.experimental_hmr_rebuild([
-							ctx.file,
-						]);
-						console.timeEnd("[rolldown:hmr]");
-						server.ws.send("rolldown:hmr", result);
-						return [];
-					}
+					logger.info(`hmr '${ctx.file}'`, { timestamp: true });
+					console.time("[rolldown:hmr]");
+					const result = await rolldownBuild.experimental_hmr_rebuild([
+						ctx.file,
+					]);
+					console.timeEnd("[rolldown:hmr]");
+					server.ws.send("rolldown:hmr", result);
+					return [];
 				}
 				// full reload
 				logger.info(`full-reload '${ctx.file}'`, { timestamp: true });
 				await fullBuild();
 				server.ws.send({ type: "full-reload", path: ctx.file });
+				return [];
 			}
 		},
 		transform(code, id) {
@@ -150,7 +149,9 @@ export function viteroll(viterollOptions?: {
 }
 
 // TODO: similar to vite:build-html plugin?
-function viterollEntryPlugin(): rolldown.Plugin {
+function viterollEntryPlugin(viterollOptions?: {
+	reactRefresh?: boolean;
+}): rolldown.Plugin {
 	return {
 		name: "viteroll:entry",
 		transform: {
@@ -159,14 +160,24 @@ function viterollEntryPlugin(): rolldown.Plugin {
 					include: [/\.html$/],
 				},
 			},
-			async handler(code) {
+			async handler(code, id) {
 				const htmlOutput = new MagicString(code);
 
-				// extract <script src="...">
 				let jsOutput = ``;
+				if (viterollOptions?.reactRefresh) {
+					jsOutput += `import "virtual:react-refresh/entry";\n`;
+				}
+
+				// extract <script src="...">
 				const matches = code.matchAll(/<script\s+src="([^"]+)"><\/script>/dg);
 				for (const match of matches) {
-					jsOutput += `import ${JSON.stringify(match[1])};\n`;
+					const src = match[1];
+					const resolved = await this.resolve(src, id);
+					if (!resolved) {
+						this.warn(`unresolved src '${src}' in '${id}'`);
+						continue;
+					}
+					jsOutput += `import ${JSON.stringify(resolved.id)};\n`;
 					const [start, end] = match.indices![0];
 					htmlOutput.remove(start, end);
 				}
@@ -174,6 +185,7 @@ function viterollEntryPlugin(): rolldown.Plugin {
 				// inject js entry
 				htmlOutput.appendLeft(
 					code.indexOf(`</body>`),
+					// TODO: not hard-code index.js
 					'<script src="/index.js"></script>',
 				);
 
@@ -211,6 +223,80 @@ function viterollEntryPlugin(): rolldown.Plugin {
 			const entry = bundle["index.js"];
 			assert(entry.type === "chunk");
 			entry.code = entry.code.replace(/const socket =.*?\n};/s, "");
+		},
+	};
+}
+
+// TODO: workaround rolldownExperimental.reactPlugin which injects js to html via `load` hook
+function reactRefreshPlugin(): rolldown.Plugin {
+	return {
+		name: "react-hmr",
+		transform: {
+			filter: {
+				code: {
+					include: ["$RefreshReg$"],
+				},
+			},
+			handler(code, id) {
+				const output = new MagicString(code);
+				output.prepend(`
+					import * as __$refresh from 'virtual:react-refresh';
+					const [$RefreshSig$, $RefreshReg$] = __$refresh.create(${JSON.stringify(id)});
+				`);
+				output.append(`
+					__$refresh.setupHot(module.hot);
+				`);
+				return { code: output.toString(), map: output.generateMap() };
+			},
+		},
+		resolveId: {
+			filter: {
+				id: {
+					include: [/^virtual:react-refresh/],
+				},
+			},
+			handler: (source) => "\0" + source,
+		},
+		load: {
+			filter: {
+				id: {
+					include: [/^\0virtual:react-refresh/],
+				},
+			},
+			async handler(id) {
+				const resolved = require.resolve("react-refresh/runtime");
+				if (id === "\0virtual:react-refresh/entry") {
+					return `
+						import runtime from ${JSON.stringify(resolved)};
+						runtime.injectIntoGlobalHook(window);
+					`;
+				}
+				if (id === "\0virtual:react-refresh") {
+					return `
+						import runtime from ${JSON.stringify(resolved)};
+
+						export const create = (file) => [
+							runtime.createSignatureFunctionForTransform,
+							(type, id) => runtime.register(type, file + '_' + id),
+						];
+
+						function debounce(fn, delay) {
+							let handle
+							return () => {
+								clearTimeout(handle)
+								handle = setTimeout(fn, delay)
+							}
+						}
+						const debouncedRefresh = debounce(runtime.performReactRefresh, 16);
+
+						export function setupHot(hot) {
+							hot.accept((prev) => {
+								debouncedRefresh();
+							});
+						}
+					`;
+				}
+			},
 		},
 	};
 }

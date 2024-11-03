@@ -31,13 +31,3 @@ export default function App() {
 		</>
 	);
 }
-
-export function Repro() {
-	return (
-		<div>
-			<p>hello</p>
-			with
-			<p>tabs</p>
-		</div>
-	);
-}
