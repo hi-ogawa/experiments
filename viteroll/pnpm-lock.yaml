@@ -12,28 +12,25 @@ importers:
 
   .:
     dependencies:
-      preact:
-        specifier: ^10.24.3
-        version: 10.24.3
+      magic-string:
+        specifier: ^0.30.12
+        version: 0.30.12
+      sirv:
+        specifier: ^3.0.0
+        version: 3.0.0
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4
         version: 1.9.4
-      '@hiogawa/viteroll':
-        specifier: workspace:*
-        version: link:packages/viteroll
       '@types/node':
         specifier: ^22.8.5
         version: 22.8.5
-      magic-string:
-        specifier: ^0.30.12
-        version: 0.30.12
+      preact:
+        specifier: ^10.24.3
+        version: 10.24.3
       rolldown:
         specifier: file:rolldown-0.13.2.tgz
         version: file:rolldown-0.13.2.tgz
-      sirv:
-        specifier: ^3.0.0
-        version: 3.0.0
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -41,21 +38,7 @@ importers:
         specifier: ^5.4.10
         version: 5.4.10(@types/node@22.8.5)
 
-  packages/viteroll:
-    dependencies:
-      magic-string:
-        specifier: ^0.30.8
-        version: 0.30.12
-      sirv:
-        specifier: ^3.0.0
-        version: 3.0.0
-    devDependencies:
-      rolldown:
-        specifier: file:../../rolldown-0.13.2.tgz
-        version: file:rolldown-0.13.2.tgz
-      vite:
-        specifier: ^5.4.10
-        version: 5.4.10(@types/node@22.8.5)
+  examples/react: {}
 
 packages:
 
