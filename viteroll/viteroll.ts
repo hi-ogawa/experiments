@@ -213,11 +213,6 @@ function viterollEntryPlugin(viterollOptions?: {
 						hot.on("rolldown:hmr", (data) => {
 							(0, eval)(data[1]);
 						});
-						hot.on("vite:beforeFullReload", (data) => {
-							if (data.path === '/index.html') {
-								throw new Error("boom");
-							}
-						});
 						window.__rolldown_hot = hot;
 					</script>
 					`,
