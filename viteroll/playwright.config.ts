@@ -18,6 +18,7 @@ export default defineConfig({
 			},
 		},
 	],
+	timeout: 10_000,
 	webServer: {
 		command,
 		port,

@@ -2,6 +2,10 @@ import { test } from "@playwright/test";
 import { createEditor } from "./helper";
 
 test("basic", async ({ page }) => {
+	page.on("pageerror", (error) => {
+		console.log(error);
+	});
+
 	await page.goto("/");
 	await page.getByRole("heading", { name: "Test" }).click();
 	await page.getByText("[define] ok").click();
