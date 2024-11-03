@@ -211,6 +211,7 @@ function viterollEntryPlugin(): rolldown.Plugin {
 				);
 
 				// inject client
+				// (reuse /@vite/client for Websocket API)
 				htmlOutput.appendLeft(
 					code.indexOf(`</head>`),
 					`
