@@ -13,11 +13,13 @@ import {
 
 export default defineConfig({
 	clearScreen: false,
-	optimizeDeps: {
-		noDiscovery: true,
+	define: {
+		__TEST_DEFINE__: `"ok"`,
+	},
+	resolve: {
+		alias: {},
 	},
 	plugins: [
-		viteroll(),
 		{
 			name: "test-virtual",
 			resolveId: {
@@ -45,13 +47,8 @@ export default defineConfig({
 				},
 			},
 		} satisfies rolldown.Plugin as Plugin,
+		viteroll(),
 	],
-	define: {
-		__TEST_DEFINE__: `"ok"`,
-	},
-	resolve: {
-		alias: {},
-	},
 });
 
 function viteroll(): Plugin {
@@ -124,6 +121,9 @@ function viteroll(): Plugin {
 		config() {
 			return {
 				appType: "custom",
+				optimizeDeps: {
+					noDiscovery: true,
+				},
 			};
 		},
 		configResolved(config_) {
