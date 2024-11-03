@@ -2,7 +2,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "vite"
+		"dev": "vite",
+		"test-e2e": "playwright test"
 	},
 	"dependencies": {
 		"react": "latest",
