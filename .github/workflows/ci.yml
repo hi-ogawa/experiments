@@ -115,3 +115,4 @@ jobs:
       - run: pnpm tsc
       - run: pnpm exec playwright install chromium
       - run: pnpm test-e2e
+      - run: pnpm -C examples/react test-e2e
