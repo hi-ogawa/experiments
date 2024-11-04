@@ -1,0 +1,15 @@
+{
+	"include": ["src", "e2e", "*.ts"],
+	"compilerOptions": {
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"verbatimModuleSyntax": true,
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
+		"target": "ESNext",
+		"lib": ["ESNext", "DOM"],
+		"skipLibCheck": true,
+		"noEmit": true
+	}
+}
