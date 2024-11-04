@@ -23,3 +23,11 @@ pnpm -C examples/react dev
 - [ ] css
 - [ ] assets
 - [ ] ssr
+
+## tbd
+
+- module graph api e.g. invalidation
+- runtime api (missing hot api)
+- module runner usage
+- how to deal with non-static import which is out of import analysis?
+  - they are not necessary "external" for vite dev as it can go through tranform pipeline as requested.
