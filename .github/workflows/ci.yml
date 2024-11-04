@@ -102,8 +102,7 @@ jobs:
   viteroll:
     runs-on: ubuntu-latest
     # TODO:
-    # for some reason, `format: "app"` not working on CI?
-    # maybe need a proper rolldown napi-rs build?
+    # not working on CI probably because it doesn't pick up a correct rolldown-binding?
     if: false
     defaults:
       run:
