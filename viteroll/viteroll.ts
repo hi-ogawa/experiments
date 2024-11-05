@@ -229,23 +229,26 @@ function viterollEntryPlugin(viterollOptions?: {
 				};
 			},
 		},
-		generateBundle(_options, bundle) {
-			const entry = bundle["index.js"];
-			assert(entry.type === "chunk");
-			// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
-			entry.code = entry.code.replace(/const socket =.*?\n};/s, "");
-			// trigger full rebuild on non-accepting entry invalidation
-			entry.code = entry.code
-				.replace("parents: [parent],", "parents: parent ? [parent] : [],")
-				.replace(
-					"for (var i = 0; i < module.parents.length; i++) {",
-					`
-					if (module.parents.length === 0) {
-						__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
-						break;
-					}
-					for (var i = 0; i < module.parents.length; i++) {`,
-				);
+		renderChunk(code) {
+			// patch rolldown_runtime to workaround a few things
+			if (code.includes("//#region rolldown:runtime")) {
+				const output = new MagicString(code);
+				// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
+				output.replace(/const socket =.*?\n};/s, "");
+				// trigger full rebuild on non-accepting entry invalidation
+				output
+					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
+					.replace(
+						"for (var i = 0; i < module.parents.length; i++) {",
+						`
+						if (module.parents.length === 0) {
+							__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
+							break;
+						}
+						for (var i = 0; i < module.parents.length; i++) {`,
+					);
+				return { code: output.toString(), map: output.generateMap() };
+			}
 		},
 	};
 }
