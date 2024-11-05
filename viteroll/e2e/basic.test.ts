@@ -6,6 +6,8 @@ test("basic", async ({ page }) => {
 		console.log(error);
 	});
 
+	await page.goto("/");
+
 	await page.getByRole("heading", { name: "Test" }).click();
 	await page.getByText("[define] ok").click();
 	await page.getByText("[virtual:test] ok").click();
