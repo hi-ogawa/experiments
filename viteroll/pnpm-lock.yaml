@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  rolldown: file:rolldown-0.13.2.tgz
+  rolldown: 0.13.2-snapshot-a292401-20241105072341
   vite: ^5.4.10
 
 importers:
@@ -35,8 +35,8 @@ importers:
         specifier: ^10.24.3
         version: 10.24.3
       rolldown:
-        specifier: file:rolldown-0.13.2.tgz
-        version: file:rolldown-0.13.2.tgz
+        specifier: 0.13.2-snapshot-a292401-20241105072341
+        version: 0.13.2-snapshot-a292401-20241105072341
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -352,63 +352,63 @@ packages:
   '@polka/url@1.0.0-next.28':
     resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
 
-  '@rolldown/binding-darwin-arm64@0.13.2':
-    resolution: {integrity: sha512-84C2ITL3AmuCZmBSrRy6Z38pwBGQqHIhCp5gVGIP7U20tUVJMFj2g8gt608e9kltkRxw4PM3vSujRAoN5PsGuA==}
+  '@rolldown/binding-darwin-arm64@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-IvGCR1JGF55EM8t1HYgNyF7RNpf/lC5++WAWPmsdWcM6aDnc2ayWLVeEq/F5UCxJGGBnXDsPH8+FBMxBf/Ieag==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@0.13.2':
-    resolution: {integrity: sha512-h1zv1C+RJ8xzlohUNdbtXayh3/fcxsp7RjeahfPDM/FEtFCmuM7WZBiAuF0TklKYqgs2YwGl8iA3gpnGuhzgFg==}
+  '@rolldown/binding-darwin-x64@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-OUbQy963o7pCdy1KnumyJUDY86dBQSdiektSpsOZOgyEB7tMTsd69EOAbqqyrxz2euQgDVveGJyD1GDgw2/ypg==}
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-freebsd-x64@0.13.2':
-    resolution: {integrity: sha512-VGBwYe/fgnIG7SWXPr6VOTPrr5d0fjYCoqM/abhUt729L3nlSaAaJOmcOvOg40KcrSJIEGgt+R0DcGNKuJ0kwA==}
+  '@rolldown/binding-freebsd-x64@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-KWvitRouQ2J9ZRd+ioaJ4Aa+iXjqh8Ugf90RfwsSHTgX5P3b75lJbw19ObH4cranWAHyu1Z3Oz3m8Q5TfTIqpw==}
     cpu: [x64]
     os: [freebsd]
 
-  '@rolldown/binding-linux-arm-gnueabihf@0.13.2':
-    resolution: {integrity: sha512-thIyywEvUlEgRlG6s0GBH04eFGKsHl59HTsL6nlILbeafizuPOw2oY+jf1NZ117ju083W5Uo6htqxKBzBeOUpg==}
+  '@rolldown/binding-linux-arm-gnueabihf@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-fPgIOpmARKshz/ZWzTkfX/a1tUbU+3gedEUA9+Ry2d0yeKF8unnEvpvfw8FRh0Ht2Uq8X+cs54ZpQS37nlimfA==}
     cpu: [arm]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@0.13.2':
-    resolution: {integrity: sha512-wTg4GKHFTcjlY+5jLycweIm95ttfQj3BFNxY28Y3uIaIxonF6hwFw15yz4MyhCqL0S3DV9wRcgxZemdykil+eA==}
+  '@rolldown/binding-linux-arm64-gnu@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-oTgB9dXnFNNC1qxzbYwHLfnRViBxsQt7pPdCdpmbxZdcsQBQpSyqvf8IFU6VJn3GnBtJU0ysQ1s3BQ5TSSeNVQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@0.13.2':
-    resolution: {integrity: sha512-9g180TIoU8U/CBbL8Ci6duuO6cvAL9misrJV5ng1G2QD7XNVrp9FG+mXbbmPuJSCz4ZjXDlM3RnpOwhmBuc+HQ==}
+  '@rolldown/binding-linux-arm64-musl@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-Q/F+iS43K6KXEB3LXwHoqxDbpude+vhC0P6Qp6HLctIksJf/2QreGTQ+aB0QVRwws2007MKJ4kYFi9ZpkfjG5A==}
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@0.13.2':
-    resolution: {integrity: sha512-cmXSW6lNCq7lmggGZFucezfDqCC3XkMnzCuM6uYJMX11PU6/HS0xRTL7FjAQAwtUNyhI5/OgOv5KSqfQhHodsQ==}
+  '@rolldown/binding-linux-x64-gnu@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-SFSK2LkhuRJ6YDUHuSapZcuf7cp0tyQoO+1F3B+5Obu0s5CHv6HkkyJ/96GBvGCGEVXdtUNPKam32U+5Af4A9g==}
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@0.13.2':
-    resolution: {integrity: sha512-Y157t4Vjyo253GbjdjMHcJfeaVhcLFZ49qcWkdjRx65rzggKyXVx1C8NFX0ER1Fyse/ZP60bhOvhlq5+R1wxnA==}
+  '@rolldown/binding-linux-x64-musl@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-OR6lEBRvFgXO2Zcr+WCWwhw9tl7S3ByVKBTEGV9ebeo0ScS4UtkChrsx13xJVOz5/o8dv0pYSV8c8OVatk/4jA==}
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-wasm32-wasi@0.13.2':
-    resolution: {integrity: sha512-o3vLuYsBYcNjkPQcgzValjeQILeuZ0YdzimHXABaCliGKHLVRcZv/yH3WDQ9SSBf7lK6cYSzHSInlcYqETqxWg==}
+  '@rolldown/binding-wasm32-wasi@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-OHewT4F6WjdFrbg56p/qByEU45ed5n+m4/NBHMwldQf7uxRS03urCI7WYRQcZe0H4Bl95cIQsPbjAQxBRzwlCw==}
     engines: {node: '>=14.21.3'}
     cpu: [wasm32]
 
-  '@rolldown/binding-win32-arm64-msvc@0.13.2':
-    resolution: {integrity: sha512-Czx5vzeFKOmW9AbPirP3kEJ390P9esiRhkHotVtfiPeRPz3gh6pKUiMxbeZqyvxB+3cDzbPftMtGIH9D/DylBA==}
+  '@rolldown/binding-win32-arm64-msvc@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-C09eFp4vjwzbfTwRBgScLIMNcey8dT1evcgb7dllkaurSONMRPweUrA8w+AjLoNLxmYtjo/8UXzy/WNAA9/9GA==}
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@0.13.2':
-    resolution: {integrity: sha512-2cHEcOnHMhsTp+7eMsTcqypr+Wt82HFEuhfwyxSI1TOGHOwqYMPis842qGhRjg2/y0jD9WYTNflnSTWAYBrVDQ==}
+  '@rolldown/binding-win32-ia32-msvc@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-nm9AH+s4LN/gUb2jNdr1E1nUCMFs/Cz2wcRn492LQHahDVBALDaY/VZGftqSp339tsMjaEZea+FzxmlTECGxCQ==}
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@0.13.2':
-    resolution: {integrity: sha512-P6Sd579+ZGEZaF05XHKE6RdPe27YlrEa1FeujcI9job+xtq3hpJ/ebKTYPqcEMt05ssR5Ervmbz5SHsrOes1wQ==}
+  '@rolldown/binding-win32-x64-msvc@0.13.2-snapshot-a292401-20241105072341':
+    resolution: {integrity: sha512-2YEn48I1RlOR4ATbVNqCjGvTPUbKbeUhtLT/+l++pJ5o6LwO3/RZMEB6J5mN5ZXQ2mXqpmbBOR06fY8tFThLSw==}
     cpu: [x64]
     os: [win32]
 
@@ -697,9 +697,8 @@ packages:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
 
-  rolldown@file:rolldown-0.13.2.tgz:
-    resolution: {integrity: sha512-wcDcjPK5IiHtaRECPTpz/0eaqaqRu/67cWInHvy3cqh6fbms5/SCoVwxnwRzZOGfBCK0quE8xMRe20Vn0YR1pw==, tarball: file:rolldown-0.13.2.tgz}
-    version: 0.13.2
+  rolldown@0.13.2-snapshot-a292401-20241105072341:
+    resolution: {integrity: sha512-WA2U4g9E+d/J1u/nAldwnxmE7KOOGxdnjg6GX/qsPekVqQ0e+dPV7qrGYWIBj3twjPFxdp+9bzsXrFW3LUhakQ==}
     hasBin: true
 
   rollup@4.24.3:
@@ -992,42 +991,42 @@ snapshots:
 
   '@polka/url@1.0.0-next.28': {}
 
-  '@rolldown/binding-darwin-arm64@0.13.2':
+  '@rolldown/binding-darwin-arm64@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-darwin-x64@0.13.2':
+  '@rolldown/binding-darwin-x64@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-freebsd-x64@0.13.2':
+  '@rolldown/binding-freebsd-x64@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-linux-arm-gnueabihf@0.13.2':
+  '@rolldown/binding-linux-arm-gnueabihf@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@0.13.2':
+  '@rolldown/binding-linux-arm64-gnu@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@0.13.2':
+  '@rolldown/binding-linux-arm64-musl@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@0.13.2':
+  '@rolldown/binding-linux-x64-gnu@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@0.13.2':
+  '@rolldown/binding-linux-x64-musl@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-wasm32-wasi@0.13.2':
+  '@rolldown/binding-wasm32-wasi@0.13.2-snapshot-a292401-20241105072341':
     dependencies:
       '@napi-rs/wasm-runtime': 0.2.5
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@0.13.2':
+  '@rolldown/binding-win32-arm64-msvc@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@0.13.2':
+  '@rolldown/binding-win32-ia32-msvc@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@0.13.2':
+  '@rolldown/binding-win32-x64-msvc@0.13.2-snapshot-a292401-20241105072341':
     optional: true
 
   '@rollup/rollup-android-arm-eabi@4.24.3':
@@ -1287,7 +1286,7 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
-  rolldown@file:rolldown-0.13.2.tgz:
+  rolldown@0.13.2-snapshot-a292401-20241105072341:
     dependencies:
       '@parcel/watcher': 2.4.1
       chokidar: 3.6.0
@@ -1296,18 +1295,18 @@ snapshots:
       ws: 8.18.0
       zod: 3.23.8
     optionalDependencies:
-      '@rolldown/binding-darwin-arm64': 0.13.2
-      '@rolldown/binding-darwin-x64': 0.13.2
-      '@rolldown/binding-freebsd-x64': 0.13.2
-      '@rolldown/binding-linux-arm-gnueabihf': 0.13.2
-      '@rolldown/binding-linux-arm64-gnu': 0.13.2
-      '@rolldown/binding-linux-arm64-musl': 0.13.2
-      '@rolldown/binding-linux-x64-gnu': 0.13.2
-      '@rolldown/binding-linux-x64-musl': 0.13.2
-      '@rolldown/binding-wasm32-wasi': 0.13.2
-      '@rolldown/binding-win32-arm64-msvc': 0.13.2
-      '@rolldown/binding-win32-ia32-msvc': 0.13.2
-      '@rolldown/binding-win32-x64-msvc': 0.13.2
+      '@rolldown/binding-darwin-arm64': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-darwin-x64': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-freebsd-x64': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-linux-arm-gnueabihf': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-linux-arm64-gnu': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-linux-arm64-musl': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-linux-x64-gnu': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-linux-x64-musl': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-wasm32-wasi': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-win32-arm64-msvc': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-win32-ia32-msvc': 0.13.2-snapshot-a292401-20241105072341
+      '@rolldown/binding-win32-x64-msvc': 0.13.2-snapshot-a292401-20241105072341
     transitivePeerDependencies:
       - bufferutil
       - supports-color
