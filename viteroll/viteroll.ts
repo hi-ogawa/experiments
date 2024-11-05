@@ -80,9 +80,6 @@ export function viteroll(viterollOptions?: {
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
 		});
-		// TODO: rolldown freezes when accessing getter later so serialize it early.
-		// (it looks like this doesn't happen anymore on latest rolldown)
-		rolldownOutput = JSON.parse(JSON.stringify(rolldownOutput, null, 2));
 		console.timeEnd("[rolldown:build]");
 	}
 
