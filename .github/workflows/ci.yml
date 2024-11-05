@@ -101,9 +101,6 @@ jobs:
 
   viteroll:
     runs-on: ubuntu-latest
-    # TODO:
-    # not working on CI probably because it doesn't pick up a correct rolldown-binding?
-    if: false
     defaults:
       run:
         working-directory: ./viteroll
