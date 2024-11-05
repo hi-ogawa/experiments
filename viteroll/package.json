@@ -20,7 +20,7 @@
 		"@playwright/test": "^1.48.2",
 		"@types/node": "^22.8.5",
 		"preact": "^10.24.3",
-		"rolldown": "file:rolldown-0.13.2.tgz",
+		"rolldown": "0.13.2-snapshot-a292401-20241105072341",
 		"typescript": "^5.6.3",
 		"vite": "^5.4.10"
 	},

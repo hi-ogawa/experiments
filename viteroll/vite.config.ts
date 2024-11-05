@@ -38,6 +38,6 @@ export default defineConfig({
 					}
 				},
 			},
-		} satisfies rolldown.Plugin as Plugin,
+		} satisfies rolldown.Plugin as any as Plugin,
 	],
 });

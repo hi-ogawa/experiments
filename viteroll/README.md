@@ -3,7 +3,6 @@
 Integrating [Rolldown HMR](https://github.com/rolldown/rolldown/tree/hmr-poc) as Vite plugin.
 
 ```sh
-# rolldown-0.13.2.tgz needs to be replaced depending on platform
 pnpm dev
 pnpm -C examples/react dev
 ```
