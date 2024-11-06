@@ -31,6 +31,7 @@ export function viteroll(viterollOptions?: {
 		allowClearScreen: false,
 	});
 
+	// TODO: abstract to support build per environment
 	async function fullBuild() {
 		if (rolldownBuild) {
 			await rolldownBuild?.close();
@@ -58,7 +59,8 @@ export function viteroll(viterollOptions?: {
 			// we'll need input options during dev too though this sounds very much reasonable.
 			// eventually `build.rollupOptions` should probably come forefront.
 			// https://vite.dev/guide/build.html#multi-page-app
-			input: config.build.rollupOptions.input ?? "./index.html",
+			input:
+				config.environments.client.build.rollupOptions.input ?? "./index.html",
 			cwd: config.root,
 			platform: "browser",
 			resolve: {

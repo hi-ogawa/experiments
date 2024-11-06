@@ -5,9 +5,13 @@ async function main() {
 	const server = await createServer({
 		root: import.meta.dirname,
 		configFile: false,
-		build: {
-			rollupOptions: {
-				input: "./src/entry.js",
+		environments: {
+			ssr: {
+				build: {
+					rollupOptions: {
+						input: "./src/entry-server.js",
+					},
+				},
 			},
 		},
 		plugins: [viteroll()],

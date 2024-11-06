@@ -2,15 +2,26 @@ import { defineConfig } from "vite";
 import { viteroll } from "../../viteroll";
 
 export default defineConfig({
-	build: {
-		rollupOptions: {
-			input: "./src/entry.js",
+	environments: {
+		client: {
+			build: {
+				rollupOptions: {
+					input: "./src/entry-client.js",
+				},
+			},
+		},
+		ssr: {
+			build: {
+				rollupOptions: {
+					input: "./src/entry-server.js",
+				},
+			},
 		},
 	},
 	plugins: [
 		viteroll(),
 		{
-			name: "ssr",
+			name: "ssr-middleware",
 			config() {
 				return {
 					appType: "custom",
