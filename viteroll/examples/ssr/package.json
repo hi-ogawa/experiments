@@ -3,5 +3,13 @@
 	"scripts": {
 		"dev": "vite",
 		"test-e2e": "playwright test"
+	},
+	"dependencies": {
+		"react": "latest",
+		"react-dom": "latest"
+	},
+	"devDependencies": {
+		"@types/react": "latest",
+		"@types/react-dom": "latest"
 	}
 }

@@ -22,7 +22,9 @@ export default defineConfig({
 		},
 	},
 	plugins: [
-		viteroll(),
+		viteroll({
+			reactRefresh: true,
+		}),
 		{
 			name: "ssr-middleware",
 			config() {
