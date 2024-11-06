@@ -123,18 +123,25 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	};
 }
 
+// TODO: RolldownEnvironment?
 class RolldownManager {
 	instance!: rolldown.RolldownBuild;
 	result!: rolldown.RolldownOutput;
 	outDir: string;
-	config: Environment["config"];
 
 	constructor(
 		public environment: Environment,
 		public viterollOptions: ViterollOptions,
 	) {
-		this.config = environment.config;
 		this.outDir = path.resolve(this.config.root, this.config.build.outDir);
+	}
+
+	get config() {
+		return this.environment.config;
+	}
+
+	get name() {
+		return this.environment.name;
 	}
 
 	async build() {
@@ -165,14 +172,15 @@ class RolldownManager {
 
 		console.time(`[rolldown:${this.environment.name}:build]`);
 		this.instance = await rolldown.rolldown({
-			dev: true,
+			// TODO: no dev ssr for now
+			dev: this.name === "client",
 			// NOTE:
 			// we'll need input options during dev too though this sounds very much reasonable.
 			// eventually `build.rollupOptions` should probably come forefront.
 			// https://vite.dev/guide/build.html#multi-page-app
 			input: this.config.build.rollupOptions.input,
 			cwd: this.config.root,
-			platform: "browser",
+			platform: this.name === "client" ? "browser" : "node",
 			resolve: {
 				conditionNames: this.config.resolve.conditions,
 				mainFields: this.config.resolve.mainFields,
@@ -196,7 +204,7 @@ class RolldownManager {
 		// `generate` should work but we use `write` so it's easier to see output and debug
 		this.result = await this.instance.write({
 			dir: this.outDir,
-			format: "app",
+			format: this.name === "client" ? "app" : "es",
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
 		});
@@ -215,9 +223,9 @@ class RolldownManager {
 		if (!output.moduleIds.includes(ctx.file)) {
 			return;
 		}
-		if (this.environment.name === "ssr") {
-			// TODO: no ssr hmr for now
+		if (this.name === "ssr") {
 			await this.build();
+			ctx.server.ws.send({ type: "full-reload" });
 		} else {
 			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
 			console.time(`[rolldown:${this.environment.name}:hmr]`);

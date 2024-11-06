@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "vite";
 import { viteroll } from "../../viteroll";
 
@@ -31,10 +32,18 @@ export default defineConfig({
 			},
 			configureServer(server) {
 				return () => {
-					server.middlewares.use((req, res, next) => {
+					server.middlewares.use(async (req, res, next) => {
 						const url = new URL(req.url ?? "/", "http://localhost");
 						if (url.pathname === "/") {
-							res.end("todo");
+							try {
+								// TODO: move to environment api
+								const entry = path.resolve("dist/server/entry-server.js");
+								// TODO: invalidate on build update
+								const mod = await import(entry + "?t=" + Date.now());
+								await mod.default(req, res);
+							} catch (e) {
+								next(e);
+							}
 							return;
 						}
 						next();
