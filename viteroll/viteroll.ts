@@ -213,12 +213,10 @@ class RolldownManager {
 	}
 }
 
-// TODO: similar to vite:build-html plugin?
+// TODO: copy vite:build-html plugin
 function viterollEntryPlugin(
 	config: ResolvedConfig,
-	viterollOptions?: {
-		reactRefresh?: boolean;
-	},
+	viterollOptions: ViterollOptions,
 ): rolldown.Plugin {
 	const htmlEntryMap = new Map<string, MagicString>();
 
