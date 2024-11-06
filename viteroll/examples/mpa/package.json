@@ -1,4 +1,6 @@
 {
+	"name": "@hiogawa/viteroll-example-mpa",
+	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "vite",

@@ -1,4 +1,6 @@
 {
+	"name": "@hiogawa/viteroll-example-ssr",
+	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "vite",

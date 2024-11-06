@@ -110,14 +110,8 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 			await managers.ssr.close();
 		},
 		async handleHotUpdate(ctx) {
-			// TODO: for now full build on ssr change
-			const ssrUpdate = await managers.ssr.handleUpdate(ctx);
-			if (ssrUpdate) {
-				await managers.client.build();
-				server.ws.send({ type: "full-reload" });
-			} else {
-				await managers.client.handleUpdate(ctx);
-			}
+			await managers.ssr.handleUpdate(ctx);
+			await managers.client.handleUpdate(ctx);
 		},
 		transform(code, id) {
 			// remove unnecessary /@vite/env
