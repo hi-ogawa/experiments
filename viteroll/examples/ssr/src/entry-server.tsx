@@ -1,5 +1,5 @@
 import ReactDOMServer from "react-dom/server.browser";
-import { Connect } from "vite";
+import type { Connect } from "vite";
 import { App } from "./app";
 
 const handler: Connect.SimpleHandleFunction = (req, res) => {
