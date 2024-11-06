@@ -110,8 +110,14 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 			await managers.ssr.close();
 		},
 		async handleHotUpdate(ctx) {
-			await managers.client.handleUpdate(ctx);
-			await managers.ssr.handleUpdate(ctx);
+			// TODO: for now full build on ssr change
+			const ssrUpdate = await managers.ssr.handleUpdate(ctx);
+			if (ssrUpdate) {
+				await managers.client.build();
+				server.ws.send({ type: "full-reload" });
+			} else {
+				await managers.client.handleUpdate(ctx);
+			}
 		},
 		transform(code, id) {
 			// remove unnecessary /@vite/env
@@ -225,7 +231,6 @@ class RolldownManager {
 		}
 		if (this.name === "ssr") {
 			await this.build();
-			ctx.server.ws.send({ type: "full-reload" });
 		} else {
 			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
 			console.time(`[rolldown:${this.environment.name}:hmr]`);
@@ -233,6 +238,7 @@ class RolldownManager {
 			console.timeEnd(`[rolldown:${this.environment.name}:hmr]`);
 			ctx.server.ws.send("rolldown:hmr", result);
 		}
+		return true;
 	}
 }
 
