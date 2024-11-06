@@ -22,6 +22,7 @@ export function viteroll(viterollOptions?: {
 	let rolldownOutput: rolldown.RolldownOutput;
 	let server: ViteDevServer;
 	let config: ResolvedConfig;
+	let outDir: string;
 
 	const logger = createLogger("info", {
 		prefix: "[rolldown]",
@@ -48,7 +49,9 @@ export function viteroll(viterollOptions?: {
 		console.time("[rolldown:build]");
 		rolldownBuild = await rolldown.rolldown({
 			dev: true,
-			// TODO: we'll need input options during dev too
+			// NOTE:
+			// we'll need input options during dev too though this sounds very much reasonable.
+			// eventually `build.rollupOptions` should probably come forefront.
 			// https://vite.dev/guide/build.html#multi-page-app
 			input: config.build.rollupOptions.input ?? "./index.html",
 			cwd: config.root,
@@ -99,14 +102,13 @@ export function viteroll(viterollOptions?: {
 		},
 		configResolved(config_) {
 			config = config_;
+			outDir = path.resolve(config.root, config.build.outDir);
 		},
 		configureServer(server_) {
 			server = server_;
 
 			// rolldown server as middleware
-			server.middlewares.use(
-				sirv(config.build.outDir, { dev: true, extensions: ["html"] }),
-			);
+			server.middlewares.use(sirv(outDir, { dev: true, extensions: ["html"] }));
 
 			// full build on non self accepting entry
 			server.ws.on("rolldown:hmr-deadend", async (data) => {
