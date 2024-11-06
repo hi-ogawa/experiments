@@ -1,4 +1,5 @@
 import assert from "node:assert";
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import MagicString from "magic-string";
@@ -135,6 +136,9 @@ export function viteroll(viterollOptions?: {
 			};
 		},
 		async buildStart() {
+			if (config.build.emptyOutDir) {
+				fs.rmSync(outDir, { recursive: true, force: true });
+			}
 			await fullBuild();
 		},
 		async buildEnd() {
