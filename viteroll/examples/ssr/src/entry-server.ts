@@ -14,6 +14,7 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
   </head>
   <body>
 		<h1>Rolldown SSR</h1>
+		<div>pathname: ${url.pathname}</div>
 		<div id="root"></div>
     <script src="/entry-client.js"></script>
   </body>
