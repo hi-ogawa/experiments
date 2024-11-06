@@ -62,6 +62,8 @@ importers:
         specifier: latest
         version: 18.3.1
 
+  examples/ssr: {}
+
 packages:
 
   '@biomejs/biome@1.9.4':

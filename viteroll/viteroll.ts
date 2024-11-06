@@ -8,6 +8,7 @@ import * as rolldownExperimental from "rolldown/experimental";
 import sirv from "sirv";
 import {
 	type Plugin,
+	type PluginOption,
 	type ResolvedConfig,
 	type ViteDevServer,
 	createLogger,
@@ -35,17 +36,20 @@ export function viteroll(viterollOptions?: {
 			await rolldownBuild?.close();
 		}
 
-		// load fresh user plugins
-		assert(config.configFile);
-		const loaded = await loadConfigFromFile(
-			{ command: "serve", mode: "development" },
-			config.configFile,
-			config.root,
-		);
-		assert(loaded);
-		const plugins = loaded.config.plugins?.filter(
-			(v) => v && "name" in v && v.name !== viteroll.name,
-		);
+		// load fresh user plugins as rolldown plugins
+		let plugins: PluginOption[] = [];
+		if (config.configFile) {
+			const loaded = await loadConfigFromFile(
+				{ command: "serve", mode: "development" },
+				config.configFile,
+				config.root,
+			);
+			assert(loaded);
+			plugins =
+				loaded.config.plugins?.filter(
+					(v) => v && "name" in v && v.name !== viteroll.name,
+				) ?? [];
+		}
 
 		console.time("[rolldown:build]");
 		rolldownBuild = await rolldown.rolldown({
