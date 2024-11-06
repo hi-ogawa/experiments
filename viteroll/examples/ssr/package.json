@@ -1,7 +1,6 @@
 {
 	"type": "module",
 	"scripts": {
-		"ts": "node --experimental-strip-types",
 		"dev": "vite",
 		"test-e2e": "playwright test"
 	}

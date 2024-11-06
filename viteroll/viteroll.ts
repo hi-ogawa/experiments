@@ -211,13 +211,14 @@ class RolldownManager {
 		if (!this.result) {
 			return;
 		}
-		// TODO: no ssr hmr for now
-		if (this.environment.name === "ssr") {
-			await this.build();
+		const output = this.result.output[0];
+		if (!output.moduleIds.includes(ctx.file)) {
 			return;
 		}
-		const output = this.result.output[0];
-		if (output.moduleIds.includes(ctx.file)) {
+		if (this.environment.name === "ssr") {
+			// TODO: no ssr hmr for now
+			await this.build();
+		} else {
 			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
 			console.time(`[rolldown:${this.environment.name}:hmr]`);
 			const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
