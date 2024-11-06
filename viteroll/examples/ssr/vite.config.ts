@@ -5,6 +5,7 @@ export default defineConfig({
 	environments: {
 		client: {
 			build: {
+				outDir: "dist/client",
 				rollupOptions: {
 					input: "./src/entry-client.js",
 				},
@@ -12,6 +13,7 @@ export default defineConfig({
 		},
 		ssr: {
 			build: {
+				outDir: "dist/server",
 				rollupOptions: {
 					input: "./src/entry-server.js",
 				},

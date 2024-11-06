@@ -8,6 +8,7 @@ import * as rolldownExperimental from "rolldown/experimental";
 import sirv from "sirv";
 import {
 	type Environment,
+	type HmrContext,
 	type Plugin,
 	type PluginOption,
 	type ResolvedConfig,
@@ -22,14 +23,14 @@ interface ViterollOptions {
 	reactRefresh?: boolean;
 }
 
+const logger = createLogger("info", {
+	prefix: "[rolldown]",
+	allowClearScreen: false,
+});
+
 export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	let server: ViteDevServer;
 	let managers: { client: RolldownManager; ssr: RolldownManager };
-
-	const logger = createLogger("info", {
-		prefix: "[rolldown]",
-		allowClearScreen: false,
-	});
 
 	return {
 		name: viteroll.name,
@@ -65,7 +66,10 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 					server.environments.client,
 					viterollOptions,
 				),
-				ssr: new RolldownManager(server.environments.ssr, viterollOptions),
+				ssr: new RolldownManager(server.environments.ssr, {
+					...viterollOptions,
+					reactRefresh: false,
+				}),
 			};
 
 			// rolldown server as middleware
@@ -106,17 +110,8 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 			await managers.ssr.close();
 		},
 		async handleHotUpdate(ctx) {
-			const output = managers.client.result.output[0];
-			if (output.moduleIds.includes(ctx.file)) {
-				logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-				console.time("[rolldown:hmr]");
-				const result = await managers.client.instance.experimental_hmr_rebuild([
-					ctx.file,
-				]);
-				console.timeEnd("[rolldown:hmr]");
-				server.ws.send("rolldown:hmr", result);
-				return [];
-			}
+			await managers.client.handleUpdate(ctx);
+			await managers.ssr.handleUpdate(ctx);
 		},
 		transform(code, id) {
 			// remove unnecessary /@vite/env
@@ -170,7 +165,7 @@ class RolldownManager {
 
 		console.time(`[rolldown:${this.environment.name}:build]`);
 		this.instance = await rolldown.rolldown({
-			dev: this.environment.name === "client",
+			dev: true,
 			// NOTE:
 			// we'll need input options during dev too though this sounds very much reasonable.
 			// eventually `build.rollupOptions` should probably come forefront.
@@ -210,6 +205,25 @@ class RolldownManager {
 
 	async close() {
 		await this.instance?.close();
+	}
+
+	async handleUpdate(ctx: HmrContext) {
+		if (!this.result) {
+			return;
+		}
+		// TODO: no ssr hmr for now
+		if (this.environment.name === "ssr") {
+			await this.build();
+			return;
+		}
+		const output = this.result.output[0];
+		if (output.moduleIds.includes(ctx.file)) {
+			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
+			console.time(`[rolldown:${this.environment.name}:hmr]`);
+			const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
+			console.timeEnd(`[rolldown:${this.environment.name}:hmr]`);
+			ctx.server.ws.send("rolldown:hmr", result);
+		}
 	}
 }
 
