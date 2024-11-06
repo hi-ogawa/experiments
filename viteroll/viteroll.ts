@@ -7,6 +7,7 @@ import * as rolldown from "rolldown";
 import * as rolldownExperimental from "rolldown/experimental";
 import sirv from "sirv";
 import {
+	type Environment,
 	type Plugin,
 	type PluginOption,
 	type ResolvedConfig,
@@ -17,14 +18,101 @@ import {
 
 const require = createRequire(import.meta.url);
 
-export function viteroll(viterollOptions?: {
+interface ViterollOptions {
 	reactRefresh?: boolean;
-}): Plugin {
+}
+
+class RolldownManager {
+	instance!: rolldown.RolldownBuild;
+	result!: rolldown.RolldownOutput;
+
+	constructor(
+		public environment: Environment,
+		public viterollOptions: ViterollOptions,
+	) {}
+
+	get config() {
+		return this.environment.config;
+	}
+
+	async build() {
+		if (!this.config.build.rollupOptions.input) {
+			return;
+		}
+
+		await this.instance?.close();
+		const outDir = path.resolve(this.config.root, this.config.build.outDir);
+
+		if (this.config.build.emptyOutDir) {
+			fs.rmSync(outDir, { recursive: true, force: true });
+		}
+
+		// load fresh user plugins as rolldown plugins
+		let plugins: PluginOption[] = [];
+		if (this.config.configFile) {
+			const loaded = await loadConfigFromFile(
+				{ command: "serve", mode: "development" },
+				this.config.configFile,
+				this.config.root,
+			);
+			assert(loaded);
+			plugins =
+				loaded.config.plugins?.filter(
+					(v) => v && "name" in v && v.name !== viteroll.name,
+				) ?? [];
+		}
+
+		console.time(`[rolldown:${this.environment.name}:build]`);
+		this.instance = await rolldown.rolldown({
+			dev: this.environment.name === "client",
+			// NOTE:
+			// we'll need input options during dev too though this sounds very much reasonable.
+			// eventually `build.rollupOptions` should probably come forefront.
+			// https://vite.dev/guide/build.html#multi-page-app
+			input: this.config.build.rollupOptions.input,
+			cwd: this.config.root,
+			platform: "browser",
+			resolve: {
+				conditionNames: this.config.resolve.conditions,
+				mainFields: this.config.resolve.mainFields,
+				symlinks: !this.config.resolve.preserveSymlinks,
+			},
+			define: this.config.define,
+			plugins: [
+				viterollEntryPlugin(this.config, this.viterollOptions),
+				// TODO: how to use jsx-dev-runtime?
+				rolldownExperimental.transformPlugin({
+					reactRefresh: this.viterollOptions?.reactRefresh,
+				}),
+				this.viterollOptions?.reactRefresh ? reactRefreshPlugin() : [],
+				rolldownExperimental.aliasPlugin({
+					entries: this.config.resolve.alias,
+				}),
+				...(plugins as any),
+			],
+		});
+
+		// `generate` should work but we use `write` so it's easier to see output and debug
+		this.result = await this.instance.write({
+			dir: outDir,
+			format: "app",
+			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
+			sourcemap: "inline",
+		});
+		console.timeEnd(`[rolldown:${this.environment.name}:build]`);
+	}
+
+	// TODO
+	handleUpdate() {}
+}
+
+export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	let rolldownBuild: rolldown.RolldownBuild;
 	let rolldownOutput: rolldown.RolldownOutput;
 	let server: ViteDevServer;
 	let config: ResolvedConfig;
 	let outDir: string;
+	let managers: { client: RolldownManager; ssr: RolldownManager };
 
 	const logger = createLogger("info", {
 		prefix: "[rolldown]",
@@ -107,12 +195,32 @@ export function viteroll(viterollOptions?: {
 				},
 			};
 		},
+		configEnvironment(name, config, _env) {
+			if (name === "client") {
+				if (!config.build?.rollupOptions?.input) {
+					return {
+						build: {
+							rollupOptions: {
+								input: "./index.html",
+							},
+						},
+					};
+				}
+			}
+		},
 		configResolved(config_) {
 			config = config_;
 			outDir = path.resolve(config.root, config.build.outDir);
 		},
 		configureServer(server_) {
 			server = server_;
+			managers = {
+				client: new RolldownManager(
+					server.environments.client,
+					viterollOptions,
+				),
+				ssr: new RolldownManager(server.environments.sr, viterollOptions),
+			};
 
 			// rolldown server as middleware
 			server.middlewares.use(sirv(outDir, { dev: true, extensions: ["html"] }));
