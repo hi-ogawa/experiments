@@ -1,5 +1,7 @@
 import assert from "node:assert";
+import fs from "node:fs";
 import { createRequire } from "node:module";
+import path from "node:path";
 import MagicString from "magic-string";
 import * as rolldown from "rolldown";
 import * as rolldownExperimental from "rolldown/experimental";
@@ -21,6 +23,7 @@ export function viteroll(viterollOptions?: {
 	let rolldownOutput: rolldown.RolldownOutput;
 	let server: ViteDevServer;
 	let config: ResolvedConfig;
+	let outDir: string;
 
 	const logger = createLogger("info", {
 		prefix: "[rolldown]",
@@ -47,10 +50,11 @@ export function viteroll(viterollOptions?: {
 		console.time("[rolldown:build]");
 		rolldownBuild = await rolldown.rolldown({
 			dev: true,
-			// TODO: reuse config.build.rollupOptions.input (MPA?)
-			input: {
-				index: "./index.html",
-			},
+			// NOTE:
+			// we'll need input options during dev too though this sounds very much reasonable.
+			// eventually `build.rollupOptions` should probably come forefront.
+			// https://vite.dev/guide/build.html#multi-page-app
+			input: config.build.rollupOptions.input ?? "./index.html",
 			cwd: config.root,
 			platform: "browser",
 			resolve: {
@@ -60,7 +64,7 @@ export function viteroll(viterollOptions?: {
 			},
 			define: config.define,
 			plugins: [
-				viterollEntryPlugin(viterollOptions),
+				viterollEntryPlugin(config, viterollOptions),
 				// TODO: how to use jsx-dev-runtime?
 				rolldownExperimental.transformPlugin({
 					reactRefresh: viterollOptions?.reactRefresh,
@@ -73,7 +77,7 @@ export function viteroll(viterollOptions?: {
 			],
 		});
 
-		// `generate` works but we use `write` so it's easier to see output and debug
+		// `generate` should work but we use `write` so it's easier to see output and debug
 		rolldownOutput = await rolldownBuild.write({
 			dir: config.build.outDir,
 			format: "app",
@@ -99,14 +103,13 @@ export function viteroll(viterollOptions?: {
 		},
 		configResolved(config_) {
 			config = config_;
+			outDir = path.resolve(config.root, config.build.outDir);
 		},
 		configureServer(server_) {
 			server = server_;
 
 			// rolldown server as middleware
-			server.middlewares.use(
-				sirv(config.build.outDir, { dev: true, extensions: ["html"] }),
-			);
+			server.middlewares.use(sirv(outDir, { dev: true, extensions: ["html"] }));
 
 			// full build on non self accepting entry
 			server.ws.on("rolldown:hmr-deadend", async (data) => {
@@ -124,7 +127,8 @@ export function viteroll(viterollOptions?: {
 					arg &&
 					typeof arg === "object" &&
 					arg.type === "full-reload" &&
-					arg.path === "/index.html"
+					typeof arg.path === "string" &&
+					arg.path.endsWith(".html")
 				) {
 					return;
 				}
@@ -132,6 +136,9 @@ export function viteroll(viterollOptions?: {
 			};
 		},
 		async buildStart() {
+			if (config.build.emptyOutDir) {
+				fs.rmSync(outDir, { recursive: true, force: true });
+			}
 			await fullBuild();
 		},
 		async buildEnd() {
@@ -159,9 +166,14 @@ export function viteroll(viterollOptions?: {
 }
 
 // TODO: similar to vite:build-html plugin?
-function viterollEntryPlugin(viterollOptions?: {
-	reactRefresh?: boolean;
-}): rolldown.Plugin {
+function viterollEntryPlugin(
+	config: ResolvedConfig,
+	viterollOptions?: {
+		reactRefresh?: boolean;
+	},
+): rolldown.Plugin {
+	const htmlEntryMap = new Map<string, MagicString>();
+
 	return {
 		name: "viteroll:entry",
 		transform: {
@@ -171,7 +183,9 @@ function viterollEntryPlugin(viterollOptions?: {
 				},
 			},
 			async handler(code, id) {
+				// process html (will be emiited later during generateBundle)
 				const htmlOutput = new MagicString(code);
+				htmlEntryMap.set(id, htmlOutput);
 
 				let jsOutput = ``;
 				if (viterollOptions?.reactRefresh) {
@@ -192,36 +206,6 @@ function viterollEntryPlugin(viterollOptions?: {
 					htmlOutput.remove(start, end);
 				}
 
-				// inject js entry
-				htmlOutput.appendLeft(
-					code.indexOf(`</body>`),
-					// TODO: not hard-code index.js
-					'<script src="/index.js"></script>',
-				);
-
-				// inject client
-				// (reuse /@vite/client for Websocket API)
-				htmlOutput.appendLeft(
-					code.indexOf(`</head>`),
-					`
-					<script type="module">
-						import { createHotContext } from "/@vite/client";
-						const hot = createHotContext("/__rolldown");
-						hot.on("rolldown:hmr", (data) => {
-							(0, eval)(data[1]);
-						});
-						window.__rolldown_hot = hot;
-					</script>
-					`,
-				);
-
-				// emit html
-				this.emitFile({
-					type: "asset",
-					fileName: "index.html",
-					source: htmlOutput.toString(),
-				});
-
 				// emit js entry
 				return {
 					code: jsOutput,
@@ -229,23 +213,66 @@ function viterollEntryPlugin(viterollOptions?: {
 				};
 			},
 		},
+		renderChunk(code) {
+			// patch rolldown_runtime to workaround a few things
+			if (code.includes("//#region rolldown:runtime")) {
+				const output = new MagicString(code);
+				// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
+				output.replace(/const socket =.*?\n};/s, "");
+				// trigger full rebuild on non-accepting entry invalidation
+				output
+					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
+					.replace(
+						"for (var i = 0; i < module.parents.length; i++) {",
+						`
+						if (module.parents.length === 0) {
+							__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
+							break;
+						}
+						for (var i = 0; i < module.parents.length; i++) {`,
+					);
+				return { code: output.toString(), map: output.generateMap() };
+			}
+		},
 		generateBundle(_options, bundle) {
-			const entry = bundle["index.js"];
-			assert(entry.type === "chunk");
-			// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
-			entry.code = entry.code.replace(/const socket =.*?\n};/s, "");
-			// trigger full rebuild on non-accepting entry invalidation
-			entry.code = entry.code
-				.replace("parents: [parent],", "parents: parent ? [parent] : [],")
-				.replace(
-					"for (var i = 0; i < module.parents.length; i++) {",
-					`
-					if (module.parents.length === 0) {
-						__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
-						break;
+			for (const key in bundle) {
+				const chunk = bundle[key];
+				// emit final html
+				if (chunk.type === "chunk" && chunk.facadeModuleId) {
+					const htmlId = chunk.facadeModuleId;
+					const htmlOutput = htmlEntryMap.get(htmlId);
+					if (htmlOutput) {
+						// inject js entry
+						htmlOutput.appendLeft(
+							htmlOutput.original.indexOf(`</body>`),
+							`<script src="/${chunk.fileName}"></script>`,
+						);
+
+						// inject client
+						// (reuse /@vite/client for Websocket API)
+						htmlOutput.appendLeft(
+							htmlOutput.original.indexOf(`</head>`),
+							`
+							<script type="module">
+								import { createHotContext } from "/@vite/client";
+								const hot = createHotContext("/__rolldown");
+								hot.on("rolldown:hmr", (data) => {
+									(0, eval)(data[1]);
+								});
+								window.__rolldown_hot = hot;
+							</script>
+							`,
+						);
+
+						this.emitFile({
+							type: "asset",
+							fileName: path.relative(config.root, htmlId),
+							originalFileName: htmlId,
+							source: htmlOutput.toString(),
+						});
 					}
-					for (var i = 0; i < module.parents.length; i++) {`,
-				);
+				}
+			}
 		},
 	};
 }

@@ -5,6 +5,7 @@ Integrating [Rolldown HMR](https://github.com/rolldown/rolldown/tree/hmr-poc) as
 ```sh
 pnpm dev
 pnpm -C examples/react dev
+pnpm -C examples/mpa dev
 ```
 
 ## links

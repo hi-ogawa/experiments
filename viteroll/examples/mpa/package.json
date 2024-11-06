@@ -1,0 +1,7 @@
+{
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"test-e2e": "playwright test"
+	}
+}

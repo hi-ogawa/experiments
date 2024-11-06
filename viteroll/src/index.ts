@@ -3,6 +3,7 @@ import virtualTest from "virtual:test";
 import { h, render } from "preact";
 import { useState } from "preact/hooks";
 import { depHmr } from "./dep-hmr";
+import { throwError } from "./error";
 
 // TODO: `declare` prevents define replacement
 // https://github.com/oxc-project/oxc/issues/7090
@@ -24,6 +25,15 @@ function App() {
 			typeof __TEST_DEFINE__ !== "undefined" ? __TEST_DEFINE__ : "NOT OK",
 		),
 		h("p", {}, `[virtual:test] `, virtualTest),
+		h(
+			"button",
+			{
+				onClick: () => {
+					throwError();
+				},
+			},
+			`Test error stack`,
+		),
 	);
 }
 
