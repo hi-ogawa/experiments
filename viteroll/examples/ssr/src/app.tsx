@@ -5,7 +5,17 @@ export function App() {
 	return (
 		<div>
 			<h1>Rolldown SSR</h1>
+			<Hydrated />
 			<button onClick={() => setCount((c) => c + 1)}>Count: {count}</button>
 		</div>
 	);
+}
+
+function Hydrated() {
+	const hydrated = React.useSyncExternalStore(
+		React.useCallback(() => () => {}, []),
+		() => true,
+		() => false,
+	);
+	return <p>hydrated: {String(hydrated)}</p>;
 }
