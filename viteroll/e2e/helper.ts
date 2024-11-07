@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import test from "@playwright/test";
 
 export function createEditor(filepath: string) {
 	let init = fs.readFileSync(filepath, "utf-8");
@@ -13,3 +14,7 @@ export function createEditor(filepath: string) {
 		},
 	};
 }
+
+export const testNoJs = test.extend({
+	javaScriptEnabled: ({}, use) => use(false),
+});

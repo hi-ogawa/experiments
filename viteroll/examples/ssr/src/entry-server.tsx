@@ -1,8 +1,11 @@
-import { Connect } from "vite";
+import ReactDOMServer from "react-dom/server.browser";
+import type { Connect } from "vite";
+import { App } from "./app";
 
 const handler: Connect.SimpleHandleFunction = (req, res) => {
 	const url = new URL(req.url ?? "/", "https://vite.dev");
 	console.log(`[SSR] ${req.method} ${url.pathname}`);
+	const ssrHtml = ReactDOMServer.renderToString(<App />);
 	res.setHeader("content-type", "text/html");
 	// TODO: transformIndexHtml?
 	res.end(`\
@@ -20,9 +23,7 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
 		</script>
 	</head>
 	<body>
-		<h1>Rolldown SSR</h1>
-		<div>pathname: ${url.pathname}</div>
-		<div id="root"></div>
+		<div id="root">${ssrHtml}</div>
 		<script src="/entry-client.js"></script>
 	</body>
 </html>
