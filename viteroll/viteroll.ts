@@ -7,7 +7,10 @@ import * as rolldown from "rolldown";
 import * as rolldownExperimental from "rolldown/experimental";
 import sirv from "sirv";
 import {
+	type Environment,
+	type HmrContext,
 	type Plugin,
+	type PluginOption,
 	type ResolvedConfig,
 	type ViteDevServer,
 	createLogger,
@@ -16,76 +19,18 @@ import {
 
 const require = createRequire(import.meta.url);
 
-export function viteroll(viterollOptions?: {
+interface ViterollOptions {
 	reactRefresh?: boolean;
-}): Plugin {
-	let rolldownBuild: rolldown.RolldownBuild;
-	let rolldownOutput: rolldown.RolldownOutput;
+}
+
+const logger = createLogger("info", {
+	prefix: "[rolldown]",
+	allowClearScreen: false,
+});
+
+export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	let server: ViteDevServer;
-	let config: ResolvedConfig;
-	let outDir: string;
-
-	const logger = createLogger("info", {
-		prefix: "[rolldown]",
-		allowClearScreen: false,
-	});
-
-	async function fullBuild() {
-		if (rolldownBuild) {
-			await rolldownBuild?.close();
-		}
-
-		// load fresh user plugins
-		assert(config.configFile);
-		const loaded = await loadConfigFromFile(
-			{ command: "serve", mode: "development" },
-			config.configFile,
-			config.root,
-		);
-		assert(loaded);
-		const plugins = loaded.config.plugins?.filter(
-			(v) => v && "name" in v && v.name !== viteroll.name,
-		);
-
-		console.time("[rolldown:build]");
-		rolldownBuild = await rolldown.rolldown({
-			dev: true,
-			// NOTE:
-			// we'll need input options during dev too though this sounds very much reasonable.
-			// eventually `build.rollupOptions` should probably come forefront.
-			// https://vite.dev/guide/build.html#multi-page-app
-			input: config.build.rollupOptions.input ?? "./index.html",
-			cwd: config.root,
-			platform: "browser",
-			resolve: {
-				conditionNames: config.resolve.conditions,
-				mainFields: config.resolve.mainFields,
-				symlinks: !config.resolve.preserveSymlinks,
-			},
-			define: config.define,
-			plugins: [
-				viterollEntryPlugin(config, viterollOptions),
-				// TODO: how to use jsx-dev-runtime?
-				rolldownExperimental.transformPlugin({
-					reactRefresh: viterollOptions?.reactRefresh,
-				}),
-				viterollOptions?.reactRefresh ? reactRefreshPlugin() : [],
-				rolldownExperimental.aliasPlugin({
-					entries: config.resolve.alias,
-				}),
-				...(plugins as any),
-			],
-		});
-
-		// `generate` should work but we use `write` so it's easier to see output and debug
-		rolldownOutput = await rolldownBuild.write({
-			dir: config.build.outDir,
-			format: "app",
-			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
-			sourcemap: "inline",
-		});
-		console.timeEnd("[rolldown:build]");
-	}
+	let managers: { client: RolldownManager; ssr: RolldownManager };
 
 	return {
 		name: viteroll.name,
@@ -101,20 +46,41 @@ export function viteroll(viterollOptions?: {
 				},
 			};
 		},
-		configResolved(config_) {
-			config = config_;
-			outDir = path.resolve(config.root, config.build.outDir);
+		configEnvironment(name, config, _env) {
+			if (name === "client") {
+				if (!config.build?.rollupOptions?.input) {
+					return {
+						build: {
+							rollupOptions: {
+								input: "./index.html",
+							},
+						},
+					};
+				}
+			}
 		},
 		configureServer(server_) {
 			server = server_;
+			managers = {
+				client: new RolldownManager(
+					server.environments.client,
+					viterollOptions,
+				),
+				ssr: new RolldownManager(server.environments.ssr, {
+					...viterollOptions,
+					reactRefresh: false,
+				}),
+			};
 
 			// rolldown server as middleware
-			server.middlewares.use(sirv(outDir, { dev: true, extensions: ["html"] }));
+			server.middlewares.use(
+				sirv(managers.client.outDir, { dev: true, extensions: ["html"] }),
+			);
 
 			// full build on non self accepting entry
 			server.ws.on("rolldown:hmr-deadend", async (data) => {
 				logger.info(`hmr-deadend '${data.moduleId}'`, { timestamp: true });
-				await fullBuild();
+				await managers.client.build();
 				server.ws.send({ type: "full-reload" });
 			});
 
@@ -136,23 +102,21 @@ export function viteroll(viterollOptions?: {
 			};
 		},
 		async buildStart() {
-			if (config.build.emptyOutDir) {
-				fs.rmSync(outDir, { recursive: true, force: true });
-			}
-			await fullBuild();
+			await managers.client.build();
+			await managers.ssr.build();
 		},
 		async buildEnd() {
-			await rolldownBuild.close();
+			await managers.client.close();
+			await managers.ssr.close();
 		},
 		async handleHotUpdate(ctx) {
-			const output = rolldownOutput.output[0];
-			if (output.moduleIds.includes(ctx.file)) {
-				logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-				console.time("[rolldown:hmr]");
-				const result = await rolldownBuild.experimental_hmr_rebuild([ctx.file]);
-				console.timeEnd("[rolldown:hmr]");
-				server.ws.send("rolldown:hmr", result);
-				return [];
+			// TODO: for now full build on ssr change
+			const ssrUpdate = await managers.ssr.handleUpdate(ctx);
+			if (ssrUpdate) {
+				await managers.client.build();
+				server.ws.send({ type: "full-reload" });
+			} else {
+				await managers.client.handleUpdate(ctx);
 			}
 		},
 		transform(code, id) {
@@ -165,12 +129,123 @@ export function viteroll(viterollOptions?: {
 	};
 }
 
-// TODO: similar to vite:build-html plugin?
+// TODO: RolldownEnvironment?
+class RolldownManager {
+	instance!: rolldown.RolldownBuild;
+	result!: rolldown.RolldownOutput;
+	outDir: string;
+
+	constructor(
+		public environment: Environment,
+		public viterollOptions: ViterollOptions,
+	) {
+		this.outDir = path.resolve(this.config.root, this.config.build.outDir);
+	}
+
+	get config() {
+		return this.environment.config;
+	}
+
+	get name() {
+		return this.environment.name;
+	}
+
+	async build() {
+		if (!this.config.build.rollupOptions.input) {
+			return;
+		}
+
+		await this.instance?.close();
+
+		if (this.config.build.emptyOutDir) {
+			fs.rmSync(this.outDir, { recursive: true, force: true });
+		}
+
+		// load fresh user plugins as rolldown plugins
+		let plugins: PluginOption[] = [];
+		if (this.config.configFile) {
+			const loaded = await loadConfigFromFile(
+				{ command: "serve", mode: "development" },
+				this.config.configFile,
+				this.config.root,
+			);
+			assert(loaded);
+			plugins =
+				loaded.config.plugins?.filter(
+					(v) => v && "name" in v && v.name !== viteroll.name,
+				) ?? [];
+		}
+
+		console.time(`[rolldown:${this.environment.name}:build]`);
+		this.instance = await rolldown.rolldown({
+			// TODO: no dev ssr for now
+			dev: this.name === "client",
+			// NOTE:
+			// we'll need input options during dev too though this sounds very much reasonable.
+			// eventually `build.rollupOptions` should probably come forefront.
+			// https://vite.dev/guide/build.html#multi-page-app
+			input: this.config.build.rollupOptions.input,
+			cwd: this.config.root,
+			platform: this.name === "client" ? "browser" : "node",
+			resolve: {
+				conditionNames: this.config.resolve.conditions,
+				mainFields: this.config.resolve.mainFields,
+				symlinks: !this.config.resolve.preserveSymlinks,
+			},
+			define: this.config.define,
+			plugins: [
+				viterollEntryPlugin(this.config, this.viterollOptions),
+				// TODO: how to use jsx-dev-runtime?
+				rolldownExperimental.transformPlugin({
+					reactRefresh: this.viterollOptions?.reactRefresh,
+				}),
+				this.viterollOptions?.reactRefresh ? reactRefreshPlugin() : [],
+				rolldownExperimental.aliasPlugin({
+					entries: this.config.resolve.alias,
+				}),
+				...(plugins as any),
+			],
+		});
+
+		// `generate` should work but we use `write` so it's easier to see output and debug
+		this.result = await this.instance.write({
+			dir: this.outDir,
+			format: this.name === "client" ? "app" : "es",
+			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
+			sourcemap: "inline",
+		});
+		console.timeEnd(`[rolldown:${this.environment.name}:build]`);
+	}
+
+	async close() {
+		await this.instance?.close();
+	}
+
+	async handleUpdate(ctx: HmrContext) {
+		if (!this.result) {
+			return;
+		}
+		const output = this.result.output[0];
+		if (!output.moduleIds.includes(ctx.file)) {
+			return;
+		}
+		if (this.name === "ssr") {
+			await this.build();
+		} else {
+			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
+			console.time(`[rolldown:${this.environment.name}:hmr]`);
+			const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
+			console.timeEnd(`[rolldown:${this.environment.name}:hmr]`);
+			ctx.server.ws.send("rolldown:hmr", result);
+		}
+		return true;
+	}
+}
+
+// TODO: copy vite:build-html plugin
 function viterollEntryPlugin(
 	config: ResolvedConfig,
-	viterollOptions?: {
-		reactRefresh?: boolean;
-	},
+	viterollOptions: ViterollOptions,
 ): rolldown.Plugin {
 	const htmlEntryMap = new Map<string, MagicString>();
 

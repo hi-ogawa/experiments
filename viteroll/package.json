@@ -22,7 +22,7 @@
 		"preact": "^10.24.3",
 		"rolldown": "0.13.2-snapshot-a292401-20241105072341",
 		"typescript": "^5.6.3",
-		"vite": "^5.4.10"
+		"vite": "6.0.0-beta.8"
 	},
 	"peerDependencies": {
 		"rolldown": "*",
