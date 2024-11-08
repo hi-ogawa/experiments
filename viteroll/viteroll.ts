@@ -37,7 +37,7 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 
 	return {
 		name: viteroll.name,
-		config() {
+		config(config) {
 			return {
 				appType: "custom",
 				optimizeDeps: {
@@ -53,6 +53,14 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 							createEnvironment:
 								RolldownEnvironment.createFactory(viterollOptions),
 						},
+						build: {
+							rollupOptions: {
+								input:
+									config.build?.rollupOptions?.input ??
+									config.environments?.client.build?.rollupOptions?.input ??
+									"./index.html",
+							},
+						},
 					},
 					ssr: {
 						dev: {
@@ -62,19 +70,6 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 					},
 				},
 			};
-		},
-		configEnvironment(name, config, _env) {
-			if (name === "client") {
-				if (!config.build?.rollupOptions?.input) {
-					return {
-						build: {
-							rollupOptions: {
-								input: "./index.html",
-							},
-						},
-					};
-				}
-			}
 		},
 		configureServer(server_) {
 			server = server_;
