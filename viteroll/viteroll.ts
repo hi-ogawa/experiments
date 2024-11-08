@@ -2,12 +2,14 @@ import assert from "node:assert";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import MagicString from "magic-string";
 import * as rolldown from "rolldown";
 import * as rolldownExperimental from "rolldown/experimental";
 import sirv from "sirv";
 import {
-	type Environment,
+	DevEnvironment,
+	type DevEnvironmentOptions,
 	type HmrContext,
 	type Plugin,
 	type PluginOption,
@@ -20,6 +22,7 @@ import {
 const require = createRequire(import.meta.url);
 
 interface ViterollOptions {
+	hmr?: boolean;
 	reactRefresh?: boolean;
 }
 
@@ -30,7 +33,7 @@ const logger = createLogger("info", {
 
 export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	let server: ViteDevServer;
-	let managers: { client: RolldownManager; ssr: RolldownManager };
+	let environments: Record<"client" | "ssr", RolldownEnvironment>;
 
 	return {
 		name: viteroll.name,
@@ -43,6 +46,20 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 				define: {
 					// TODO: copy vite:define plugin
 					"process.env.NODE_ENV": "'development'",
+				},
+				environments: {
+					client: {
+						dev: {
+							createEnvironment:
+								RolldownEnvironment.createFactory(viterollOptions),
+						},
+					},
+					ssr: {
+						dev: {
+							createEnvironment:
+								RolldownEnvironment.createFactory(viterollOptions),
+						},
+					},
 				},
 			};
 		},
@@ -61,26 +78,17 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 		},
 		configureServer(server_) {
 			server = server_;
-			managers = {
-				client: new RolldownManager(
-					server.environments.client,
-					viterollOptions,
-				),
-				ssr: new RolldownManager(server.environments.ssr, {
-					...viterollOptions,
-					reactRefresh: false,
-				}),
-			};
+			environments = server.environments as any;
 
 			// rolldown server as middleware
 			server.middlewares.use(
-				sirv(managers.client.outDir, { dev: true, extensions: ["html"] }),
+				sirv(environments.client.outDir, { dev: true, extensions: ["html"] }),
 			);
 
 			// full build on non self accepting entry
 			server.ws.on("rolldown:hmr-deadend", async (data) => {
 				logger.info(`hmr-deadend '${data.moduleId}'`, { timestamp: true });
-				await managers.client.build();
+				await environments.client.build();
 				server.ws.send({ type: "full-reload" });
 			});
 
@@ -101,17 +109,9 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 				oldSend.apply(this, args);
 			};
 		},
-		async buildStart() {
-			await managers.client.build();
-			await managers.ssr.build();
-		},
-		async buildEnd() {
-			await managers.client.close();
-			await managers.ssr.close();
-		},
 		async handleHotUpdate(ctx) {
-			await managers.ssr.handleUpdate(ctx);
-			await managers.client.handleUpdate(ctx);
+			await environments.ssr.handleUpdate(ctx);
+			await environments.client.handleUpdate(ctx);
 		},
 		transform(code, id) {
 			// remove unnecessary /@vite/env
@@ -123,25 +123,35 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	};
 }
 
-// TODO: RolldownEnvironment?
-class RolldownManager {
+export class RolldownEnvironment extends DevEnvironment {
 	instance!: rolldown.RolldownBuild;
 	result!: rolldown.RolldownOutput;
-	outDir: string;
+	outDir!: string;
+	buildTimestamp = Date.now();
+
+	static createFactory(
+		viterollOptions: ViterollOptions,
+	): NonNullable<DevEnvironmentOptions["createEnvironment"]> {
+		return (name, config) =>
+			new RolldownEnvironment(viterollOptions, name, config);
+	}
 
 	constructor(
-		public environment: Environment,
 		public viterollOptions: ViterollOptions,
+		name: ConstructorParameters<typeof DevEnvironment>[0],
+		config: ConstructorParameters<typeof DevEnvironment>[1],
 	) {
-		this.outDir = path.resolve(this.config.root, this.config.build.outDir);
+		super(name, config, { hot: false });
+		this.outDir = path.join(this.config.root, this.config.build.outDir);
 	}
 
-	get config() {
-		return this.environment.config;
+	override async init() {
+		await super.init();
+		await this.build();
 	}
 
-	get name() {
-		return this.environment.name;
+	override async close() {
+		await this.instance?.close();
 	}
 
 	async build() {
@@ -170,7 +180,7 @@ class RolldownManager {
 				) ?? [];
 		}
 
-		console.time(`[rolldown:${this.environment.name}:build]`);
+		console.time(`[rolldown:${this.name}:build]`);
 		this.instance = await rolldown.rolldown({
 			// TODO: no dev ssr for now
 			dev: this.name === "client",
@@ -208,11 +218,8 @@ class RolldownManager {
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
 		});
-		console.timeEnd(`[rolldown:${this.environment.name}:build]`);
-	}
-
-	async close() {
-		await this.instance?.close();
+		this.buildTimestamp = Date.now();
+		console.timeEnd(`[rolldown:${this.name}:build]`);
 	}
 
 	async handleUpdate(ctx: HmrContext) {
@@ -227,12 +234,19 @@ class RolldownManager {
 			await this.build();
 		} else {
 			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-			console.time(`[rolldown:${this.environment.name}:hmr]`);
+			console.time(`[rolldown:${this.name}:hmr]`);
 			const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
-			console.timeEnd(`[rolldown:${this.environment.name}:hmr]`);
+			console.timeEnd(`[rolldown:${this.name}:hmr]`);
 			ctx.server.ws.send("rolldown:hmr", result);
 		}
 		return true;
+	}
+
+	async import(input: string): Promise<unknown> {
+		const output = this.result.output.find((o) => o.name === input);
+		assert(output, `invalid import input '${input}'`);
+		const filepath = path.join(this.outDir, output.fileName);
+		return import(`${pathToFileURL(filepath)}?t=${this.buildTimestamp}`);
 	}
 }
 
