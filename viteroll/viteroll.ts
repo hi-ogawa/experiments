@@ -22,7 +22,6 @@ import {
 const require = createRequire(import.meta.url);
 
 interface ViterollOptions {
-	hmr?: boolean;
 	reactRefresh?: boolean;
 }
 
