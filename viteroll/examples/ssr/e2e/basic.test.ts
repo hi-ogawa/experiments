@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { createEditor, testNoJs } from "../../../e2e/helper";
 
 testNoJs("ssr", async ({ page }) => {
@@ -11,7 +11,7 @@ test("csr", async ({ page }) => {
 	await page.getByText("hydrated: true").click();
 });
 
-test("hmr", async ({ page }) => {
+test("hmr", async ({ page, request }) => {
 	await page.goto("/");
 	await page.getByText("hydrated: true").click();
 
@@ -24,4 +24,8 @@ test("hmr", async ({ page }) => {
 
 	file.edit((s) => s.replace("Count-EDIT:", "Count-EDIT-EDIT:"));
 	await page.getByRole("button", { name: "Count-EDIT-EDIT: 2" }).click();
+
+	// server module is also invalidated
+	const res = await request.get("/");
+	expect(await res.text()).toContain("Count-EDIT-EDIT");
 });
