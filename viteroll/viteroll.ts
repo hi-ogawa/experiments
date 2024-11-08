@@ -156,7 +156,7 @@ export class RolldownEnvironment extends DevEnvironment {
 
 		await this.instance?.close();
 
-		if (this.config.build.emptyOutDir) {
+		if (this.config.build.emptyOutDir !== false) {
 			fs.rmSync(this.outDir, { recursive: true, force: true });
 		}
 
