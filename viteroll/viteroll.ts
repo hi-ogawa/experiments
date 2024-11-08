@@ -176,7 +176,7 @@ export class RolldownEnvironment extends DevEnvironment {
 		}
 
 		console.time(`[rolldown:${this.name}:build]`);
-		this.instance = await rolldown.rolldown({
+		const inputOptions: rolldown.InputOptions = {
 			// TODO: no dev ssr for now
 			dev: this.name === "client",
 			// NOTE:
@@ -196,23 +196,29 @@ export class RolldownEnvironment extends DevEnvironment {
 				viterollEntryPlugin(this.config, this.viterollOptions),
 				// TODO: how to use jsx-dev-runtime?
 				rolldownExperimental.transformPlugin({
-					reactRefresh: this.viterollOptions?.reactRefresh,
+					reactRefresh:
+						this.name === "client" && this.viterollOptions?.reactRefresh,
 				}),
-				this.viterollOptions?.reactRefresh ? reactRefreshPlugin() : [],
+				this.name === "client" && this.viterollOptions?.reactRefresh
+					? reactRefreshPlugin()
+					: [],
 				rolldownExperimental.aliasPlugin({
 					entries: this.config.resolve.alias,
 				}),
 				...(plugins as any),
 			],
-		});
+		};
+		this.instance = await rolldown.rolldown(inputOptions);
 
 		// `generate` should work but we use `write` so it's easier to see output and debug
-		this.result = await this.instance.write({
+		const outputOptions: rolldown.OutputOptions = {
 			dir: this.outDir,
 			format: this.name === "client" ? "app" : "es",
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
-		});
+		};
+		this.result = await this.instance.write(outputOptions);
+
 		this.buildTimestamp = Date.now();
 		console.timeEnd(`[rolldown:${this.name}:build]`);
 	}
