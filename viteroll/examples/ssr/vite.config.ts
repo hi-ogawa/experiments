@@ -1,6 +1,5 @@
-import path from "node:path";
 import { defineConfig } from "vite";
-import { viteroll } from "../../viteroll";
+import { RolldownEnvironment, viteroll } from "../../viteroll";
 
 export default defineConfig({
 	environments: {
@@ -16,7 +15,9 @@ export default defineConfig({
 			build: {
 				outDir: "dist/server",
 				rollupOptions: {
-					input: "./src/entry-server",
+					input: {
+						index: "./src/entry-server",
+					},
 				},
 			},
 		},
@@ -34,12 +35,10 @@ export default defineConfig({
 			},
 			configureServer(server) {
 				return () => {
+					const devEnv = server.environments.ssr as RolldownEnvironment;
 					server.middlewares.use(async (req, res, next) => {
 						try {
-							// TODO: move to environment api
-							const entry = path.resolve("dist/server/entry-server.js");
-							// TODO: invalidate on build update
-							const mod = await import(entry + "?t=" + Date.now());
+							const mod = (await devEnv.import("index")) as any;
 							await mod.default(req, res);
 						} catch (e) {
 							next(e);
