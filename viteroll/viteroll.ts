@@ -276,7 +276,9 @@ function viterollEntryPlugin(
 				}
 
 				// extract <script src="...">
-				const matches = code.matchAll(/<script\s+src="([^"]+)"><\/script>/dg);
+				const matches = code.matchAll(
+					/<script\b[^>]+\bsrc=["']([^"']+)["'][^>]*>.*?<\/script>/dg,
+				);
 				for (const match of matches) {
 					const src = match[1];
 					const resolved = await this.resolve(src, id);
