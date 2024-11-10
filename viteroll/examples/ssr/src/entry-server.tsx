@@ -1,6 +1,4 @@
-// use browser build to avoid `require("stream")`
-// https://github.com/rolldown/rolldown/issues/2041
-import ReactDOMServer from "react-dom/server.browser";
+import ReactDOMServer from "react-dom/server";
 import type { Connect } from "vite";
 import { App } from "./app";
 

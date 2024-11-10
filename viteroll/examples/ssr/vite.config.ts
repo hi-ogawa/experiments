@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import { RolldownEnvironment, viteroll } from "../../viteroll";
 
+process.setSourceMapsEnabled(true);
+
 export default defineConfig({
 	environments: {
 		client: {

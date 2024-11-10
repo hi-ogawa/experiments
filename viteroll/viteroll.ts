@@ -212,9 +212,15 @@ export class RolldownEnvironment extends DevEnvironment {
 		// `generate` should work but we use `write` so it's easier to see output and debug
 		const outputOptions: rolldown.OutputOptions = {
 			dir: this.outDir,
-			format: this.name === "client" ? "app" : "es",
+			format: this.name === "client" ? "app" : "esm",
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
+			// TODO: https://github.com/rolldown/rolldown/issues/2041
+			// handle `require("stream")` in `react-dom/server`
+			banner:
+				this.name === "ssr"
+					? `import __nodeModule from "node:module"; const require = __nodeModule.createRequire(import.meta.url);`
+					: undefined,
 		};
 		this.result = await this.instance.write(outputOptions);
 

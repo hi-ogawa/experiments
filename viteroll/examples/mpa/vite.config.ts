@@ -3,11 +3,15 @@ import { viteroll } from "../../viteroll";
 
 export default defineConfig({
 	root: "./src",
-	build: {
-		rollupOptions: {
-			input: {
-				index: "./index.html",
-				about: "./about/index.html",
+	environments: {
+		client: {
+			build: {
+				rollupOptions: {
+					input: {
+						index: "./index.html",
+						about: "./about/index.html",
+					},
+				},
 			},
 		},
 	},
