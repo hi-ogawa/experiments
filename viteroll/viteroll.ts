@@ -79,6 +79,19 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 				sirv(environments.client.outDir, { dev: true, extensions: ["html"] }),
 			);
 
+			// reuse /@vite/client for Websocket API but serve it on our own
+			// TODO: include it in `rolldown_runtime`?
+			const rolldownClientCode = getRolldownClientCode();
+			server.middlewares.use((req, res, next) => {
+				const url = new URL(req.url ?? "", "https://rolldown.rs");
+				if (url.pathname === "/@rolldown/client") {
+					res.setHeader("content-type", "text/javascript;charset=utf-8");
+					res.end(rolldownClientCode);
+					return;
+				}
+				next();
+			});
+
 			// full build on non self accepting entry
 			server.ws.on("rolldown:hmr-deadend", async (data) => {
 				logger.info(`hmr-deadend '${data.moduleId}'`, { timestamp: true });
@@ -107,14 +120,39 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 			await environments.ssr.handleUpdate(ctx);
 			await environments.client.handleUpdate(ctx);
 		},
-		transform(code, id) {
-			// remove unnecessary /@vite/env
-			if (id.endsWith("/vite/dist/client/client.mjs")) {
-				code = code.replace(`import '@vite/env'`, "/* @vite/env removed */");
-				return { code, map: null };
-			}
-		},
 	};
+}
+
+function getRolldownClientCode() {
+	const viteClientPath = require.resolve("vite/dist/client/client.mjs");
+	let code = fs.readFileSync(viteClientPath, "utf-8");
+	const replacements = {
+		// https://github.com/vitejs/vite/blob/55461b43329db6a5e737eab591163a8681ba9230/packages/vite/src/node/plugins/clientInjections.ts
+		__BASE__: `"/"`,
+		__SERVER_HOST__: `""`,
+		__HMR_PROTOCOL__: `null`,
+		__HMR_HOSTNAME__: `null`,
+		__HMR_PORT__: `new URL(import.meta.url).port`,
+		__HMR_DIRECT_TARGET__: `""`,
+		__HMR_BASE__: `"/"`,
+		__HMR_TIMEOUT__: `30000`,
+		__HMR_ENABLE_OVERLAY__: `true`,
+		__HMR_CONFIG_NAME__: `""`,
+		// runtime define is not necessary
+		[`import '@vite/env';`]: ``,
+	};
+	for (const [k, v] of Object.entries(replacements)) {
+		code = code.replaceAll(k, v);
+	}
+	// inject own hmr event handler
+	code += `
+const hot = createHotContext("/__rolldown");
+hot.on("rolldown:hmr", (data) => {
+	(0, eval)(data[1]);
+});
+window.__rolldown_hot = hot;
+`;
+	return code;
 }
 
 export class RolldownEnvironment extends DevEnvironment {
@@ -340,19 +378,9 @@ function viterollEntryPlugin(
 						);
 
 						// inject client
-						// (reuse /@vite/client for Websocket API)
 						htmlOutput.appendLeft(
 							htmlOutput.original.indexOf(`</head>`),
-							`
-							<script type="module">
-								import { createHotContext } from "/@vite/client";
-								const hot = createHotContext("/__rolldown");
-								hot.on("rolldown:hmr", (data) => {
-									(0, eval)(data[1]);
-								});
-								window.__rolldown_hot = hot;
-							</script>
-							`,
+							`<script type="module" src="/@rolldown/client"></script>`,
 						);
 
 						this.emitFile({
