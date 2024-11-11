@@ -13,14 +13,7 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<script type="module">
-			import { createHotContext } from "/@vite/client";
-			const hot = createHotContext("/__rolldown");
-			hot.on("rolldown:hmr", (data) => {
-				(0, eval)(data[1]);
-			});
-			window.__rolldown_hot = hot;
-		</script>
+		<script type="module" src="/@rolldown/client"></script>
 	</head>
 	<body>
 		<div id="root">${ssrHtml}</div>
