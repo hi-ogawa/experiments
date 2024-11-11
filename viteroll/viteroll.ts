@@ -83,7 +83,7 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 			// TODO: include it in `rolldown_runtime`?
 			const rolldownClientCode = getRolldownClientCode();
 			server.middlewares.use((req, res, next) => {
-				const url = new URL(req.url ?? "", "https://vite.dev");
+				const url = new URL(req.url ?? "", "https://rolldown.rs");
 				if (url.pathname === "/@rolldown/client") {
 					res.setHeader("content-type", "text/javascript;charset=utf-8");
 					res.end(rolldownClientCode);
