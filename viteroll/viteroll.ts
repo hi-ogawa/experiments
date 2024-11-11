@@ -127,7 +127,7 @@ function getRolldownClientCode() {
 	const viteClientPath = require.resolve("vite/dist/client/client.mjs");
 	let code = fs.readFileSync(viteClientPath, "utf-8");
 	const replacements = {
-		// cf. packages/vite/src/node/plugins/clientInjections.ts
+		// https://github.com/vitejs/vite/blob/55461b43329db6a5e737eab591163a8681ba9230/packages/vite/src/node/plugins/clientInjections.ts
 		__BASE__: `"/"`,
 		__SERVER_HOST__: `""`,
 		__HMR_PROTOCOL__: `null`,
