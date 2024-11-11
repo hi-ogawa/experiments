@@ -140,7 +140,6 @@ function getRolldownClientCode() {
 		__HMR_CONFIG_NAME__: `""`,
 		// runtime define is not necessary
 		[`import '@vite/env';`]: ``,
-		[`export { ErrorOverlay, createHotContext, injectQuery, removeStyle, updateStyle };`]: ``,
 	};
 	for (const [k, v] of Object.entries(replacements)) {
 		code = code.replaceAll(k, v);
