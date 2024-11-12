@@ -145,7 +145,7 @@ hot.on("rolldown:hmr", (data) => {
 });
 window.__rolldown_hot = hot;
 `;
-	return code;
+	return `(() => {/*** @vite/client for rolldown ***/\n${code}}\n)()`;
 }
 
 export class RolldownEnvironment extends DevEnvironment {
