@@ -63,8 +63,10 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 					},
 					ssr: {
 						dev: {
-							createEnvironment:
-								RolldownEnvironment.createFactory(viterollOptions),
+							createEnvironment: RolldownEnvironment.createFactory({
+								...viterollOptions,
+								reactRefresh: false,
+							}),
 						},
 					},
 				},
