@@ -81,19 +81,6 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 				sirv(environments.client.outDir, { dev: true, extensions: ["html"] }),
 			);
 
-			// reuse /@vite/client for Websocket API but serve it on our own
-			// TODO: include it in `rolldown_runtime`?
-			const rolldownClientCode = getRolldownClientCode();
-			server.middlewares.use((req, res, next) => {
-				const url = new URL(req.url ?? "", "https://rolldown.rs");
-				if (url.pathname === "/@rolldown/client") {
-					res.setHeader("content-type", "text/javascript;charset=utf-8");
-					res.end(rolldownClientCode);
-					return;
-				}
-				next();
-			});
-
 			// full build on non self accepting entry
 			server.ws.on("rolldown:hmr-deadend", async (data) => {
 				logger.info(`hmr-deadend '${data.moduleId}'`, { timestamp: true });
@@ -125,16 +112,18 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 	};
 }
 
+// reuse /@vite/client for Websocket API and inject to rolldown:runtime
 function getRolldownClientCode() {
 	const viteClientPath = require.resolve("vite/dist/client/client.mjs");
 	let code = fs.readFileSync(viteClientPath, "utf-8");
 	const replacements = {
 		// https://github.com/vitejs/vite/blob/55461b43329db6a5e737eab591163a8681ba9230/packages/vite/src/node/plugins/clientInjections.ts
+		"import.meta.url": "self.location.href",
 		__BASE__: `"/"`,
 		__SERVER_HOST__: `""`,
 		__HMR_PROTOCOL__: `null`,
 		__HMR_HOSTNAME__: `null`,
-		__HMR_PORT__: `new URL(import.meta.url).port`,
+		__HMR_PORT__: `new URL(self.location.href).port`,
 		__HMR_DIRECT_TARGET__: `""`,
 		__HMR_BASE__: `"/"`,
 		__HMR_TIMEOUT__: `30000`,
@@ -142,6 +131,7 @@ function getRolldownClientCode() {
 		__HMR_CONFIG_NAME__: `""`,
 		// runtime define is not necessary
 		[`import '@vite/env';`]: ``,
+		[`export { ErrorOverlay, createHotContext, injectQuery, removeStyle, updateStyle };`]: ``,
 	};
 	for (const [k, v] of Object.entries(replacements)) {
 		code = code.replaceAll(k, v);
@@ -345,8 +335,8 @@ function viterollEntryPlugin(
 			// patch rolldown_runtime to workaround a few things
 			if (code.includes("//#region rolldown:runtime")) {
 				const output = new MagicString(code);
-				// patch out hard-coded WebSocket setup "const socket = WebSocket(`ws://localhost:8080`)"
-				output.replace(/const socket =.*?\n};/s, "");
+				// replace hard-coded WebSocket setup with custom one
+				output.replace(/const socket =.*?\n};/s, getRolldownClientCode());
 				// trigger full rebuild on non-accepting entry invalidation
 				output
 					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
@@ -377,12 +367,6 @@ function viterollEntryPlugin(
 						htmlOutput.appendLeft(
 							htmlOutput.original.indexOf(`</body>`),
 							`<script src="/${chunk.fileName}"></script>`,
-						);
-
-						// inject client
-						htmlOutput.appendLeft(
-							htmlOutput.original.indexOf(`</head>`),
-							`<script type="module" src="/@rolldown/client"></script>`,
 						);
 
 						this.emitFile({
