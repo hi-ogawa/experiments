@@ -117,3 +117,4 @@ jobs:
       - run: pnpm test-e2e
       - run: pnpm -C examples/react test-e2e
       - run: pnpm -C examples/mpa test-e2e
+      - run: pnpm -C examples/ssr test-e2e
