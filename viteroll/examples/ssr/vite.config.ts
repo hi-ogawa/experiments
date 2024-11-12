@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { RolldownEnvironment, viteroll } from "../../viteroll";
+// import { RolldownEnvironment, viteroll } from "../../viteroll";
 
 process.setSourceMapsEnabled(true);
 
@@ -24,10 +24,13 @@ export default defineConfig({
 			},
 		},
 	},
+	experimental: {
+		rolldownDev: { hmr: true, reactRefresh: true },
+	},
 	plugins: [
-		viteroll({
-			reactRefresh: true,
-		}),
+		// viteroll({
+		// 	reactRefresh: true,
+		// }),
 		{
 			name: "ssr-middleware",
 			config() {
@@ -37,10 +40,11 @@ export default defineConfig({
 			},
 			configureServer(server) {
 				return () => {
-					const devEnv = server.environments.ssr as RolldownEnvironment;
 					server.middlewares.use(async (req, res, next) => {
 						try {
-							const mod = (await devEnv.import("index")) as any;
+							const mod = (await (server.environments.ssr as any).import(
+								"index",
+							)) as any;
 							await mod.default(req, res);
 						} catch (e) {
 							next(e);
