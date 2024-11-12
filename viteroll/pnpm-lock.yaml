@@ -6,7 +6,7 @@ settings:
 
 overrides:
   rolldown: 0.13.2-snapshot-a292401-20241105072341
-  vite: 6.0.0-beta.8
+  vite: ./vite-6.0.0-beta.8.tgz
 
 importers:
 
@@ -41,8 +41,8 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
       vite:
-        specifier: 6.0.0-beta.8
-        version: 6.0.0-beta.8(@types/node@22.8.5)
+        specifier: ./vite-6.0.0-beta.8.tgz
+        version: file:vite-6.0.0-beta.8.tgz(@types/node@22.8.5)
 
   examples/mpa: {}
 
@@ -772,8 +772,9 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  vite@6.0.0-beta.8:
-    resolution: {integrity: sha512-KbUpk2e8NvL1aYGJdV4FfppDq/ygwTm+YUqGyUUb30K9R2Z9Up6a1D4203D2YRQb5pT4hChmYsXPA3MZ1R3ohA==}
+  vite@file:vite-6.0.0-beta.8.tgz:
+    resolution: {integrity: sha512-B8BnnW4DL8mqftbKod44Cl09YmuXaHZeUWtogsQHZp9ke9O+t6PZR72S1kD0YHq9pBDbdId6IAVL3hTNIoFJMw==, tarball: file:vite-6.0.0-beta.8.tgz}
+    version: 6.0.0-beta.8
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -1404,13 +1405,19 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  vite@6.0.0-beta.8(@types/node@22.8.5):
+  vite@file:vite-6.0.0-beta.8.tgz(@types/node@22.8.5):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.47
+      react-refresh: 0.14.2
+      rolldown: 0.13.2-snapshot-a292401-20241105072341
       rollup: 4.24.3
     optionalDependencies:
       '@types/node': 22.8.5
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
 
   watchpack@2.4.2:
     dependencies:

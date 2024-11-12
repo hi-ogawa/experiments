@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { viteroll } from "../../viteroll";
+// import { viteroll } from "../../viteroll";
 
 export default defineConfig({
 	root: "./src",
@@ -15,5 +15,8 @@ export default defineConfig({
 			},
 		},
 	},
-	plugins: [viteroll()],
+	experimental: {
+		rolldownDev: { hmr: true, reactRefresh: true },
+	},
+	// plugins: [viteroll()],
 });

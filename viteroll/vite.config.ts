@@ -1,6 +1,6 @@
 import * as rolldown from "rolldown";
 import { type Plugin, defineConfig } from "vite";
-import { viteroll } from "./viteroll";
+// import { viteroll } from "./viteroll";
 
 export default defineConfig({
 	clearScreen: false,
@@ -10,8 +10,11 @@ export default defineConfig({
 	resolve: {
 		alias: {},
 	},
+	experimental: {
+		rolldownDev: { hmr: true },
+	},
 	plugins: [
-		viteroll(),
+		// viteroll(),
 		{
 			name: "test-virtual",
 			resolveId: {
