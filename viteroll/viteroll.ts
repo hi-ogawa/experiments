@@ -113,13 +113,13 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 }
 
 // reuse /@vite/client for Websocket API and inject to rolldown:runtime
-function getRolldownClientCode() {
+function getRolldownClientCode(config: ResolvedConfig) {
+	config.base;
 	const viteClientPath = require.resolve("vite/dist/client/client.mjs");
 	let code = fs.readFileSync(viteClientPath, "utf-8");
 	const replacements = {
-		// https://github.com/vitejs/vite/blob/55461b43329db6a5e737eab591163a8681ba9230/packages/vite/src/node/plugins/clientInjections.ts
-		"import.meta.url": "self.location.href",
-		__BASE__: `"/"`,
+		// TODO: https://github.com/vitejs/vite/blob/55461b43329db6a5e737eab591163a8681ba9230/packages/vite/src/node/plugins/clientInjections.ts
+		__BASE__: JSON.stringify(config.base),
 		__SERVER_HOST__: `""`,
 		__HMR_PROTOCOL__: `null`,
 		__HMR_HOSTNAME__: `null`,
@@ -133,6 +133,7 @@ function getRolldownClientCode() {
 		[`import '@vite/env';`]: ``,
 		// remove esm code since this runs as classic script
 		[`export { ErrorOverlay, createHotContext, injectQuery, removeStyle, updateStyle };`]: ``,
+		"import.meta.url": "self.location.href",
 	};
 	for (const [k, v] of Object.entries(replacements)) {
 		code = code.replaceAll(k, v);
@@ -337,7 +338,7 @@ function viterollEntryPlugin(
 			if (code.includes("//#region rolldown:runtime")) {
 				const output = new MagicString(code);
 				// replace hard-coded WebSocket setup with custom one
-				output.replace(/const socket =.*?\n};/s, getRolldownClientCode());
+				output.replace(/const socket =.*?\n};/s, getRolldownClientCode(config));
 				// trigger full rebuild on non-accepting entry invalidation
 				output
 					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
