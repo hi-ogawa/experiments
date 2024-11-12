@@ -131,6 +131,7 @@ function getRolldownClientCode() {
 		__HMR_CONFIG_NAME__: `""`,
 		// runtime define is not necessary
 		[`import '@vite/env';`]: ``,
+		// remove esm code since this runs as classic script
 		[`export { ErrorOverlay, createHotContext, injectQuery, removeStyle, updateStyle };`]: ``,
 	};
 	for (const [k, v] of Object.entries(replacements)) {
