@@ -63,8 +63,10 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 					},
 					ssr: {
 						dev: {
-							createEnvironment:
-								RolldownEnvironment.createFactory(viterollOptions),
+							createEnvironment: RolldownEnvironment.createFactory({
+								...viterollOptions,
+								reactRefresh: false,
+							}),
 						},
 					},
 				},
@@ -315,9 +317,6 @@ function viterollEntryPlugin(
 				htmlEntryMap.set(id, htmlOutput);
 
 				let jsOutput = ``;
-				if (viterollOptions?.reactRefresh) {
-					jsOutput += `import "virtual:react-refresh/entry";\n`;
-				}
 
 				// extract <script src="...">
 				const matches = code.matchAll(
@@ -360,6 +359,9 @@ function viterollEntryPlugin(
 						}
 						for (var i = 0; i < module.parents.length; i++) {`,
 					);
+				if (viterollOptions.reactRefresh) {
+					output.prepend(getReactRefreshRuntimeCode());
+				}
 				return { code: output.toString(), map: output.generateMap() };
 			}
 		},
@@ -396,7 +398,6 @@ function viterollEntryPlugin(
 	};
 }
 
-// TODO: workaround rolldownExperimental.reactPlugin which injects js to html via `load` hook
 function reactRefreshPlugin(): rolldown.Plugin {
 	return {
 		name: "react-hmr",
@@ -407,65 +408,54 @@ function reactRefreshPlugin(): rolldown.Plugin {
 				},
 			},
 			handler(code, id) {
-				const output = new MagicString(code);
-				output.prepend(`
-					import * as __$refresh from 'virtual:react-refresh';
-					const [$RefreshSig$, $RefreshReg$] = __$refresh.create(${JSON.stringify(id)});
-				`);
-				output.append(`
-					__$refresh.setupHot(module.hot);
-				`);
-				return { code: output.toString(), map: output.generateMap() };
-			},
-		},
-		resolveId: {
-			filter: {
-				id: {
-					include: [/^virtual:react-refresh/],
-				},
-			},
-			handler: (source) => "\0" + source,
-		},
-		load: {
-			filter: {
-				id: {
-					include: [/^\0virtual:react-refresh/],
-				},
-			},
-			async handler(id) {
-				const resolved = require.resolve("react-refresh/runtime");
-				if (id === "\0virtual:react-refresh/entry") {
-					return `
-						import runtime from ${JSON.stringify(resolved)};
-						runtime.injectIntoGlobalHook(window);
-					`;
-				}
-				if (id === "\0virtual:react-refresh") {
-					return `
-						import runtime from ${JSON.stringify(resolved)};
-
-						export const create = (file) => [
-							runtime.createSignatureFunctionForTransform,
-							(type, id) => runtime.register(type, file + '_' + id),
-						];
-
-						function debounce(fn, delay) {
-							let handle
-							return () => {
-								clearTimeout(handle)
-								handle = setTimeout(fn, delay)
-							}
-						}
-						const debouncedRefresh = debounce(runtime.performReactRefresh, 16);
-
-						export function setupHot(hot) {
-							hot.accept((prev) => {
-								debouncedRefresh();
-							});
-						}
-					`;
-				}
+				return [
+					`const [$RefreshSig$, $RefreshReg$] = __react_refresh_transform_define(${JSON.stringify(id)})`,
+					code,
+					`__react_refresh_transform_setupHot(module.hot)`,
+				].join(";");
 			},
 		},
 	};
+}
+
+// inject react refresh runtime in client runtime to ensure initialized early
+function getReactRefreshRuntimeCode() {
+	let code = fs.readFileSync(
+		path.resolve(
+			require.resolve("react-refresh/runtime"),
+			"..",
+			"cjs/react-refresh-runtime.development.js",
+		),
+		"utf-8",
+	);
+	const output = new MagicString(code);
+	output.prepend("self.__react_refresh_runtime = {};\n");
+	output.replaceAll('process.env.NODE_ENV !== "production"', "true");
+	output.replaceAll(/\bexports\./g, "__react_refresh_runtime.");
+	output.append(`
+		(() => {
+			__react_refresh_runtime.injectIntoGlobalHook(self);
+
+			__react_refresh_transform_define = (file) => [
+				__react_refresh_runtime.createSignatureFunctionForTransform,
+				(type, id) => __react_refresh_runtime.register(type, file + '_' + id)
+			];
+
+			__react_refresh_transform_setupHot = (hot) => {
+				hot.accept((prev) => {
+					debouncedRefresh();
+				});
+			};
+
+			function debounce(fn, delay) {
+				let handle
+				return () => {
+					clearTimeout(handle)
+					handle = setTimeout(fn, delay)
+				}
+			}
+			const debouncedRefresh = debounce(__react_refresh_runtime.performReactRefresh, 16);
+		})()
+	`);
+	return output.toString();
 }
