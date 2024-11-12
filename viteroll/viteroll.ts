@@ -114,7 +114,6 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 
 // reuse /@vite/client for Websocket API and inject to rolldown:runtime
 function getRolldownClientCode(config: ResolvedConfig) {
-	config.base;
 	const viteClientPath = require.resolve("vite/dist/client/client.mjs");
 	let code = fs.readFileSync(viteClientPath, "utf-8");
 	const replacements = {
