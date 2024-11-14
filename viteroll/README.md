@@ -12,4 +12,4 @@ pnpm -C examples/mpa dev
 ## links
 
 - https://github.com/users/hi-ogawa/projects/4/views/1?pane=issue&itemId=84997064
-- https://github.com/hi-ogawa/rolldown/tree/feat-vite-like
+- https://github.com/rolldown/vite/pull/66
