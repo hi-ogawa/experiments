@@ -23,6 +23,7 @@ const require = createRequire(import.meta.url);
 
 interface ViterollOptions {
 	reactRefresh?: boolean;
+	ssrPatchModule?: boolean;
 }
 
 const logger = createLogger("info", {
@@ -151,7 +152,9 @@ window.__rolldown_hot = hot;
 export class RolldownEnvironment extends DevEnvironment {
 	instance!: rolldown.RolldownBuild;
 	result!: rolldown.RolldownOutput;
-	outDir!: string;
+	outDir: string;
+	inputOptions!: rolldown.InputOptions;
+	outputOptions!: rolldown.OutputOptions;
 	buildTimestamp = Date.now();
 
 	static createFactory(
@@ -206,7 +209,7 @@ export class RolldownEnvironment extends DevEnvironment {
 		}
 
 		console.time(`[rolldown:${this.name}:build]`);
-		const inputOptions: rolldown.InputOptions = {
+		this.inputOptions = {
 			// TODO: no dev ssr for now
 			dev: this.name === "client",
 			// NOTE:
@@ -238,12 +241,16 @@ export class RolldownEnvironment extends DevEnvironment {
 				...(plugins as any),
 			],
 		};
-		this.instance = await rolldown.rolldown(inputOptions);
+		this.instance = await rolldown.rolldown(this.inputOptions);
 
 		// `generate` should work but we use `write` so it's easier to see output and debug
-		const outputOptions: rolldown.OutputOptions = {
+		this.outputOptions = {
 			dir: this.outDir,
-			format: this.name === "client" ? "app" : "esm",
+			format:
+				this.name === "client" ||
+				(this.name === "ssr" && this.viterollOptions.ssrPatchModule)
+					? "app"
+					: "esm",
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
 			// TODO: https://github.com/rolldown/rolldown/issues/2041
@@ -253,7 +260,7 @@ export class RolldownEnvironment extends DevEnvironment {
 					? `import __nodeModule from "node:module"; const require = __nodeModule.createRequire(import.meta.url);`
 					: undefined,
 		};
-		this.result = await this.instance.write(outputOptions);
+		this.result = await this.instance.write(this.outputOptions);
 
 		this.buildTimestamp = Date.now();
 		console.timeEnd(`[rolldown:${this.name}:build]`);
@@ -268,7 +275,11 @@ export class RolldownEnvironment extends DevEnvironment {
 			return;
 		}
 		if (this.name === "ssr") {
-			await this.build();
+			if (this.outputOptions.format === "app") {
+				// TODO
+			} else {
+				await this.build();
+			}
 		} else {
 			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
 			console.time(`[rolldown:${this.name}:hmr]`);
@@ -276,10 +287,12 @@ export class RolldownEnvironment extends DevEnvironment {
 			console.timeEnd(`[rolldown:${this.name}:hmr]`);
 			ctx.server.ws.send("rolldown:hmr", result);
 		}
-		return true;
 	}
 
 	async import(input: string): Promise<unknown> {
+		if (this.outputOptions.format === "app") {
+			// TODO: eval or vm
+		}
 		const output = this.result.output.find((o) => o.name === input);
 		assert(output, `invalid import input '${input}'`);
 		const filepath = path.join(this.outDir, output.fileName);
