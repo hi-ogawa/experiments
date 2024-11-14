@@ -27,7 +27,7 @@ export default defineConfig({
 	plugins: [
 		viteroll({
 			reactRefresh: true,
-			// ssrPatchModule: true,
+			ssrPatchModule: true,
 		}),
 		{
 			name: "ssr-middleware",
@@ -41,7 +41,7 @@ export default defineConfig({
 					const devEnv = server.environments.ssr as RolldownEnvironment;
 					server.middlewares.use(async (req, res, next) => {
 						try {
-							const mod = (await devEnv.import("index")) as any;
+							const mod = (await devEnv.import("src/entry-server.tsx")) as any;
 							await mod.default(req, res);
 						} catch (e) {
 							next(e);

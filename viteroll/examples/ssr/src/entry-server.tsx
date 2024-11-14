@@ -1,4 +1,5 @@
-import ReactDOMServer from "react-dom/server";
+// @ts-ignore TODO: external require (e.g. require("stream")) not supported
+import ReactDOMServer from "react-dom/server.browser";
 import type { Connect } from "vite";
 import { App } from "./app";
 
@@ -23,3 +24,7 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
 };
 
 export default handler;
+
+if (typeof module !== "undefined") {
+	(module as any).hot.accept();
+}

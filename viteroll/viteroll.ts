@@ -226,7 +226,7 @@ export class RolldownEnvironment extends DevEnvironment {
 			},
 			define: this.config.define,
 			plugins: [
-				viterollEntryPlugin(this.config, this.viterollOptions),
+				viterollEntryPlugin(this.config, this.viterollOptions, this),
 				// TODO: how to use jsx-dev-runtime?
 				rolldownExperimental.transformPlugin({
 					reactRefresh:
@@ -243,23 +243,24 @@ export class RolldownEnvironment extends DevEnvironment {
 		};
 		this.instance = await rolldown.rolldown(this.inputOptions);
 
-		// `generate` should work but we use `write` so it's easier to see output and debug
+		const format: rolldown.ModuleFormat =
+			this.name === "client" ||
+			(this.name === "ssr" && this.viterollOptions.ssrPatchModule)
+				? "app"
+				: "esm";
 		this.outputOptions = {
 			dir: this.outDir,
-			format:
-				this.name === "client" ||
-				(this.name === "ssr" && this.viterollOptions.ssrPatchModule)
-					? "app"
-					: "esm",
+			format,
 			// TODO: hmr_rebuild returns source map file when `sourcemap: true`
 			sourcemap: "inline",
 			// TODO: https://github.com/rolldown/rolldown/issues/2041
 			// handle `require("stream")` in `react-dom/server`
 			banner:
-				this.name === "ssr"
+				this.name === "ssr" && format === "esm"
 					? `import __nodeModule from "node:module"; const require = __nodeModule.createRequire(import.meta.url);`
 					: undefined,
 		};
+		// `generate` should work but we use `write` so it's easier to see output and debug
 		this.result = await this.instance.write(this.outputOptions);
 
 		this.buildTimestamp = Date.now();
@@ -276,7 +277,10 @@ export class RolldownEnvironment extends DevEnvironment {
 		}
 		if (this.name === "ssr") {
 			if (this.outputOptions.format === "app") {
-				// TODO
+				console.time(`[rolldown:${this.name}:hmr]`);
+				const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
+				this.getRunner().evaluate(result[1].toString());
+				console.timeEnd(`[rolldown:${this.name}:hmr]`);
 			} else {
 				await this.build();
 			}
@@ -289,9 +293,22 @@ export class RolldownEnvironment extends DevEnvironment {
 		}
 	}
 
+	runner!: RolldownModuleRunner;
+
+	getRunner() {
+		if (!this.runner) {
+			const output = this.result.output[0];
+			const filepath = path.join(this.outDir, output.fileName);
+			this.runner = new RolldownModuleRunner();
+			const code = fs.readFileSync(filepath, "utf-8");
+			this.runner.evaluate(code);
+		}
+		return this.runner;
+	}
+
 	async import(input: string): Promise<unknown> {
 		if (this.outputOptions.format === "app") {
-			// TODO: eval or vm
+			return this.getRunner().import(input);
 		}
 		const output = this.result.output.find((o) => o.name === input);
 		assert(output, `invalid import input '${input}'`);
@@ -300,10 +317,54 @@ export class RolldownEnvironment extends DevEnvironment {
 	}
 }
 
+class RolldownModuleRunner {
+	// intercept globals
+	private context = {
+		rolldown_runtime: {} as any,
+		__rolldown_hot: {
+			send: () => {},
+		},
+		// TODO
+		// should be aware of importer for non static require/import.
+		// they needs to be transformed beforehand, so runtime can intercept.
+		require,
+	};
+
+	// TODO: support resolution?
+	async import(id: string): Promise<unknown> {
+		const mod = this.context.rolldown_runtime.moduleCache[id];
+		assert(mod, `Module not found '${id}'`);
+		return mod.exports;
+	}
+
+	evaluate(code: string) {
+		const context = {
+			self: this.context,
+			...this.context,
+		};
+		// TODO: sourcemap
+		code = code.replace(/^\/\/# sourceMapping.*$/m, "");
+		const wrapped = `'use strict';(${Object.keys(context).join(",")})=>{{
+			${code};
+			// TODO: need to re-expose runtime utilities for now
+			self.__toCommonJS = __toCommonJS;
+			self.__export = __export;
+			self.__toESM = __toESM;
+		}}`;
+		const fn = (0, eval)(wrapped);
+		try {
+			fn(...Object.values(context));
+		} catch (e) {
+			console.error(e);
+		}
+	}
+}
+
 // TODO: copy vite:build-html plugin
 function viterollEntryPlugin(
 	config: ResolvedConfig,
 	viterollOptions: ViterollOptions,
+	environment: RolldownEnvironment,
 ): rolldown.Plugin {
 	const htmlEntryMap = new Map<string, MagicString>();
 
@@ -350,7 +411,10 @@ function viterollEntryPlugin(
 			if (code.includes("//#region rolldown:runtime")) {
 				const output = new MagicString(code);
 				// replace hard-coded WebSocket setup with custom one
-				output.replace(/const socket =.*?\n};/s, getRolldownClientCode(config));
+				output.replace(
+					/const socket =.*?\n};/s,
+					environment.name === "client" ? getRolldownClientCode(config) : "",
+				);
 				// trigger full rebuild on non-accepting entry invalidation
 				output
 					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
