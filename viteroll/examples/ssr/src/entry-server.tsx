@@ -24,7 +24,3 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
 };
 
 export default handler;
-
-if (typeof module !== "undefined") {
-	(module as any).hot.accept();
-}

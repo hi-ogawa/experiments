@@ -417,11 +417,21 @@ function viterollEntryPlugin(
 				);
 				// trigger full rebuild on non-accepting entry invalidation
 				output
+					.replace(
+						"this.executeModuleStack.length > 1",
+						"this.executeModuleStack.length >= 1",
+					)
 					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
+					.replace(
+						"if (module.parents.indexOf(parent) === -1) {",
+						"if (parent && module.parents.indexOf(parent) === -1) {",
+					)
 					.replace(
 						"for (var i = 0; i < module.parents.length; i++) {",
 						`
-						if (module.parents.length === 0) {
+						boundaries.push(moduleId);
+						invalidModuleIds.push(moduleId);
+						if (module.parents.filter(Boolean).length === 0) {
 							__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
 							break;
 						}
