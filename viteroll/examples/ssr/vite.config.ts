@@ -27,7 +27,7 @@ export default defineConfig({
 	plugins: [
 		viteroll({
 			reactRefresh: true,
-			ssrPatchModule: true,
+			ssrModuleRunner: true,
 		}),
 		{
 			name: "ssr-middleware",

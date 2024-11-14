@@ -23,7 +23,7 @@ const require = createRequire(import.meta.url);
 
 interface ViterollOptions {
 	reactRefresh?: boolean;
-	ssrPatchModule?: boolean;
+	ssrModuleRunner?: boolean;
 }
 
 const logger = createLogger("info", {
@@ -245,7 +245,7 @@ export class RolldownEnvironment extends DevEnvironment {
 
 		const format: rolldown.ModuleFormat =
 			this.name === "client" ||
-			(this.name === "ssr" && this.viterollOptions.ssrPatchModule)
+			(this.name === "ssr" && this.viterollOptions.ssrModuleRunner)
 				? "app"
 				: "esm";
 		this.outputOptions = {
