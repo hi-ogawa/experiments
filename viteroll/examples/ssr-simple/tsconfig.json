@@ -1,0 +1,16 @@
+{
+	"include": ["src", "*.ts"],
+	"compilerOptions": {
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"verbatimModuleSyntax": true,
+		"allowImportingTsExtensions": true,
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
+		"target": "ESNext",
+		"lib": ["ESNext", "DOM"],
+		"jsx": "react-jsx",
+		"noEmit": true
+	}
+}

@@ -1,7 +1,4 @@
-// @ts-ignore TODO: external require (e.g. require("stream")) not supported
-import ReactDOMServer from "react-dom/server.browser";
 import type { Connect } from "vite";
-import { App } from "./app";
 
 const handler: Connect.SimpleHandleFunction = (req, res) => {
 	const url = new URL(req.url ?? "/", "https://vite.dev");
@@ -9,7 +6,6 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
 	if (url.pathname === "/crash-ssr") {
 		throw new Error("crash-ssr");
 	}
-	const ssrHtml = ReactDOMServer.renderToString(<App />);
 	res.setHeader("content-type", "text/html");
 	// TODO: transformIndexHtml?
 	res.end(`\
@@ -19,8 +15,7 @@ const handler: Connect.SimpleHandleFunction = (req, res) => {
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	</head>
 	<body>
-		<div id="root">${ssrHtml}</div>
-		<script src="/entry-client.js"></script>
+		Test SSR
 	</body>
 </html>
 `);

@@ -342,16 +342,36 @@ class RolldownModuleRunner {
 			self: this.context,
 			...this.context,
 		};
-		// TODO: sourcemap
-		code = code.replace(/^\/\/# sourceMapping.*$/m, "");
-		const wrapped = `'use strict';(${Object.keys(context).join(",")})=>{{
-			${code};
-			// TODO: need to re-expose runtime utilities for now
-			self.__toCommonJS = __toCommonJS;
-			self.__export = __export;
-			self.__toESM = __toESM;
-		}}`;
-		const fn = (0, eval)(wrapped);
+		// TODO: sourcemap not working?
+		// extract sourcemap
+		const sourcemap = code.match(/^\/\/# sourceMappingURL=.*/m)?.[0] ?? "";
+		if (sourcemap) {
+			code = code.replace(sourcemap, "");
+		}
+		// as eval
+		code = `\
+'use strict';(${Object.keys(context).join(",")})=>{{${code}
+// TODO: need to re-expose runtime utilities for now
+self.__toCommonJS = __toCommonJS;
+self.__export = __export;
+self.__toESM = __toESM;
+}}
+//# sourceMappingSource=rolldown-module-runner
+${sourcemap}
+`;
+		// as new Function
+		// code = `\
+		// ${code}
+		// // TODO: need to re-expose runtime utilities for now
+		// self.__toCommonJS = __toCommonJS;
+		// self.__export = __export;
+		// self.__toESM = __toESM;
+		// //# sourceMappingSource=rolldown-module-runner
+		// ${sourcemap}
+		// `;
+		fs.writeFileSync("dump.js", code);
+		const fn = (0, eval)(code);
+		// const fn = new Function(...Object.keys(context), code);
 		try {
 			fn(...Object.values(context));
 		} catch (e) {
@@ -440,7 +460,10 @@ function viterollEntryPlugin(
 				if (viterollOptions.reactRefresh) {
 					output.prepend(getReactRefreshRuntimeCode());
 				}
-				return { code: output.toString(), map: output.generateMap() };
+				return {
+					code: output.toString(),
+					map: output.generateMap({ hires: "boundary" }),
+				};
 			}
 		},
 		generateBundle(_options, bundle) {
