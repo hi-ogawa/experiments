@@ -279,7 +279,7 @@ export class RolldownEnvironment extends DevEnvironment {
 			if (this.outputOptions.format === "app") {
 				console.time(`[rolldown:${this.name}:hmr]`);
 				const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
-				this.getRunner().evaluate(result[1].toString());
+				this.getRunner().evaluate(result[1].toString(), result[0]);
 				console.timeEnd(`[rolldown:${this.name}:hmr]`);
 			} else {
 				await this.build();
@@ -301,7 +301,7 @@ export class RolldownEnvironment extends DevEnvironment {
 			const filepath = path.join(this.outDir, output.fileName);
 			this.runner = new RolldownModuleRunner();
 			const code = fs.readFileSync(filepath, "utf-8");
-			this.runner.evaluate(code);
+			this.runner.evaluate(code, filepath);
 		}
 		return this.runner;
 	}
@@ -337,12 +337,11 @@ class RolldownModuleRunner {
 		return mod.exports;
 	}
 
-	evaluate(code: string) {
+	evaluate(code: string, sourceURL: string) {
 		const context = {
 			self: this.context,
 			...this.context,
 		};
-		// TODO: sourcemap not working?
 		// extract sourcemap
 		const sourcemap = code.match(/^\/\/# sourceMappingURL=.*/m)?.[0] ?? "";
 		if (sourcemap) {
@@ -356,23 +355,11 @@ self.__toCommonJS = __toCommonJS;
 self.__export = __export;
 self.__toESM = __toESM;
 }}
-//# sourceMappingSource=rolldown-module-runner
+//# sourceURL=${sourceURL}
 ${sourcemap}
 `;
-		// as new Function
-		// code = `\
-		// ${code}
-		// // TODO: need to re-expose runtime utilities for now
-		// self.__toCommonJS = __toCommonJS;
-		// self.__export = __export;
-		// self.__toESM = __toESM;
-		// //# sourceMappingSource=rolldown-module-runner
-		// ${sourcemap}
-		// `;
-		fs.writeFileSync("dump.js", code);
-		const fn = (0, eval)(code);
-		// const fn = new Function(...Object.keys(context), code);
 		try {
+			const fn = (0, eval)(code);
 			fn(...Object.values(context));
 		} catch (e) {
 			console.error(e);
