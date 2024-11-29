@@ -310,9 +310,11 @@ export class RolldownEnvironment extends DevEnvironment {
 		if (this.outputOptions.format === "app") {
 			return this.getRunner().import(input);
 		}
-		const output = this.result.output.find((o) => o.name === input);
-		assert(output, `invalid import input '${input}'`);
+		// input is no use
+		const output = this.result.output[0];
 		const filepath = path.join(this.outDir, output.fileName);
+		// TODO: source map not applied when adding `?t=...`?
+		// return import(`${pathToFileURL(filepath)}`)
 		return import(`${pathToFileURL(filepath)}?t=${this.buildTimestamp}`);
 	}
 }
