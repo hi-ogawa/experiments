@@ -274,6 +274,23 @@ export class RolldownEnvironment extends DevEnvironment {
 		console.timeEnd(`[rolldown:${this.name}:build]`);
 	}
 
+	async buildHmr(file: string) {
+		logger.info(`hmr '${file}'`, { timestamp: true });
+		this.changedFiles = [file];
+		this.changedModules = {};
+		await this.build();
+		const newCode = this.changedModules[file];
+		const stableId = path.relative(this.config.root, file);
+		const output = `\
+self.rolldown_runtime.patch([${JSON.stringify(stableId)}], function(){
+	rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){
+		${newCode}
+	})
+})
+`;
+		return [path.join(this.outDir, "hmr-update.js"), output];
+	}
+
 	async handleUpdate(ctx: HmrContext) {
 		if (!this.result) {
 			return;
@@ -284,27 +301,14 @@ export class RolldownEnvironment extends DevEnvironment {
 		}
 		if (this.name === "ssr") {
 			if (this.outputOptions.format === "app") {
-				console.time(`[rolldown:${this.name}:hmr]`);
-				const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
+				const result = await this.buildHmr(ctx.file);
 				this.getRunner().evaluate(result[1].toString(), result[0]);
-				console.timeEnd(`[rolldown:${this.name}:hmr]`);
 			} else {
 				await this.build();
 			}
 		} else {
-			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-			this.changedFiles = [ctx.file];
-			this.changedModules = {};
-			await this.build();
-			const stableId = path.relative(this.config.root, ctx.file);
-			const output = `\
-self.rolldown_runtime.patch([${JSON.stringify(stableId)}], function(){
-	rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){
-		${this.changedModules[ctx.file]}
-	})
-})
-`;
-			ctx.server.ws.send("rolldown:hmr", [null, output]);
+			const result = await this.buildHmr(ctx.file);
+			ctx.server.ws.send("rolldown:hmr", result);
 		}
 	}
 
@@ -456,7 +460,7 @@ function viterollEntryPlugin(
 						boundaries.push(moduleId);
 						invalidModuleIds.push(moduleId);
 						if (module.parents.filter(Boolean).length === 0) {
-							window.location.reload();
+							globalThis.window?.location.reload();
 							break;
 						}
 						for (var i = 0; i < module.parents.length; i++) {`,
