@@ -29,3 +29,9 @@ test("hmr", async ({ page, request }) => {
 	const res = await request.get("/");
 	expect(await res.text()).toContain("Count-EDIT-EDIT");
 });
+
+test("server stacktrace", async ({ page }) => {
+	const res = await page.goto("/crash-ssr");
+	expect(await res?.text()).toContain("examples/ssr/src/error.tsx:8:8");
+	expect(res?.status()).toBe(500);
+});
