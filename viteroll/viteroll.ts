@@ -77,7 +77,15 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 			server = server_;
 			environments = server.environments as any;
 
-			// rolldown server as middleware
+			// rolldown assets middleware
+			server.middlewares.use(async (_req, _res, next) => {
+				try {
+					await environments.client.buildPromise;
+					next();
+				} catch (e) {
+					next(e);
+				}
+			});
 			server.middlewares.use(
 				sirv(environments.client.outDir, { dev: true, extensions: ["html"] }),
 			);
@@ -151,6 +159,7 @@ export class RolldownEnvironment extends DevEnvironment {
 	buildTimestamp = Date.now();
 	changedFiles: string[] = [];
 	changedModules: Record<string, string> = {};
+	buildPromise?: Promise<void>;
 
 	static createFactory(
 		viterollOptions: ViterollOptions,
@@ -178,6 +187,10 @@ export class RolldownEnvironment extends DevEnvironment {
 	}
 
 	async build() {
+		return (this.buildPromise = this.buildImpl());
+	}
+
+	async buildImpl() {
 		if (!this.config.build.rollupOptions.input) {
 			return;
 		}
