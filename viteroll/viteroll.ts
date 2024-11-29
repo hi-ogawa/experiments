@@ -279,7 +279,7 @@ export class RolldownEnvironment extends DevEnvironment {
 			if (this.outputOptions.format === "app") {
 				console.time(`[rolldown:${this.name}:hmr]`);
 				const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
-				this.getRunner().evaluate(result[1].toString());
+				this.getRunner().evaluate(result[1].toString(), result[0]);
 				console.timeEnd(`[rolldown:${this.name}:hmr]`);
 			} else {
 				await this.build();
@@ -301,7 +301,7 @@ export class RolldownEnvironment extends DevEnvironment {
 			const filepath = path.join(this.outDir, output.fileName);
 			this.runner = new RolldownModuleRunner();
 			const code = fs.readFileSync(filepath, "utf-8");
-			this.runner.evaluate(code);
+			this.runner.evaluate(code, filepath);
 		}
 		return this.runner;
 	}
@@ -310,9 +310,11 @@ export class RolldownEnvironment extends DevEnvironment {
 		if (this.outputOptions.format === "app") {
 			return this.getRunner().import(input);
 		}
-		const output = this.result.output.find((o) => o.name === input);
-		assert(output, `invalid import input '${input}'`);
+		// input is no use
+		const output = this.result.output[0];
 		const filepath = path.join(this.outDir, output.fileName);
+		// TODO: source map not applied when adding `?t=...`?
+		// return import(`${pathToFileURL(filepath)}`)
 		return import(`${pathToFileURL(filepath)}?t=${this.buildTimestamp}`);
 	}
 }
@@ -337,22 +339,29 @@ class RolldownModuleRunner {
 		return mod.exports;
 	}
 
-	evaluate(code: string) {
+	evaluate(code: string, sourceURL: string) {
 		const context = {
 			self: this.context,
 			...this.context,
 		};
-		// TODO: sourcemap
-		code = code.replace(/^\/\/# sourceMapping.*$/m, "");
-		const wrapped = `'use strict';(${Object.keys(context).join(",")})=>{{
-			${code};
-			// TODO: need to re-expose runtime utilities for now
-			self.__toCommonJS = __toCommonJS;
-			self.__export = __export;
-			self.__toESM = __toESM;
-		}}`;
-		const fn = (0, eval)(wrapped);
+		// extract sourcemap
+		const sourcemap = code.match(/^\/\/# sourceMappingURL=.*/m)?.[0] ?? "";
+		if (sourcemap) {
+			code = code.replace(sourcemap, "");
+		}
+		// as eval
+		code = `\
+'use strict';(${Object.keys(context).join(",")})=>{{${code}
+// TODO: need to re-expose runtime utilities for now
+self.__toCommonJS = __toCommonJS;
+self.__export = __export;
+self.__toESM = __toESM;
+}}
+//# sourceURL=${sourceURL}
+${sourcemap}
+`;
 		try {
+			const fn = (0, eval)(code);
 			fn(...Object.values(context));
 		} catch (e) {
 			console.error(e);
@@ -440,7 +449,10 @@ function viterollEntryPlugin(
 				if (viterollOptions.reactRefresh) {
 					output.prepend(getReactRefreshRuntimeCode());
 				}
-				return { code: output.toString(), map: output.generateMap() };
+				return {
+					code: output.toString(),
+					map: output.generateMap({ hires: "boundary" }),
+				};
 			}
 		},
 		generateBundle(_options, bundle) {
