@@ -476,6 +476,7 @@ function viterollEntryPlugin(
 						"if (module.parents.indexOf(parent) === -1) {",
 						"if (parent && module.parents.indexOf(parent) === -1) {",
 					)
+					.replace("if (item.deps.includes(updateModuleId)) {", "if (true) {")
 					.replace(
 						"for (var i = 0; i < module.parents.length; i++) {",
 						`
