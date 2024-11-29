@@ -82,13 +82,6 @@ export function viteroll(viterollOptions: ViterollOptions = {}): Plugin {
 				sirv(environments.client.outDir, { dev: true, extensions: ["html"] }),
 			);
 
-			// full build on non self accepting entry
-			server.ws.on("rolldown:hmr-deadend", async (data) => {
-				logger.info(`hmr-deadend '${data.moduleId}'`, { timestamp: true });
-				await environments.client.build();
-				server.ws.send({ type: "full-reload" });
-			});
-
 			// disable automatic html reload
 			// https://github.com/vitejs/vite/blob/01cf7e14ca63988c05627907e72b57002ffcb8d5/packages/vite/src/node/server/hmr.ts#L590-L595
 			const oldSend = server.ws.send;
@@ -156,6 +149,8 @@ export class RolldownEnvironment extends DevEnvironment {
 	inputOptions!: rolldown.InputOptions;
 	outputOptions!: rolldown.OutputOptions;
 	buildTimestamp = Date.now();
+	changedFiles: string[] = [];
+	changedModules: Record<string, string> = {};
 
 	static createFactory(
 		viterollOptions: ViterollOptions,
@@ -210,8 +205,6 @@ export class RolldownEnvironment extends DevEnvironment {
 
 		console.time(`[rolldown:${this.name}:build]`);
 		this.inputOptions = {
-			// TODO: no dev ssr for now
-			dev: this.name === "client",
 			// NOTE:
 			// we'll need input options during dev too though this sounds very much reasonable.
 			// eventually `build.rollupOptions` should probably come forefront.
@@ -238,6 +231,20 @@ export class RolldownEnvironment extends DevEnvironment {
 				rolldownExperimental.aliasPlugin({
 					entries: this.config.resolve.alias,
 				}),
+				{
+					name: "viteroll:extract-hmr-chunk",
+					renderChunk: (_code, chunk) => {
+						for (const file of this.changedFiles) {
+							const mod = chunk.modules[file];
+							if (mod) {
+								let code = mod.code;
+								if (code) {
+									this.changedModules[file] = code;
+								}
+							}
+						}
+					},
+				},
 				...(plugins as any),
 			],
 		};
@@ -286,10 +293,18 @@ export class RolldownEnvironment extends DevEnvironment {
 			}
 		} else {
 			logger.info(`hmr '${ctx.file}'`, { timestamp: true });
-			console.time(`[rolldown:${this.name}:hmr]`);
-			const result = await this.instance.experimental_hmr_rebuild([ctx.file]);
-			console.timeEnd(`[rolldown:${this.name}:hmr]`);
-			ctx.server.ws.send("rolldown:hmr", result);
+			this.changedFiles = [ctx.file];
+			this.changedModules = {};
+			await this.build();
+			const stableId = path.relative(this.config.root, ctx.file);
+			const output = `\
+self.rolldown_runtime.patch([${JSON.stringify(stableId)}], function(){
+	rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){
+		${this.changedModules[ctx.file]}
+	})
+})
+`;
+			ctx.server.ws.send("rolldown:hmr", [null, output]);
 		}
 	}
 
@@ -441,7 +456,7 @@ function viterollEntryPlugin(
 						boundaries.push(moduleId);
 						invalidModuleIds.push(moduleId);
 						if (module.parents.filter(Boolean).length === 0) {
-							__rolldown_hot.send("rolldown:hmr-deadend", { moduleId });
+							window.location.reload();
 							break;
 						}
 						for (var i = 0; i < module.parents.length; i++) {`,
