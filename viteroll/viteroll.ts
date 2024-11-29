@@ -157,8 +157,8 @@ export class RolldownEnvironment extends DevEnvironment {
 	inputOptions!: rolldown.InputOptions;
 	outputOptions!: rolldown.OutputOptions;
 	buildTimestamp = Date.now();
-	changedFiles: string[] = [];
-	changedModules: Record<string, string> = {};
+	lastModules: Record<string, string | null> = {};
+	newModules: Record<string, string | null> = {};
 	buildPromise?: Promise<void>;
 
 	static createFactory(
@@ -247,15 +247,19 @@ export class RolldownEnvironment extends DevEnvironment {
 				{
 					name: "viteroll:extract-hmr-chunk",
 					renderChunk: (_code, chunk) => {
-						for (const file of this.changedFiles) {
-							const mod = chunk.modules[file];
-							if (mod) {
-								let code = mod.code;
-								if (code) {
-									this.changedModules[file] = code;
-								}
+						// cf. https://github.com/web-infra-dev/rspack/blob/5a967f7a10ec51171a304a1ce8d741bd09fa8ed5/crates/rspack_plugin_hmr/src/lib.rs#L60
+						// TODO: assume single chunk for now
+						this.newModules = {};
+						const modules: Record<string, string | null> = {};
+						for (const [id, mod] of Object.entries(chunk.modules)) {
+							const current = mod.code;
+							const last = this.lastModules?.[id];
+							if (current !== last) {
+								this.newModules[id] = current;
 							}
+							modules[id] = current;
 						}
+						this.lastModules = modules;
 					},
 				},
 				...(plugins as any),
@@ -289,17 +293,22 @@ export class RolldownEnvironment extends DevEnvironment {
 
 	async buildHmr(file: string) {
 		logger.info(`hmr '${file}'`, { timestamp: true });
-		this.changedFiles = [file];
-		this.changedModules = {};
 		await this.build();
-		const newCode = this.changedModules[file];
-		const stableId = path.relative(this.config.root, file);
-		const output = `\
-self.rolldown_runtime.patch([${JSON.stringify(stableId)}], function(){
+		let stableIds: string[] = [];
+		let innerCode = "";
+		for (const [id, code] of Object.entries(this.newModules)) {
+			const stableId = path.relative(this.config.root, id);
+			stableIds.push(stableId);
+			innerCode += `\
 	rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){
-		${newCode}
-	})
-})
+		${code}
+	});
+`;
+		}
+		const output = `\
+self.rolldown_runtime.patch(${JSON.stringify(stableIds)}, function(){
+${innerCode}
+});
 `;
 		return [path.join(this.outDir, "hmr-update.js"), output];
 	}
