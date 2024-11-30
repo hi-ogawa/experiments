@@ -22,18 +22,19 @@ export default defineConfig({
 				},
 				handler(source) {
 					if (source === "virtual:test") {
-						return `\0virtual:test`;
+						// TODO: \0 not available in chunk.modules https://github.com/rolldown/rolldown/issues/1115
+						return `\tvirtual:test`;
 					}
 				},
 			},
 			load: {
 				filter: {
 					id: {
-						include: ["\0virtual:test"],
+						include: ["\tvirtual:test"],
 					},
 				},
 				handler(id) {
-					if (id === "\0virtual:test") {
+					if (id === "\tvirtual:test") {
 						return `export default "ok"`;
 					}
 				},

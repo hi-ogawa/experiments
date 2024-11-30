@@ -459,26 +459,36 @@ function viterollEntryPlugin(
 				};
 			},
 		},
-		renderChunk(code) {
-			// patch rolldown_runtime to workaround a few things
-			if (true) {
-				const output = new MagicString(code);
-				const runtimeCode = fs.readFileSync(
-					path.join(import.meta.dirname, "viteroll-runtime.js"),
-					"utf-8",
+		renderChunk(_code, chunk) {
+			// silly but we can do `render_app` on our own for now
+			// https://github.com/rolldown/rolldown/blob/a29240168290e45b36fdc1a6d5c375281fb8dc3e/crates/rolldown/src/ecmascript/format/app.rs#L28-L55
+			const output = new MagicString("");
+			for (const [id, mod] of Object.entries(chunk.modules)) {
+				const stableId = path.relative(config.root, id);
+				const code = mod.code || "";
+				output.append(
+					`rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){${code}\n});\n\n`,
 				);
-				output.prepend(runtimeCode);
-				if (environment.name === "client") {
-					output.prepend(getRolldownClientCode(config));
-				}
-				if (viterollOptions.reactRefresh) {
-					output.prepend(getReactRefreshRuntimeCode());
-				}
-				return {
-					code: output.toString(),
-					map: output.generateMap({ hires: "boundary" }),
-				};
 			}
+			assert(chunk.facadeModuleId);
+			const stableId = path.relative(config.root, chunk.facadeModuleId);
+			output.append(`rolldown_runtime.require(${JSON.stringify(stableId)});\n`);
+
+			const runtimeCode = fs.readFileSync(
+				path.join(import.meta.dirname, "viteroll-runtime.js"),
+				"utf-8",
+			);
+			output.prepend(runtimeCode);
+			if (environment.name === "client") {
+				output.prepend(getRolldownClientCode(config));
+			}
+			if (viterollOptions.reactRefresh) {
+				output.prepend(getReactRefreshRuntimeCode());
+			}
+			return {
+				code: output.toString(),
+				map: output.generateMap({ hires: "boundary" }),
+			};
 		},
 		generateBundle(_options, bundle) {
 			for (const key in bundle) {
