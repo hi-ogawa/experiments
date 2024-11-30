@@ -147,7 +147,7 @@ hot.on("rolldown:hmr", (data) => {
 });
 window.__rolldown_hot = hot;
 `;
-	return `(() => {/*** @vite/client for rolldown ***/\n${code}}\n)()`;
+	return `\n;(() => {/*** @vite/client for rolldown ***/\n${code}}\n)();`;
 }
 
 export class RolldownEnvironment extends DevEnvironment {
@@ -244,24 +244,6 @@ export class RolldownEnvironment extends DevEnvironment {
 				rolldownExperimental.aliasPlugin({
 					entries: this.config.resolve.alias,
 				}),
-				{
-					name: "viteroll:extract-hmr-chunk",
-					renderChunk: (_code, chunk) => {
-						// cf. https://github.com/web-infra-dev/rspack/blob/5a967f7a10ec51171a304a1ce8d741bd09fa8ed5/crates/rspack_plugin_hmr/src/lib.rs#L60
-						// TODO: assume single chunk for now
-						this.newModules = {};
-						const modules: Record<string, string | null> = {};
-						for (const [id, mod] of Object.entries(chunk.modules)) {
-							const current = mod.code;
-							const last = this.lastModules?.[id];
-							if (current !== last) {
-								this.newModules[id] = current;
-							}
-							modules[id] = current;
-						}
-						this.lastModules = modules;
-					},
-				},
 				...(plugins as any),
 			],
 		};
@@ -286,6 +268,21 @@ export class RolldownEnvironment extends DevEnvironment {
 		};
 		// `generate` should work but we use `write` so it's easier to see output and debug
 		this.result = await this.instance.write(this.outputOptions);
+
+		// extract hmr chunk
+		// cf. https://github.com/web-infra-dev/rspack/blob/5a967f7a10ec51171a304a1ce8d741bd09fa8ed5/crates/rspack_plugin_hmr/src/lib.rs#L60
+		const chunk = this.result.output[0];
+		this.newModules = {};
+		const modules: Record<string, string | null> = {};
+		for (const [id, mod] of Object.entries(chunk.modules)) {
+			const current = mod.code;
+			const last = this.lastModules?.[id];
+			if (current !== last) {
+				this.newModules[id] = current;
+			}
+			modules[id] = current;
+		}
+		this.lastModules = modules;
 
 		this.buildTimestamp = Date.now();
 		console.timeEnd(`[rolldown:${this.name}:build]`);
@@ -459,50 +456,45 @@ function viterollEntryPlugin(
 				};
 			},
 		},
-		renderChunk(code) {
-			// patch rolldown_runtime to workaround a few things
-			if (code.includes("//#region rolldown:runtime")) {
-				const output = new MagicString(code);
-				// replace hard-coded WebSocket setup with custom one
-				output.replace(
-					/const socket =.*?\n};/s,
-					environment.name === "client" ? getRolldownClientCode(config) : "",
+		renderChunk(code, chunk) {
+			// silly but we can do `render_app` on our own for now
+			// https://github.com/rolldown/rolldown/blob/a29240168290e45b36fdc1a6d5c375281fb8dc3e/crates/rolldown/src/ecmascript/format/app.rs#L28-L55
+			const output = new MagicString(code);
+
+			// extract isolated module between #region and #endregion
+			const matches = code.matchAll(/^\/\/#region (.*)$/gm);
+			for (const match of matches) {
+				const stableId = match[1]!;
+				const start = match.index!;
+				const end = code.indexOf("//#endregion", match.index);
+				output.appendLeft(
+					start,
+					`rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){\n\n`,
 				);
-				// trigger full rebuild on non-accepting entry invalidation
-				output
-					.replace(
-						"this.executeModuleStack.length > 1",
-						"this.executeModuleStack.length >= 1",
-					)
-					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
-					.replace(
-						"if (module.parents.indexOf(parent) === -1) {",
-						"if (parent && module.parents.indexOf(parent) === -1) {",
-					)
-					.replace("if (item.deps.includes(updateModuleId)) {", "if (true) {")
-					.replace(
-						"var module = rolldown_runtime.moduleCache[moduleId];",
-						"var module = rolldown_runtime.moduleCache[moduleId]; if (!module) { continue; }",
-					)
-					.replace(
-						"for (var i = 0; i < module.parents.length; i++) {",
-						`
-						boundaries.push(moduleId);
-						invalidModuleIds.push(moduleId);
-						if (module.parents.filter(Boolean).length === 0) {
-							globalThis.window?.location.reload();
-							break;
-						}
-						for (var i = 0; i < module.parents.length; i++) {`,
-					);
-				if (viterollOptions.reactRefresh) {
-					output.prepend(getReactRefreshRuntimeCode());
-				}
-				return {
-					code: output.toString(),
-					map: output.generateMap({ hires: "boundary" }),
-				};
+				output.appendRight(end, `\n\n});\n`);
 			}
+			assert(chunk.facadeModuleId);
+			const stableId = path.relative(config.root, chunk.facadeModuleId);
+			output.append(
+				`\nrolldown_runtime.require(${JSON.stringify(stableId)});\n`,
+			);
+
+			// inject runtime
+			const runtimeCode = fs.readFileSync(
+				path.join(import.meta.dirname, "viteroll-runtime.js"),
+				"utf-8",
+			);
+			output.prepend(runtimeCode);
+			if (environment.name === "client") {
+				output.prepend(getRolldownClientCode(config));
+			}
+			if (viterollOptions.reactRefresh) {
+				output.prepend(getReactRefreshRuntimeCode());
+			}
+			return {
+				code: output.toString(),
+				map: output.generateMap({ hires: "boundary" }),
+			};
 		},
 		generateBundle(_options, bundle) {
 			for (const key in bundle) {
