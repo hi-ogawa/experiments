@@ -310,7 +310,10 @@ self.rolldown_runtime.patch(${JSON.stringify(stableIds)}, function(){
 ${innerCode}
 });
 `;
-		return [path.join(this.outDir, "hmr-update.js"), output];
+		// dump for debugging
+		const updatePath = path.join(this.outDir, `hmr-update-${Date.now()}.js`);
+		fs.writeFileSync(updatePath, output);
+		return [updatePath, output];
 	}
 
 	async handleUpdate(ctx: HmrContext) {
@@ -477,6 +480,10 @@ function viterollEntryPlugin(
 						"if (parent && module.parents.indexOf(parent) === -1) {",
 					)
 					.replace("if (item.deps.includes(updateModuleId)) {", "if (true) {")
+					.replace(
+						"var module = rolldown_runtime.moduleCache[moduleId];",
+						"var module = rolldown_runtime.moduleCache[moduleId]; if (!module) { continue; }",
+					)
 					.replace(
 						"for (var i = 0; i < module.parents.length; i++) {",
 						`
