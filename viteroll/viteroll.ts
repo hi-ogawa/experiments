@@ -459,21 +459,30 @@ function viterollEntryPlugin(
 				};
 			},
 		},
-		renderChunk(_code, chunk) {
+		renderChunk(code, chunk) {
 			// silly but we can do `render_app` on our own for now
 			// https://github.com/rolldown/rolldown/blob/a29240168290e45b36fdc1a6d5c375281fb8dc3e/crates/rolldown/src/ecmascript/format/app.rs#L28-L55
-			const output = new MagicString("");
-			for (const [id, mod] of Object.entries(chunk.modules)) {
-				const stableId = path.relative(config.root, id);
-				const code = mod.code || "";
-				output.append(
-					`rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){${code}\n});\n\n`,
+			const output = new MagicString(code);
+
+			// extract isolated module between #region and #endregion
+			const matches = code.matchAll(/^\/\/#region (.*)$/gm);
+			for (const match of matches) {
+				const stableId = match[1]!;
+				const start = match.index!;
+				const end = code.indexOf("//#endregion", match.index);
+				output.appendLeft(
+					start,
+					`rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){\n`,
 				);
+				output.appendRight(end, `\n});\n`);
 			}
 			assert(chunk.facadeModuleId);
 			const stableId = path.relative(config.root, chunk.facadeModuleId);
-			output.append(`rolldown_runtime.require(${JSON.stringify(stableId)});\n`);
+			output.append(
+				`\nrolldown_runtime.require(${JSON.stringify(stableId)});\n`,
+			);
 
+			// inject runtime
 			const runtimeCode = fs.readFileSync(
 				path.join(import.meta.dirname, "viteroll-runtime.js"),
 				"utf-8",
