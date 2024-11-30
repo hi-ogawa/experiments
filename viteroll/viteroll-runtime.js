@@ -97,12 +97,12 @@ var rolldown_runtime = (self.rolldown_runtime = {
 	},
 	require: function (id) {
 		const parent =
-			this.executeModuleStack.length > 1
+			this.executeModuleStack.length >= 1
 				? this.executeModuleStack[this.executeModuleStack.length - 1]
 				: null;
 		if (this.moduleCache[id]) {
 			var module = this.moduleCache[id];
-			if (module.parents.indexOf(parent) === -1) {
+			if (parent && module.parents.indexOf(parent) === -1) {
 				module.parents.push(parent);
 			}
 			return module.exports;
@@ -113,7 +113,7 @@ var rolldown_runtime = (self.rolldown_runtime = {
 		}
 		var module = (this.moduleCache[id] = {
 			exports: {},
-			parents: [parent],
+			parents: parent ? [parent] : [],
 			hot: {
 				selfAccept: false,
 				acceptCallbacks: [],
@@ -194,6 +194,9 @@ var rolldown_runtime = (self.rolldown_runtime = {
 				}
 
 				var module = rolldown_runtime.moduleCache[moduleId];
+				if (!module) {
+					continue;
+				}
 
 				if (module.hot.selfAccept) {
 					if (boundaries.indexOf(moduleId) === -1) {
@@ -201,9 +204,7 @@ var rolldown_runtime = (self.rolldown_runtime = {
 
 						for (var i = 0; i < module.hot.acceptCallbacks.length; i++) {
 							var item = module.hot.acceptCallbacks[i];
-							if (item.deps.includes(updateModuleId)) {
-								acceptCallbacks.push(item);
-							}
+							acceptCallbacks.push(item);
 						}
 					}
 					for (var i = 0; i < chain.length; i++) {
@@ -212,6 +213,13 @@ var rolldown_runtime = (self.rolldown_runtime = {
 						}
 					}
 					continue;
+				}
+
+				boundaries.push(moduleId);
+				invalidModuleIds.push(moduleId);
+				if (module.parents.length === 0) {
+					globalThis.window?.location.reload();
+					break;
 				}
 
 				for (var i = 0; i < module.parents.length; i++) {

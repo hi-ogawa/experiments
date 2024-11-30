@@ -147,7 +147,7 @@ hot.on("rolldown:hmr", (data) => {
 });
 window.__rolldown_hot = hot;
 `;
-	return `(() => {/*** @vite/client for rolldown ***/\n${code}}\n)()`;
+	return `\n;(() => {/*** @vite/client for rolldown ***/\n${code}}\n)();`;
 }
 
 export class RolldownEnvironment extends DevEnvironment {
@@ -463,36 +463,10 @@ function viterollEntryPlugin(
 			// patch rolldown_runtime to workaround a few things
 			if (true) {
 				const output = new MagicString(code);
-				let runtimeCode = fs.readFileSync(
+				const runtimeCode = fs.readFileSync(
 					path.join(import.meta.dirname, "viteroll-runtime.js"),
 					"utf-8",
 				);
-				runtimeCode = runtimeCode
-					.replace(
-						"this.executeModuleStack.length > 1",
-						"this.executeModuleStack.length >= 1",
-					)
-					.replace("parents: [parent],", "parents: parent ? [parent] : [],")
-					.replace(
-						"if (module.parents.indexOf(parent) === -1) {",
-						"if (parent && module.parents.indexOf(parent) === -1) {",
-					)
-					.replace("if (item.deps.includes(updateModuleId)) {", "if (true) {")
-					.replace(
-						"var module = rolldown_runtime.moduleCache[moduleId];",
-						"var module = rolldown_runtime.moduleCache[moduleId]; if (!module) { continue; }",
-					)
-					.replace(
-						"for (var i = 0; i < module.parents.length; i++) {",
-						`
-						boundaries.push(moduleId);
-						invalidModuleIds.push(moduleId);
-						if (module.parents.filter(Boolean).length === 0) {
-							globalThis.window?.location.reload();
-							break;
-						}
-						for (var i = 0; i < module.parents.length; i++) {`,
-					);
 				output.prepend(runtimeCode);
 				if (environment.name === "client") {
 					output.prepend(getRolldownClientCode(config));
