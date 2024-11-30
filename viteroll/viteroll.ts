@@ -461,15 +461,13 @@ function viterollEntryPlugin(
 		},
 		renderChunk(code) {
 			// patch rolldown_runtime to workaround a few things
-			if (code.includes("//#region rolldown:runtime")) {
+			if (true) {
 				const output = new MagicString(code);
-				// replace hard-coded WebSocket setup with custom one
-				output.replace(
-					/const socket =.*?\n};/s,
-					environment.name === "client" ? getRolldownClientCode(config) : "",
+				let runtimeCode = fs.readFileSync(
+					path.join(import.meta.dirname, "viteroll-runtime.js"),
+					"utf-8",
 				);
-				// trigger full rebuild on non-accepting entry invalidation
-				output
+				runtimeCode = runtimeCode
 					.replace(
 						"this.executeModuleStack.length > 1",
 						"this.executeModuleStack.length >= 1",
@@ -495,6 +493,10 @@ function viterollEntryPlugin(
 						}
 						for (var i = 0; i < module.parents.length; i++) {`,
 					);
+				output.prepend(runtimeCode);
+				if (environment.name === "client") {
+					output.prepend(getRolldownClientCode(config));
+				}
 				if (viterollOptions.reactRefresh) {
 					output.prepend(getReactRefreshRuntimeCode());
 				}
