@@ -244,24 +244,6 @@ export class RolldownEnvironment extends DevEnvironment {
 				rolldownExperimental.aliasPlugin({
 					entries: this.config.resolve.alias,
 				}),
-				{
-					name: "viteroll:extract-hmr-chunk",
-					renderChunk: (_code, chunk) => {
-						// cf. https://github.com/web-infra-dev/rspack/blob/5a967f7a10ec51171a304a1ce8d741bd09fa8ed5/crates/rspack_plugin_hmr/src/lib.rs#L60
-						// TODO: assume single chunk for now
-						this.newModules = {};
-						const modules: Record<string, string | null> = {};
-						for (const [id, mod] of Object.entries(chunk.modules)) {
-							const current = mod.code;
-							const last = this.lastModules?.[id];
-							if (current !== last) {
-								this.newModules[id] = current;
-							}
-							modules[id] = current;
-						}
-						this.lastModules = modules;
-					},
-				},
 				...(plugins as any),
 			],
 		};
@@ -286,6 +268,21 @@ export class RolldownEnvironment extends DevEnvironment {
 		};
 		// `generate` should work but we use `write` so it's easier to see output and debug
 		this.result = await this.instance.write(this.outputOptions);
+
+		// extract hmr chunk
+		// cf. https://github.com/web-infra-dev/rspack/blob/5a967f7a10ec51171a304a1ce8d741bd09fa8ed5/crates/rspack_plugin_hmr/src/lib.rs#L60
+		const chunk = this.result.output[0];
+		this.newModules = {};
+		const modules: Record<string, string | null> = {};
+		for (const [id, mod] of Object.entries(chunk.modules)) {
+			const current = mod.code;
+			const last = this.lastModules?.[id];
+			if (current !== last) {
+				this.newModules[id] = current;
+			}
+			modules[id] = current;
+		}
+		this.lastModules = modules;
 
 		this.buildTimestamp = Date.now();
 		console.timeEnd(`[rolldown:${this.name}:build]`);
