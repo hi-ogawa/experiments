@@ -472,9 +472,9 @@ function viterollEntryPlugin(
 				const end = code.indexOf("//#endregion", match.index);
 				output.appendLeft(
 					start,
-					`rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){\n`,
+					`rolldown_runtime.define(${JSON.stringify(stableId)},function(require, module, exports){\n\n`,
 				);
-				output.appendRight(end, `\n});\n`);
+				output.appendRight(end, `\n\n});\n`);
 			}
 			assert(chunk.facadeModuleId);
 			const stableId = path.relative(config.root, chunk.facadeModuleId);
