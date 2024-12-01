@@ -348,7 +348,7 @@ ${innerCode}
 	}
 
 	async import(input: string): Promise<unknown> {
-		if (this.outputOptions.format === "app") {
+		if (this.outputOptions.format === "experimental-app") {
 			return this.getRunner().import(input);
 		}
 		// input is no use
