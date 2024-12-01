@@ -252,7 +252,7 @@ export class RolldownEnvironment extends DevEnvironment {
 		const format: rolldown.ModuleFormat =
 			this.name === "client" ||
 			(this.name === "ssr" && this.viterollOptions.ssrModuleRunner)
-				? "app"
+				? "experimental-app"
 				: "esm";
 		this.outputOptions = {
 			dir: this.outDir,
@@ -322,7 +322,7 @@ ${innerCode}
 			return;
 		}
 		if (this.name === "ssr") {
-			if (this.outputOptions.format === "app") {
+			if (this.outputOptions.format === "experimental-app") {
 				const result = await this.buildHmr(ctx.file);
 				this.getRunner().evaluate(result[1].toString(), result[0]);
 			} else {
