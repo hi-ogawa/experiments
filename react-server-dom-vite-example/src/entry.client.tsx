@@ -9,6 +9,10 @@ async function main() {
 		{},
 	);
 	ReactDomClient.hydrateRoot(document, payload.root);
+
+	const el = document.createElement("div");
+	el.textContent = "hydrated";
+	document.body.appendChild(el);
 }
 
 main();

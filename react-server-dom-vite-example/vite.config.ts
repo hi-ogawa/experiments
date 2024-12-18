@@ -1,19 +1,21 @@
+import assert from "node:assert";
 import path from "node:path";
 import {
+	type Manifest,
 	type Plugin,
 	type RunnableDevEnvironment,
 	createRunnableDevEnvironment,
 	defineConfig,
 } from "vite";
 
+let clientManifest: Manifest;
+
 export default defineConfig({
 	appType: "custom",
 	environments: {
 		client: {
-			optimizeDeps: {
-				entries: [],
-			},
 			build: {
+				manifest: true,
 				outDir: "dist/client",
 				rollupOptions: {
 					input: { index: "/src/entry.client.tsx" },
@@ -87,12 +89,41 @@ export default defineConfig({
 				};
 			},
 		},
-		createVirtualPlugin("build-rsc-entry", function () {
-			// TODO
-			return `export {}`;
+		{
+			name: "virtual:build-rsc-entry",
+			resolveId(source) {
+				if (source === "virtual:build-rsc-entry") {
+					// externalize rsc entry in ssr entry as relative path
+					return { id: "../rsc/index.js", external: true };
+				}
+			},
+		},
+		createVirtualPlugin("ssr-assets", function () {
+			assert(this.environment.name === "ssr");
+			let bootstrapModules: string[] = [];
+			if (this.environment.mode === "dev") {
+				bootstrapModules = ["/src/entry.client.tsx"];
+			}
+			if (this.environment.mode === "build") {
+				bootstrapModules = [clientManifest["src/entry.client.tsx"].file];
+			}
+			return `export const bootstrapModules = ${JSON.stringify(bootstrapModules)}`;
 		}),
+		{
+			name: "misc",
+			writeBundle(_options, bundle) {
+				if (this.environment.name === "client") {
+					const output = bundle[".vite/manifest.json"];
+					assert(output.type === "asset");
+					assert(typeof output.source === "string");
+					clientManifest = JSON.parse(output.source);
+				}
+			},
+		},
 	],
 	builder: {
+		sharedPlugins: true,
+		sharedConfigBuild: true,
 		async buildApp(builder) {
 			await builder.build(builder.environments.rsc);
 			await builder.build(builder.environments.client);

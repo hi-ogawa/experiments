@@ -37,11 +37,11 @@ export default async function handler(
 		{},
 	);
 
+	const ssrAssets = await import("virtual:ssr-assets");
+
 	const htmlStream = fromPipeableToWebReadable(
 		ReactDomServer.renderToPipeableStream(payload.root, {
-			bootstrapModules: [
-				import.meta.env.DEV ? "/src/entry.client.tsx" : "/todo",
-			],
+			bootstrapModules: ssrAssets.bootstrapModules,
 		}),
 	);
 
@@ -64,7 +64,6 @@ async function importRscEntry(): Promise<typeof import("./entry.rsc")> {
 	if (import.meta.env.DEV) {
 		return await __rscRunner.import("/src/entry.rsc.tsx");
 	} else {
-		// @ts-ignore
-		return await import("virtual:build-rsc-entry");
+		return (await import("virtual:build-rsc-entry")) as any;
 	}
 }

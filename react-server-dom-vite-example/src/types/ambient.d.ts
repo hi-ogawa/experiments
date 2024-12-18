@@ -49,3 +49,11 @@ declare module "@jacob-ebey/react-server-dom-vite/client" {
 		manifest: unknown,
 	): Promise<T>;
 }
+
+declare module "virtual:ssr-assets" {
+	export const bootstrapModules: string[];
+}
+
+declare module "virtual:build-rsc-entry" {
+	export {};
+}
