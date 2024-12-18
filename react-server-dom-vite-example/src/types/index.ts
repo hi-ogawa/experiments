@@ -9,13 +9,11 @@ export type ClientReferenceManifest = {
 	};
 };
 
-export type ResolveServerReferenceFn = (reference: string) => {
-	preload(): Promise<void>;
-	get(): unknown;
-};
-
 export type ServerReferenceManifest = {
-	resolveServerReference: ResolveServerReferenceFn;
+	resolveServerReference(reference: string): {
+		preload(): Promise<void>;
+		get(): unknown;
+	};
 };
 
 export type CallServerFn = (id: string, args: unknown[]) => unknown;

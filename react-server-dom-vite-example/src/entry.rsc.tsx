@@ -59,6 +59,7 @@ export async function handler(
 			{
 				root: <App />,
 				returnValue,
+				formState,
 			},
 			clientReferenceMetadataManifest,
 			{},
