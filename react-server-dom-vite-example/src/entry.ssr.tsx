@@ -65,6 +65,6 @@ async function importRscEntry(): Promise<typeof import("./entry.rsc")> {
 	if (import.meta.env.DEV) {
 		return await __rscRunner.import("/src/entry.rsc.tsx");
 	} else {
-		return (await import("virtual:build-rsc-entry")) as any;
+		return await import("virtual:build-rsc-entry" as any);
 	}
 }

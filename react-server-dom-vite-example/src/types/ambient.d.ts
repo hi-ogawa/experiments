@@ -50,10 +50,6 @@ declare module "virtual:ssr-assets" {
 	export const bootstrapModules: string[];
 }
 
-declare module "virtual:build-rsc-entry" {
-	export {};
-}
-
 declare module "virtual:build-client-references" {
 	const value: Record<string, () => Promise<Record<string, unknown>>>;
 	export default value;
