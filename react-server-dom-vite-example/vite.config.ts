@@ -11,6 +11,7 @@ import {
 let browserManifest: Manifest;
 let clientReferences: Record<string, string> = {};
 let serverReferences: Record<string, string> = {};
+let buildScan = false;
 
 export default defineConfig({
 	appType: "custom",
@@ -130,6 +131,9 @@ export default defineConfig({
 		sharedPlugins: true,
 		sharedConfigBuild: true,
 		async buildApp(builder) {
+			buildScan = true;
+			await builder.build(builder.environments.rsc);
+			buildScan = false;
 			await builder.build(builder.environments.rsc);
 			await builder.build(builder.environments.client);
 			await builder.build(builder.environments.ssr);
@@ -144,6 +148,10 @@ function vitePluginUseClient(): Plugin[] {
 			transform(code, id) {
 				if (this.environment.name === "rsc") {
 					if (/^(("use client")|('use client'))/.test(code)) {
+						// pass through client code to find server reference used only by client
+						if (buildScan) {
+							return;
+						}
 						clientReferences[id] = id; // TODO: normalize
 						const matches = code.matchAll(/export function (\w+)\(/g);
 						const result = [
@@ -194,7 +202,7 @@ function vitePluginUseServer(): Plugin[] {
 			},
 		},
 		createVirtualPlugin("build-server-references", () => {
-			const code = Object.keys(clientReferences)
+			const code = Object.keys(serverReferences)
 				.map(
 					(id) => `${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
 				)
