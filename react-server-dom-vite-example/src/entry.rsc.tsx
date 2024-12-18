@@ -80,10 +80,8 @@ const serverReferenceManifest: ServerReferenceManifest = {
 				if (import.meta.env.DEV) {
 					mod = await import(/* @vite-ignore */ id);
 				} else {
-					const references = await import(
-						"virtual:build-server-references" as string
-					);
-					mod = references.default[id]();
+					const references = await import("virtual:build-server-references");
+					mod = await references.default[id]();
 				}
 				resolved = mod[name];
 			},

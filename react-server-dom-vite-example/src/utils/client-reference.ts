@@ -13,7 +13,7 @@ export const clientReferenceManifest: ClientReferenceManifest = {
 					const references = await import(
 						"virtual:build-client-references" as string
 					);
-					mod = references.default[id]();
+					mod = await references.default[id]();
 				}
 				resolved = mod[name];
 			},

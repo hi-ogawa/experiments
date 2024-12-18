@@ -58,3 +58,8 @@ declare module "virtual:build-client-references" {
 	const value: Record<string, () => Promise<Record<string, unknown>>>;
 	export default value;
 }
+
+declare module "virtual:build-server-references" {
+	const value: Record<string, () => Promise<Record<string, unknown>>>;
+	export default value;
+}
