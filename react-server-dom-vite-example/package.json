@@ -6,6 +6,8 @@
 		"build": "vite build --app",
 		"preview": "vite preview",
 		"tsc": "tsc -b",
+		"test-e2e": "playwright test",
+		"test-e2e-preview": "E2E_PREVIEW=1 playwright test",
 		"lint": "biome check --write .",
 		"lint-check": "biome check ."
 	},
@@ -16,6 +18,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.49.1",
 		"@types/node": "^22.10.2",
 		"@types/react": "^19.0.1",
 		"@types/react-dom": "^19.0.1",
