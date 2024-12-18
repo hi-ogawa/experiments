@@ -8,7 +8,8 @@ import {
 	defineConfig,
 } from "vite";
 
-let clientManifest: Manifest;
+let browserManifest: Manifest;
+let clientReferences: Record<string, string> = {};
 
 export default defineConfig({
 	appType: "custom",
@@ -105,7 +106,7 @@ export default defineConfig({
 				bootstrapModules = ["/src/entry.client.tsx"];
 			}
 			if (this.environment.mode === "build") {
-				bootstrapModules = [clientManifest["src/entry.client.tsx"].file];
+				bootstrapModules = [browserManifest["src/entry.client.tsx"].file];
 			}
 			return `export const bootstrapModules = ${JSON.stringify(bootstrapModules)}`;
 		}),
@@ -116,11 +117,12 @@ export default defineConfig({
 					const output = bundle[".vite/manifest.json"];
 					assert(output.type === "asset");
 					assert(typeof output.source === "string");
-					clientManifest = JSON.parse(output.source);
+					browserManifest = JSON.parse(output.source);
 				}
 			},
 		},
 		transformClientPlugin(),
+		vitePluginSilenceDirectiveBuildWarning(),
 	],
 	builder: {
 		sharedPlugins: true,
@@ -140,6 +142,7 @@ function transformClientPlugin(): Plugin[] {
 			transform(code, id) {
 				if (this.environment.name === "rsc") {
 					if (/^(("use client")|('use client'))/.test(code)) {
+						clientReferences[id] = id; // TODO: normalize
 						const matches = code.matchAll(/export function (\w+)\(/g);
 						const result = [
 							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
@@ -153,6 +156,14 @@ function transformClientPlugin(): Plugin[] {
 				}
 			},
 		},
+		createVirtualPlugin("build-client-references", () => {
+			const code = Object.keys(clientReferences)
+				.map(
+					(id) => `${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
+				)
+				.join("\n");
+			return `export default {${code}}`;
+		}),
 	];
 }
 
@@ -169,4 +180,43 @@ function createVirtualPlugin(name: string, load: Plugin["load"]) {
 			}
 		},
 	} satisfies Plugin;
+}
+
+// silence warning due to "use ..." directives
+// https://github.com/vitejs/vite-plugin-react/blob/814ed8043d321f4b4679a9f4a781d1ed14f185e4/packages/plugin-react/src/index.ts#L303
+export function vitePluginSilenceDirectiveBuildWarning(): Plugin {
+	return {
+		name: vitePluginSilenceDirectiveBuildWarning.name,
+		enforce: "post",
+		config(config, _env) {
+			return {
+				build: {
+					rollupOptions: {
+						onwarn(warning, defaultHandler) {
+							// https://github.com/vitejs/vite/issues/15012#issuecomment-1948550039
+							if (
+								warning.code === "SOURCEMAP_ERROR" &&
+								warning.message.includes("(1:0)")
+							) {
+								return;
+							}
+							// https://github.com/TanStack/query/pull/5161#issuecomment-1506683450
+							if (
+								warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+								(warning.message.includes(`use client`) ||
+									warning.message.includes(`use server`))
+							) {
+								return;
+							}
+							if (config.build?.rollupOptions?.onwarn) {
+								config.build.rollupOptions.onwarn(warning, defaultHandler);
+							} else {
+								defaultHandler(warning);
+							}
+						},
+					},
+				},
+			};
+		},
+	};
 }

@@ -9,18 +9,6 @@ declare module "@jacob-ebey/react-server-dom-vite/server" {
 		opitons?: unknown,
 	): import("react-dom/server").PipeableStream;
 
-	// export function registerClientReference<T>(
-	// 	proxy: T,
-	// 	id: string,
-	// 	name: string,
-	// ): T;
-
-	// export function registerServerReference<T>(
-	// 	ref: T,
-	// 	id: string,
-	// 	name: string,
-	// ): T;
-
 	// export function decodeReply(body: string | FormData): Promise<unknown[]>;
 
 	// export function decodeAction(
@@ -68,4 +56,9 @@ declare module "virtual:ssr-assets" {
 
 declare module "virtual:build-rsc-entry" {
 	export {};
+}
+
+declare module "virtual:build-client-references" {
+	const value: Record<string, () => Promise<Record<string, unknown>>>;
+	export default value;
 }
