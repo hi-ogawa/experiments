@@ -4,8 +4,15 @@ import type { PipeableStream } from "react-dom/server";
 
 export function createRequest(
 	req: IncomingMessage,
-	_res: ServerResponse,
+	res: ServerResponse,
 ): Request {
+	const abortController = new AbortController();
+	res.once("close", () => {
+		if (req.destroyed) {
+			abortController.abort();
+		}
+	});
+
 	const headers = new Headers();
 	for (const [k, v] of Object.entries(req.headers)) {
 		if (k.startsWith(":")) {
@@ -32,6 +39,7 @@ export function createRequest(
 					? null
 					: (Readable.toWeb(req) as any),
 			headers,
+			signal: abortController.signal,
 			// @ts-ignore for undici
 			duplex: "half",
 		},

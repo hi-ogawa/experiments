@@ -1,3 +1,4 @@
+import { changeCounter, getCounter } from "./action";
 import { Counter, Hydrated } from "./client";
 
 export async function App() {
@@ -21,6 +22,17 @@ export async function App() {
 					<div>server random: {Math.random().toString(36).slice(2)}</div>
 					<Counter />
 					<Hydrated />
+					<form action={changeCounter}>
+						<div>Server count is {getCounter()}</div>
+						<div>
+							<button name="change" value="-1">
+								-1
+							</button>
+							<button name="change" value="+1">
+								+1
+							</button>
+						</div>
+					</form>
 				</div>
 			</body>
 		</html>

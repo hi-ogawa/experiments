@@ -10,6 +10,7 @@ import {
 
 let browserManifest: Manifest;
 let clientReferences: Record<string, string> = {};
+let serverReferences: Record<string, string> = {};
 
 export default defineConfig({
 	appType: "custom",
@@ -122,6 +123,7 @@ export default defineConfig({
 			},
 		},
 		vitePluginUseClient(),
+		vitePluginUseServer(),
 		vitePluginSilenceDirectiveBuildWarning(),
 	],
 	builder: {
@@ -148,7 +150,7 @@ function vitePluginUseClient(): Plugin[] {
 							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
 							...[...matches].map(
 								([, name]) =>
-									`export ${name === "default" ? "" : "const"} ${name} = $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
+									`export const ${name} = $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
 							),
 						].join(";\n");
 						return { code: result, map: null };
@@ -157,6 +159,41 @@ function vitePluginUseClient(): Plugin[] {
 			},
 		},
 		createVirtualPlugin("build-client-references", () => {
+			const code = Object.keys(clientReferences)
+				.map(
+					(id) => `${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
+				)
+				.join("\n");
+			return `export default {${code}}`;
+		}),
+	];
+}
+
+function vitePluginUseServer(): Plugin[] {
+	return [
+		{
+			name: vitePluginUseServer.name,
+			transform(code, id) {
+				if (/^(("use server")|('use server'))/.test(code)) {
+					if (this.environment.name === "rsc") {
+						serverReferences[id] = id;
+						const matches = code.matchAll(/export async function (\w+)\(/g);
+						const result = [
+							code,
+							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
+							...[...matches].map(
+								([, name]) =>
+									`${name} = $$ReactServer.registerServerReference(${name}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
+							),
+						].join(";\n");
+						return { code: result, map: null };
+					} else {
+						// TODO
+					}
+				}
+			},
+		},
+		createVirtualPlugin("build-server-references", () => {
 			const code = Object.keys(clientReferences)
 				.map(
 					(id) => `${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
@@ -184,7 +221,7 @@ function createVirtualPlugin(name: string, load: Plugin["load"]) {
 
 // silence warning due to "use ..." directives
 // https://github.com/vitejs/vite-plugin-react/blob/814ed8043d321f4b4679a9f4a781d1ed14f185e4/packages/plugin-react/src/index.ts#L303
-export function vitePluginSilenceDirectiveBuildWarning(): Plugin {
+function vitePluginSilenceDirectiveBuildWarning(): Plugin {
 	return {
 		name: vitePluginSilenceDirectiveBuildWarning.name,
 		enforce: "post",
