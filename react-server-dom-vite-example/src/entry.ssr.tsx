@@ -6,7 +6,7 @@ import type { ServerPayload } from "./entry.rsc";
 import {
 	createRequest,
 	fromPipeableToWebReadable,
-	fromWebReadable,
+	fromWebToNodeReadable,
 	sendResponse,
 } from "./utils/server";
 import { injectFlightStream } from "./utils/stream-script";
@@ -33,7 +33,7 @@ export default async function handler(
 	const [flightStream1, flightStream2] = rscResult.stream.tee();
 
 	const payload = await ReactClient.createFromNodeStream<ServerPayload>(
-		fromWebReadable(flightStream1),
+		fromWebToNodeReadable(flightStream1),
 		{},
 	);
 

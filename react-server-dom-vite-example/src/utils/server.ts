@@ -64,6 +64,6 @@ export function fromPipeableToWebReadable(stream: PipeableStream) {
 	) as ReadableStream<Uint8Array>;
 }
 
-export function fromWebReadable(stream: ReadableStream<Uint8Array>) {
+export function fromWebToNodeReadable(stream: ReadableStream<Uint8Array>) {
 	return Readable.fromWeb(stream as any);
 }
