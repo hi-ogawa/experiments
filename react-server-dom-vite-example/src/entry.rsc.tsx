@@ -1,7 +1,10 @@
 import ReactServer from "@jacob-ebey/react-server-dom-vite/server";
 import type { ReactFormState } from "react-dom/client";
 import { App } from "./app";
-import type { ServerReferenceManifest } from "./types";
+import type {
+	ClientReferenceMetadataManifest,
+	ServerReferenceManifest,
+} from "./types";
 import { fromPipeableToWebReadable } from "./utils/fetch";
 
 export interface RscHandlerResult {
@@ -57,12 +60,7 @@ export async function handler(
 				root: <App />,
 				returnValue,
 			},
-			{
-				resolveClientReferenceMetadata(metadata) {
-					// console.log("[debug:resolveClientReferenceMetadata]", { metadata }, Object.getOwnPropertyDescriptors(metadata));
-					return [metadata.$$id];
-				},
-			},
+			clientReferenceMetadataManifest,
 			{},
 		),
 	);
@@ -93,5 +91,12 @@ const serverReferenceManifest: ServerReferenceManifest = {
 				return resolved;
 			},
 		};
+	},
+};
+
+const clientReferenceMetadataManifest: ClientReferenceMetadataManifest = {
+	resolveClientReferenceMetadata(metadata) {
+		// console.log("[debug:resolveClientReferenceMetadata]", { metadata }, Object.getOwnPropertyDescriptors(metadata));
+		return metadata.$$id;
 	},
 };

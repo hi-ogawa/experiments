@@ -3,14 +3,10 @@ import React from "react";
 import ReactDomClient from "react-dom/client";
 import type { ServerPayload } from "./entry.rsc";
 import type { CallServerFn } from "./types";
-import { resolveClientReference } from "./utils/client-reference";
+import { clientReferenceManifest } from "./utils/client-reference";
 import { getFlightStreamBrowser } from "./utils/stream-script";
 
 async function main() {
-	const manifest = {
-		resolveClientReference,
-	};
-
 	const callServer: CallServerFn = async (id, args) => {
 		const url = new URL(window.location.href);
 		url.searchParams.set("__rsc", id);
@@ -19,7 +15,7 @@ async function main() {
 				method: "POST",
 				body: await ReactClient.encodeReply(args),
 			}),
-			manifest,
+			clientReferenceManifest,
 			{ callServer },
 		);
 		setPayload(payload);
@@ -29,28 +25,22 @@ async function main() {
 	const initialPayload =
 		await ReactClient.createFromReadableStream<ServerPayload>(
 			getFlightStreamBrowser(),
-			manifest,
+			clientReferenceManifest,
 			{ callServer },
 		);
 
 	let setPayload: (v: ServerPayload) => void;
 
 	function BrowserRoot() {
-		const [payload, setPayload_] = React.useState(
-			initialPayload
-		);
+		const [payload, setPayload_] = React.useState(initialPayload);
 		const [_isPending, startTransition] = React.useTransition();
 		setPayload = (v) => startTransition(() => setPayload_(v));
 		return payload.root;
 	}
 
-	ReactDomClient.hydrateRoot(
-		document,
-		<BrowserRoot />,
-		{
-			formState: initialPayload.formState,
-		},
-	);
+	ReactDomClient.hydrateRoot(document, <BrowserRoot />, {
+		formState: initialPayload.formState,
+	});
 }
 
 main();

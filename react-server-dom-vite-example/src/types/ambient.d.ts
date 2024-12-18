@@ -3,10 +3,7 @@
 declare module "@jacob-ebey/react-server-dom-vite/server" {
 	export function renderToPipeableStream<T>(
 		data: T,
-		manifest: {
-			// biome-ignore format:
-			resolveClientReferenceMetadata: import(".").ResolveClientReferenceMetadataFn;
-		},
+		manifest: import(".").ClientReferenceMetadataManifest,
 		opitons?: unknown,
 	): import("react-dom/server").PipeableStream;
 
@@ -27,16 +24,12 @@ declare module "@jacob-ebey/react-server-dom-vite/server" {
 declare module "@jacob-ebey/react-server-dom-vite/client" {
 	export function createFromNodeStream<T>(
 		stream: import("node:stream").Readable,
-		manifest: {
-			resolveClientReference: import(".").ResolveClientReferenceFn;
-		},
+		manifest: import(".").ClientReferenceManifest,
 	): Promise<T>;
 
 	export function createFromReadableStream<T>(
 		stream: ReadableStream,
-		manifest: {
-			resolveClientReference: import(".").ResolveClientReferenceFn;
-		},
+		manifest: import(".").ClientReferenceManifest,
 		options: {
 			callServer: import(".").CallServerFn;
 		},

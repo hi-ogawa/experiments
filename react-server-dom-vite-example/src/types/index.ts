@@ -1,10 +1,12 @@
-export type ResolveClientReferenceMetadataFn = (metadata: { $$id: string }) => [
-	string,
-];
+export type ClientReferenceMetadataManifest = {
+	resolveClientReferenceMetadata(metadata: { $$id: string }): string;
+};
 
-export type ResolveClientReferenceFn = (reference: [string]) => {
-	preload(): Promise<void>;
-	get(): unknown;
+export type ClientReferenceManifest = {
+	resolveClientReference(reference: string): {
+		preload(): Promise<void>;
+		get(): unknown;
+	};
 };
 
 export type ResolveServerReferenceFn = (reference: string) => {

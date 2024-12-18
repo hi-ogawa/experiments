@@ -3,7 +3,7 @@ import ReactClient from "@jacob-ebey/react-server-dom-vite/client";
 import ReactDomServer from "react-dom/server";
 import type { ModuleRunner } from "vite/module-runner";
 import type { ServerPayload } from "./entry.rsc";
-import { resolveClientReference } from "./utils/client-reference";
+import { clientReferenceManifest } from "./utils/client-reference";
 import {
 	createRequest,
 	fromPipeableToWebReadable,
@@ -35,9 +35,7 @@ export default async function handler(
 
 	const payload = await ReactClient.createFromNodeStream<ServerPayload>(
 		fromWebToNodeReadable(flightStream1),
-		{
-			resolveClientReference,
-		},
+		clientReferenceManifest,
 	);
 
 	const ssrAssets = await import("virtual:ssr-assets");
