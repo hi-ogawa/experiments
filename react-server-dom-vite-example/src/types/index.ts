@@ -13,7 +13,7 @@ export type ResolveServerReferenceFn = (reference: string) => {
 };
 
 export type ServerReferenceManifest = {
-	resolveServerReference: ResolveServerReferenceFn
-}
+	resolveServerReference: ResolveServerReferenceFn;
+};
 
 export type CallServerFn = (id: string, args: unknown[]) => unknown;

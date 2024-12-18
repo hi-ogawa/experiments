@@ -14,7 +14,7 @@ async function main() {
 	const callServer: CallServerFn = async (id, args) => {
 		const url = new URL(window.location.href);
 		url.searchParams.set("__rsc", id);
-		const payloadPromise = ReactClient.createFromFetch<ServerPayload>(
+		const payload = await ReactClient.createFromFetch<ServerPayload>(
 			fetch(url, {
 				method: "POST",
 				body: await ReactClient.encodeReply(args),
@@ -22,31 +22,35 @@ async function main() {
 			manifest,
 			{ callServer },
 		);
-		setPayloadPromise(payloadPromise);
-		return (await payloadPromise).returnValue;
+		setPayload(payload);
+		return payload.returnValue;
 	};
 
-	const initialPayloadPromise =
-		ReactClient.createFromReadableStream<ServerPayload>(
+	const initialPayload =
+		await ReactClient.createFromReadableStream<ServerPayload>(
 			getFlightStreamBrowser(),
 			manifest,
 			{ callServer },
 		);
 
-	let setPayloadPromise: (v: Promise<ServerPayload>) => void;
+	let setPayload: (v: ServerPayload) => void;
 
 	function BrowserRoot() {
-		const [payloadPromise, setPayloadPromise_] = React.useState(
-			initialPayloadPromise,
+		const [payload, setPayload_] = React.useState(
+			initialPayload
 		);
 		const [_isPending, startTransition] = React.useTransition();
-		setPayloadPromise = (v) => startTransition(() => setPayloadPromise_(v));
-		return React.use(payloadPromise).root;
+		setPayload = (v) => startTransition(() => setPayload_(v));
+		return payload.root;
 	}
 
-	ReactDomClient.hydrateRoot(document, <BrowserRoot />, {
-		formState: (await initialPayloadPromise).formState,
-	});
+	ReactDomClient.hydrateRoot(
+		document,
+		<BrowserRoot />,
+		{
+			formState: initialPayload.formState,
+		},
+	);
 }
 
 main();

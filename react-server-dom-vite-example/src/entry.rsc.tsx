@@ -1,8 +1,8 @@
 import ReactServer from "@jacob-ebey/react-server-dom-vite/server";
 import type { ReactFormState } from "react-dom/client";
 import { App } from "./app";
-import { fromPipeableToWebReadable } from "./utils/fetch";
 import type { ServerReferenceManifest } from "./types";
+import { fromPipeableToWebReadable } from "./utils/fetch";
 
 export interface RscHandlerResult {
 	stream: ReadableStream<Uint8Array>;
@@ -30,14 +30,18 @@ export async function handler(
 				? await request.formData()
 				: await request.text();
 			const args = await ReactServer.decodeReply(body);
-			const reference = serverReferenceManifest.resolveServerReference(actionId);
+			const reference =
+				serverReferenceManifest.resolveServerReference(actionId);
 			await reference.preload();
 			const action = await reference.get();
 			returnValue = await (action as any).apply(null, args);
 		} else {
 			// progressive enhancement
 			const formData = await request.formData();
-			const decodedAction = await ReactServer.decodeAction(formData, serverReferenceManifest);
+			const decodedAction = await ReactServer.decodeAction(
+				formData,
+				serverReferenceManifest,
+			);
 			formState = await ReactServer.decodeFormState(
 				await decodedAction(),
 				formData,
@@ -74,7 +78,7 @@ const serverReferenceManifest: ServerReferenceManifest = {
 		let resolved: unknown;
 		return {
 			async preload() {
-				let mod: Record<string, unknown>
+				let mod: Record<string, unknown>;
 				if (import.meta.env.DEV) {
 					mod = await import(/* @vite-ignore */ id);
 				} else {
