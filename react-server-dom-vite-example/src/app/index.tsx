@@ -20,16 +20,20 @@ export async function App() {
 			<body>
 				<div>
 					<div>server random: {Math.random().toString(36).slice(2)}</div>
-					<Counter />
 					<Hydrated />
-					<form action={changeCounter}>
-						<div>Server count is {getCounter()}</div>
+					<Counter />
+					<form
+						action={changeCounter}
+						data-testid="server-counter"
+						style={{ padding: "0.5rem" }}
+					>
+						<div>Server counter: {getCounter()}</div>
 						<div>
 							<button name="change" value="-1">
-								-1
+								-
 							</button>
 							<button name="change" value="+1">
-								+1
+								+
 							</button>
 						</div>
 					</form>
