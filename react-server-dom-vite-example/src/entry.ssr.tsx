@@ -3,13 +3,13 @@ import ReactClient from "@jacob-ebey/react-server-dom-vite/client";
 import ReactDomServer from "react-dom/server";
 import type { ModuleRunner } from "vite/module-runner";
 import type { ServerPayload } from "./entry.rsc";
-import { resolveClientReference } from "./utils/client";
+import { resolveClientReference } from "./utils/client-reference";
 import {
 	createRequest,
 	fromPipeableToWebReadable,
 	fromWebToNodeReadable,
 	sendResponse,
-} from "./utils/server";
+} from "./utils/fetch";
 import { injectFlightStream } from "./utils/stream-script";
 
 export default async function handler(

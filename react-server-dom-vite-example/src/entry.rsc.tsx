@@ -1,6 +1,6 @@
 import ReactServer from "@jacob-ebey/react-server-dom-vite/server";
 import { App } from "./app";
-import { fromPipeableToWebReadable } from "./utils/server";
+import { fromPipeableToWebReadable } from "./utils/fetch";
 
 export interface RscHandlerResult {
 	stream: ReadableStream<Uint8Array>;

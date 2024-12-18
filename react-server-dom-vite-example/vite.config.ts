@@ -121,7 +121,7 @@ export default defineConfig({
 				}
 			},
 		},
-		transformClientPlugin(),
+		vitePluginUseClient(),
 		vitePluginSilenceDirectiveBuildWarning(),
 	],
 	builder: {
@@ -135,10 +135,10 @@ export default defineConfig({
 	},
 });
 
-function transformClientPlugin(): Plugin[] {
+function vitePluginUseClient(): Plugin[] {
 	return [
 		{
-			name: transformClientPlugin.name,
+			name: vitePluginUseClient.name,
 			transform(code, id) {
 				if (this.environment.name === "rsc") {
 					if (/^(("use client")|('use client'))/.test(code)) {
