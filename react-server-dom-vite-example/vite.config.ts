@@ -120,6 +120,7 @@ export default defineConfig({
 				}
 			},
 		},
+		transformClientPlugin(),
 	],
 	builder: {
 		sharedPlugins: true,
@@ -131,6 +132,29 @@ export default defineConfig({
 		},
 	},
 });
+
+function transformClientPlugin(): Plugin[] {
+	return [
+		{
+			name: transformClientPlugin.name,
+			transform(code, id) {
+				if (this.environment.name === "rsc") {
+					if (/^(("use client")|('use client'))/.test(code)) {
+						const matches = code.matchAll(/export function (\w+)\(/g);
+						const result = [
+							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
+							...[...matches].map(
+								([, name]) =>
+									`export ${name === "default" ? "" : "const"} ${name} = $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
+							),
+						].join(";\n");
+						return { code: result, map: null };
+					}
+				}
+			},
+		},
+	];
+}
 
 function createVirtualPlugin(name: string, load: Plugin["load"]) {
 	name = "virtual:" + name;

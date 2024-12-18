@@ -17,7 +17,12 @@ export async function handler(request: Request): Promise<RscHandlerResult> {
 			{
 				root: <App />,
 			},
-			{},
+			{
+				resolveClientReferenceMetadata(metadata) {
+					// console.log("[debug:resolveClientReferenceMetadata]", { metadata }, Object.getOwnPropertyDescriptors(metadata));
+					return [metadata.$$id];
+				},
+			},
 			{},
 		),
 	);

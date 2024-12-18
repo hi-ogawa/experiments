@@ -1,3 +1,5 @@
+import { Counter, Hydrated } from "./client";
+
 export async function App() {
 	return (
 		<html>
@@ -17,6 +19,8 @@ export async function App() {
 			<body>
 				<div>
 					<div>server random: {Math.random().toString(36).slice(2)}</div>
+					<Counter />
+					<Hydrated />
 				</div>
 			</body>
 		</html>

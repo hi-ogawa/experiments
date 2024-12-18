@@ -3,7 +3,9 @@
 declare module "@jacob-ebey/react-server-dom-vite/server" {
 	export function renderToPipeableStream<T>(
 		data: T,
-		manifest: unknown,
+		manifest: {
+			resolveClientReferenceMetadata(metadata: { $$id: string }): [string];
+		},
 		opitons?: unknown,
 	): import("react-dom/server").PipeableStream;
 
@@ -36,12 +38,22 @@ declare module "@jacob-ebey/react-server-dom-vite/server" {
 declare module "@jacob-ebey/react-server-dom-vite/client" {
 	export function createFromNodeStream<T>(
 		stream: import("node:stream").Readable,
-		manifest: unknown,
+		manifest: {
+			resolveClientReference(reference: [string]): {
+				preload(): Promise<void>;
+				get(): unknown;
+			};
+		},
 	): Promise<T>;
 
 	export function createFromReadableStream<T>(
 		stream: ReadableStream,
-		manifest: unknown,
+		manifest: {
+			resolveClientReference(reference: [string]): {
+				preload(): Promise<void>;
+				get(): unknown;
+			};
+		},
 	): Promise<T>;
 
 	export function createFromFetch<T>(

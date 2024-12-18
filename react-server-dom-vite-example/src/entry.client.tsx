@@ -6,13 +6,22 @@ import { getFlightStreamBrowser } from "./utils/stream-script";
 async function main() {
 	const payload = await ReactClient.createFromReadableStream<ServerPayload>(
 		getFlightStreamBrowser(),
-		{},
+		{
+			resolveClientReference(reference) {
+				const [id, name] = reference[0].split("#");
+				let mod: Record<string, unknown>;
+				return {
+					async preload() {
+						mod ??= await import(/* @vite-ignore */ id);
+					},
+					get() {
+						return mod[name];
+					},
+				};
+			},
+		},
 	);
 	ReactDomClient.hydrateRoot(document, payload.root);
-
-	const el = document.createElement("div");
-	el.textContent = "hydrated";
-	document.body.appendChild(el);
 }
 
 main();

@@ -34,7 +34,23 @@ export default async function handler(
 
 	const payload = await ReactClient.createFromNodeStream<ServerPayload>(
 		fromWebToNodeReadable(flightStream1),
-		{},
+		{
+			resolveClientReference(reference) {
+				// console.log("[debug:resolveClientReference]", { reference })
+				const [id, name] = reference[0].split("#");
+				let mod: Record<string, unknown>;
+				return {
+					async preload() {
+						// console.log("[debug:preload]", { id, name})
+						mod ??= await import(/* @vite-ignore */ id);
+					},
+					get() {
+						// console.log("[debug:get]", { id, name })
+						return mod[name];
+					},
+				};
+			},
+		},
 	);
 
 	const ssrAssets = await import("virtual:ssr-assets");
