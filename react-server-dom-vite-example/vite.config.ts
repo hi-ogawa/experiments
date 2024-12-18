@@ -30,7 +30,12 @@ export default defineConfig({
 		},
 		rsc: {
 			optimizeDeps: {
-				noDiscovery: false,
+				include: [
+					"react",
+					"react/jsx-runtime",
+					"react/jsx-dev-runtime",
+					"@jacob-ebey/react-server-dom-vite/server",
+				],
 			},
 			resolve: {
 				conditions: ["react-server"],
@@ -58,14 +63,16 @@ export default defineConfig({
 				const rscRunner = (server.environments.rsc as RunnableDevEnvironment)
 					.runner;
 				Object.assign(globalThis, { __rscRunner: rscRunner });
-				server.middlewares.use(async (req, res, next) => {
-					try {
-						const mod: any = await ssrRunner.import("/src/entry.ssr.tsx");
-						await mod.default(req, res);
-					} catch (e) {
-						next(e);
-					}
-				});
+				return () => {
+					server.middlewares.use(async (req, res, next) => {
+						try {
+							const mod: any = await ssrRunner.import("/src/entry.ssr.tsx");
+							await mod.default(req, res);
+						} catch (e) {
+							next(e);
+						}
+					});
+				};
 			},
 			async configurePreviewServer(server) {
 				const mod = await import(path.resolve("dist/ssr/index.js"));

@@ -38,4 +38,14 @@ declare module "@jacob-ebey/react-server-dom-vite/client" {
 		stream: import("node:stream").Readable,
 		manifest: unknown,
 	): Promise<T>;
+
+	export function createFromReadableStream<T>(
+		stream: ReadableStream,
+		manifest: unknown,
+	): Promise<T>;
+
+	export function createFromFetch<T>(
+		fetchReturn: ReturnType<typeof fetch>,
+		manifest: unknown,
+	): Promise<T>;
 }

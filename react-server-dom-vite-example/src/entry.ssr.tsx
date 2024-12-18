@@ -9,6 +9,7 @@ import {
 	fromWebReadable,
 	sendResponse,
 } from "./utils/server";
+import { injectFlightStream } from "./utils/stream-script";
 
 export default async function handler(
 	req: IncomingMessage,
@@ -29,25 +30,31 @@ export default async function handler(
 		return;
 	}
 
-	const [flightStream1, _flightStream2] = rscResult.stream.tee();
+	const [flightStream1, flightStream2] = rscResult.stream.tee();
 
 	const payload = await ReactClient.createFromNodeStream<ServerPayload>(
 		fromWebReadable(flightStream1),
 		{},
 	);
 
-	const stream = fromPipeableToWebReadable(
+	const htmlStream = fromPipeableToWebReadable(
 		ReactDomServer.renderToPipeableStream(payload.root, {
 			bootstrapModules: [
-				// import.meta.env.DEV ? "/src/entry.client.tsx" : "/todo",
+				import.meta.env.DEV ? "/src/entry.client.tsx" : "/todo",
 			],
 		}),
 	);
-	const response = new Response(stream, {
-		headers: {
-			"content-type": "text/html;charset=utf-8",
+
+	const response = new Response(
+		htmlStream
+			.pipeThrough(new TextDecoderStream())
+			.pipeThrough(injectFlightStream(flightStream2)),
+		{
+			headers: {
+				"content-type": "text/html;charset=utf-8",
+			},
 		},
-	});
+	);
 	sendResponse(response, res);
 }
 
