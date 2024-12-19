@@ -1,6 +1,6 @@
 import ReactServer from "@jacob-ebey/react-server-dom-vite/server";
 import type { ReactFormState } from "react-dom/client";
-import { App } from "./app";
+import { Router } from "./app/routes";
 import type {
 	ClientReferenceMetadataManifest,
 	ServerReferenceManifest,
@@ -57,7 +57,7 @@ export async function handler(
 	const stream = fromPipeableToWebReadable(
 		ReactServer.renderToPipeableStream<ServerPayload>(
 			{
-				root: <App />,
+				root: <Router url={url} />,
 				returnValue,
 				formState,
 			},

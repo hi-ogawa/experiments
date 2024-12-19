@@ -51,7 +51,7 @@ async function main() {
 		}, [startTransition, setPayload_]);
 
 		React.useEffect(() => {
-			return listenWindowHistory(onNavigation);
+			return listenNavigation(onNavigation);
 		}, []);
 
 		return payload.root;
@@ -69,7 +69,7 @@ async function main() {
 	}
 }
 
-function listenWindowHistory(onNavigation: () => void) {
+function listenNavigation(onNavigation: () => void) {
 	window.addEventListener("popstate", onNavigation);
 
 	const oldPushState = window.history.pushState;
@@ -86,7 +86,30 @@ function listenWindowHistory(onNavigation: () => void) {
 		return res;
 	};
 
+	function onClick(e: MouseEvent) {
+		let link = (e.target as Element).closest("a");
+		if (
+			link &&
+			link instanceof HTMLAnchorElement &&
+			link.href &&
+			(!link.target || link.target === "_self") &&
+			link.origin === location.origin &&
+			!link.hasAttribute("download") &&
+			e.button === 0 && // left clicks only
+			!e.metaKey && // open in new tab (mac)
+			!e.ctrlKey && // open in new tab (windows)
+			!e.altKey && // download
+			!e.shiftKey &&
+			!e.defaultPrevented
+		) {
+			e.preventDefault();
+			history.pushState(null, "", link.href);
+		}
+	}
+	document.addEventListener("click", onClick);
+
 	return () => {
+		document.removeEventListener("click", onClick);
 		window.removeEventListener("popstate", onNavigation);
 		window.history.pushState = oldPushState;
 		window.history.replaceState = oldReplaceState;
