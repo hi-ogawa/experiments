@@ -8,15 +8,15 @@ importers:
 
   .:
     dependencies:
-      '@jacob-ebey/react-server-dom-vite':
-        specifier: 19.0.0-experimental.14
-        version: 19.0.0-experimental.14(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react:
         specifier: ^19.0.0
         version: 19.0.0
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
+      react-server-dom-vite:
+        specifier: npm:@jacob-ebey/react-server-dom-vite@19.0.0-experimental.14
+        version: '@jacob-ebey/react-server-dom-vite@19.0.0-experimental.14(react-dom@19.0.0(react@19.0.0))(react@19.0.0)'
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4

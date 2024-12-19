@@ -12,7 +12,7 @@
 		"lint-check": "biome check ."
 	},
 	"dependencies": {
-		"@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
+		"react-server-dom-vite": "npm:@jacob-ebey/react-server-dom-vite@19.0.0-experimental.14",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0"
 	},
