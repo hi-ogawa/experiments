@@ -19,6 +19,12 @@ export default defineConfig({
 	appType: "custom",
 	environments: {
 		client: {
+			optimizeDeps: {
+				include: [
+					"react-dom/client",
+					"@jacob-ebey/react-server-dom-vite/client",
+				],
+			},
 			build: {
 				manifest: true,
 				outDir: "dist/client",
