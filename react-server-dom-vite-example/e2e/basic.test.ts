@@ -65,7 +65,9 @@ async function testServerAction2(page: Page, options: { js: boolean }) {
 	await page.locator('input[name="x"]').fill("2");
 	await page.locator('input[name="y"]').fill("three");
 	await page.locator('input[name="y"]').press("Enter");
-	await expect(page.getByTestId("calculator-answer")).toContainText("(invalid input)");
+	await expect(page.getByTestId("calculator-answer")).toContainText(
+		"(invalid input)",
+	);
 	if (options.js) {
 		await expect(page.locator('input[name="x"]')).toHaveValue("2");
 		await expect(page.locator('input[name="y"]')).toHaveValue("three");
