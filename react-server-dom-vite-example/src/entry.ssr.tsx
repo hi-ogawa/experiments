@@ -43,6 +43,8 @@ export default async function handler(
 	const htmlStream = fromPipeableToWebReadable(
 		ReactDomServer.renderToPipeableStream(payload.root, {
 			bootstrapModules: ssrAssets.bootstrapModules,
+			// @ts-ignore no type?
+			formState: payload.formState,
 		}),
 	);
 

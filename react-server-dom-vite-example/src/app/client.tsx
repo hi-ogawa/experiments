@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { add } from "./action-by-client";
 
 export function Counter() {
 	const [count, setCount] = React.useState(0);
@@ -24,5 +25,38 @@ function useHydrated() {
 		React.useCallback(() => () => {}, []),
 		() => true,
 		() => false,
+	);
+}
+
+export function Calculator() {
+	const [returnValue, formAction, _isPending] = React.useActionState(add, null);
+	const [x, setX] = React.useState("");
+	const [y, setY] = React.useState("");
+
+	return (
+		<form
+			action={formAction}
+			style={{ padding: "0.5rem" }}
+			data-testid="calculator"
+		>
+			<div>Calculator</div>
+			<div style={{ display: "flex", gap: "0.3rem" }}>
+				<input
+					name="x"
+					style={{ width: "2rem" }}
+					value={x}
+					onChange={(e) => setX(e.target.value)}
+				/>
+				+
+				<input
+					name="y"
+					style={{ width: "2rem" }}
+					value={y}
+					onChange={(e) => setY(e.target.value)}
+				/>
+				=<span data-testid="calculator-answer">{returnValue ?? "?"}</span>
+			</div>
+			<button hidden></button>
+		</form>
 	);
 }
