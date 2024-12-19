@@ -196,12 +196,15 @@ function vitePluginUseClient(): Plugin[] {
 							return;
 						}
 						clientReferences[id] = id; // TODO: normalize
-						const matches = code.matchAll(/export function (\w+)\(/g);
+						const matches = [
+							...code.matchAll(/export function (\w+)\(/g),
+							...code.matchAll(/export (default) (function|class) /g),
+						];
 						const result = [
 							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
 							...[...matches].map(
 								([, name]) =>
-									`export const ${name} = $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
+									`export ${name === "default" ? "default" : `const ${name} =`} $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
 							),
 						].join(";\n");
 						return { code: result, map: null };
