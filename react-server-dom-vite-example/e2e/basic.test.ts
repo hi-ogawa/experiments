@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { type Page, test } from "@playwright/test";
 
 test("client reference", async ({ page }) => {
 	await page.goto("/");
@@ -13,7 +13,18 @@ test("client reference", async ({ page }) => {
 	await page.getByText("Client counter: 0").click();
 });
 
-test("server reference", async ({ page }) => {
+test("server reference @js", async ({ page }) => {
+	await testServerAction(page);
+});
+
+test.describe(() => {
+	test.use({ javaScriptEnabled: false });
+	test("server reference @nojs", async ({ page }) => {
+		await testServerAction(page);
+	});
+});
+
+async function testServerAction(page: Page) {
 	await page.goto("/");
 	await page.getByText("Server counter: 0").click();
 	await page
@@ -21,6 +32,11 @@ test("server reference", async ({ page }) => {
 		.getByRole("button", { name: "+" })
 		.click();
 	await page.getByText("Server counter: 1").click();
-	await page.reload();
+	await page.goto("/");
 	await page.getByText("Server counter: 1").click();
-});
+	await page
+		.getByTestId("server-counter")
+		.getByRole("button", { name: "-" })
+		.click();
+	await page.getByText("Server counter: 0").click();
+}
