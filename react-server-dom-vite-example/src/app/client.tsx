@@ -34,7 +34,11 @@ export function Calculator() {
 	const [y, setY] = React.useState("");
 
 	return (
-		<form action={formAction} style={{ padding: "0.5rem" }}>
+		<form
+			action={formAction}
+			style={{ padding: "0.5rem" }}
+			data-testid="calculator"
+		>
 			<div>Calculator</div>
 			<div style={{ display: "flex", gap: "0.3rem" }}>
 				<input
@@ -50,7 +54,7 @@ export function Calculator() {
 					value={y}
 					onChange={(e) => setY(e.target.value)}
 				/>
-				=<span>{returnValue ?? "?"}</span>
+				=<span data-testid="calculator-answer">{returnValue ?? "?"}</span>
 			</div>
 			<button hidden></button>
 		</form>

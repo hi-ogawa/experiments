@@ -1,4 +1,4 @@
-import { type Page, test } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
 import { createEditor } from "./helper";
 
 test("client reference", async ({ page }) => {
@@ -14,13 +14,13 @@ test("client reference", async ({ page }) => {
 	await page.getByText("Client counter: 0").click();
 });
 
-test("server reference @js", async ({ page }) => {
+test("server reference in server @js", async ({ page }) => {
 	await testServerAction(page);
 });
 
 test.describe(() => {
 	test.use({ javaScriptEnabled: false });
-	test("server reference @nojs", async ({ page }) => {
+	test("server reference in server @nojs", async ({ page }) => {
 		await testServerAction(page);
 	});
 });
@@ -40,6 +40,39 @@ async function testServerAction(page: Page) {
 		.getByRole("button", { name: "-" })
 		.click();
 	await page.getByText("Server counter: 0").click();
+}
+
+test("server reference in client @js", async ({ page }) => {
+	await testServerAction2(page, { js: true });
+});
+
+test.describe(() => {
+	test.use({ javaScriptEnabled: false });
+	test("server reference in client @nojs", async ({ page }) => {
+		await testServerAction2(page, { js: false });
+	});
+});
+
+async function testServerAction2(page: Page, options: { js: boolean }) {
+	await page.goto("/");
+	if (options.js) {
+		await page.getByText("[hydrated: 1]").click();
+	}
+	await page.locator('input[name="x"]').fill("2");
+	await page.locator('input[name="y"]').fill("3");
+	await page.locator('input[name="y"]').press("Enter");
+	await expect(page.getByTestId("calculator-answer")).toContainText("5");
+	await page.locator('input[name="x"]').fill("2");
+	await page.locator('input[name="y"]').fill("three");
+	await page.locator('input[name="y"]').press("Enter");
+	await expect(page.getByTestId("calculator-answer")).toContainText("(invalid input)");
+	if (options.js) {
+		await expect(page.locator('input[name="x"]')).toHaveValue("2");
+		await expect(page.locator('input[name="y"]')).toHaveValue("three");
+	} else {
+		await expect(page.locator('input[name="x"]')).toHaveValue("");
+		await expect(page.locator('input[name="y"]')).toHaveValue("");
+	}
 }
 
 test("client hmr @dev", async ({ page }) => {
