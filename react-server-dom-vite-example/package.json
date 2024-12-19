@@ -1,0 +1,30 @@
+{
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build --app",
+		"preview": "vite preview",
+		"tsc": "tsc -b",
+		"test-e2e": "playwright test",
+		"test-e2e-preview": "E2E_PREVIEW=1 playwright test",
+		"lint": "biome check --write .",
+		"lint-check": "biome check ."
+	},
+	"dependencies": {
+		"@jacob-ebey/react-server-dom-vite": "19.0.0-experimental.14",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.49.1",
+		"@types/node": "^22.10.2",
+		"@types/react": "^19.0.1",
+		"@types/react-dom": "^19.0.1",
+		"@vitejs/plugin-react": "^4.3.4",
+		"typescript": "^5.7.2",
+		"vite": "6.0.3"
+	},
+	"packageManager": "pnpm@9.15.0+sha512.76e2379760a4328ec4415815bcd6628dee727af3779aaa4c914e3944156c4299921a89f976381ee107d41f12cfa4b66681ca9c718f0668fa0831ed4c6d8ba56c"
+}
