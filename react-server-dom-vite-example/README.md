@@ -1,5 +1,7 @@
 Bare minimal example of `react-server-dom-vite` https://github.com/facebook/react/pull/31768
 
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/hi-ogawa/experiments/tree/main/react-server-dom-vite-example?file=README.md)
+
 ## implemented
 
 - client component
