@@ -7,11 +7,6 @@ export async function App() {
 			<head>
 				<meta charSet="UTF-8" />
 				<title>react-server</title>
-				{import.meta.env.DEV && (
-					<>
-						<script type="module" src="/@vite/client"></script>
-					</>
-				)}
 				<meta
 					name="viewport"
 					content="width=device-width, height=device-height, initial-scale=1.0"

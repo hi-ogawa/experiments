@@ -1,5 +1,6 @@
 import assert from "node:assert";
 import path from "node:path";
+import react from "@vitejs/plugin-react";
 import {
 	type Manifest,
 	type Plugin,
@@ -21,7 +22,7 @@ export default defineConfig({
 				manifest: true,
 				outDir: "dist/client",
 				rollupOptions: {
-					input: { index: "/src/entry.client.tsx" },
+					input: { index: "virtual:browser-entry" },
 				},
 			},
 		},
@@ -105,12 +106,27 @@ export default defineConfig({
 			assert(this.environment.name === "ssr");
 			let bootstrapModules: string[] = [];
 			if (this.environment.mode === "dev") {
-				bootstrapModules = ["/src/entry.client.tsx"];
+				bootstrapModules = ["/@id/__x00__virtual:browser-entry"];
 			}
 			if (this.environment.mode === "build") {
-				bootstrapModules = [browserManifest["src/entry.client.tsx"].file];
+				bootstrapModules = [browserManifest["virtual:browser-entry"].file];
 			}
 			return `export const bootstrapModules = ${JSON.stringify(bootstrapModules)}`;
+		}),
+		createVirtualPlugin("browser-entry", function () {
+			if (this.environment.mode === "dev") {
+				return `
+					import "/@vite/client";
+					import RefreshRuntime from "/@react-refresh";
+					RefreshRuntime.injectIntoGlobalHook(window);
+					window.$RefreshReg$ = () => {};
+					window.$RefreshSig$ = () => (type) => type;
+					window.__vite_plugin_react_preamble_installed__ = true;
+					await import("/src/entry.client.tsx");
+				`;
+			} else {
+				return `import "/src/entry.client.tsx";`;
+			}
 		}),
 		{
 			name: "misc",
@@ -126,6 +142,7 @@ export default defineConfig({
 		vitePluginUseClient(),
 		vitePluginUseServer(),
 		vitePluginSilenceDirectiveBuildWarning(),
+		react(),
 	],
 	builder: {
 		sharedPlugins: true,
