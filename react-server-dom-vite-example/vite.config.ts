@@ -130,6 +130,26 @@ export default defineConfig({
 		}),
 		{
 			name: "misc",
+			hotUpdate(ctx) {
+				if (this.environment.name === "rsc") {
+					const ids = ctx.modules
+						.map((mod) => mod.id)
+						.filter((v) => v !== null);
+					if (ids.length > 0) {
+						// client reference id is also in react server module graph,
+						// but we skip RSC HMR for this case since Client HMR handles it.
+						if (!ids.some((id) => id in clientReferences)) {
+							ctx.server.environments.client.hot.send({
+								type: "custom",
+								event: "react-server:update",
+								data: {
+									file: ctx.file,
+								},
+							});
+						}
+					}
+				}
+			},
 			writeBundle(_options, bundle) {
 				if (this.environment.name === "client") {
 					const output = bundle[".vite/manifest.json"];

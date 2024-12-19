@@ -22,6 +22,17 @@ async function main() {
 		return payload.returnValue;
 	};
 
+	async function onNavigation() {
+		const url = new URL(window.location.href);
+		url.searchParams.set("__rsc", "");
+		const payload = await ReactClient.createFromFetch<ServerPayload>(
+			fetch(url),
+			clientReferenceManifest,
+			{ callServer },
+		);
+		setPayload(payload);
+	}
+
 	const initialPayload =
 		await ReactClient.createFromReadableStream<ServerPayload>(
 			getFlightStreamBrowser(),
@@ -34,13 +45,53 @@ async function main() {
 	function BrowserRoot() {
 		const [payload, setPayload_] = React.useState(initialPayload);
 		const [_isPending, startTransition] = React.useTransition();
-		setPayload = (v) => startTransition(() => setPayload_(v));
+
+		React.useEffect(() => {
+			setPayload = (v) => startTransition(() => setPayload_(v));
+		}, [startTransition, setPayload_])
+
+		React.useEffect(() => {
+			return listenWindowHistory(onNavigation);
+		}, []);
+
 		return payload.root;
 	}
 
 	ReactDomClient.hydrateRoot(document, <BrowserRoot />, {
 		formState: initialPayload.formState,
 	});
+
+	if (import.meta.hot) {
+		import.meta.hot.on("react-server:update", (e) => {
+			console.log("[react-server:update]", e.file);
+			window.history.replaceState({}, "", window.location.href);
+		});
+	}
 }
+
+function listenWindowHistory(onNavigation: () => void) {
+  window.addEventListener("popstate", onNavigation);
+
+  const oldPushState = window.history.pushState;
+  window.history.pushState = function (...args) {
+    const res = oldPushState.apply(this, args);
+    onNavigation();
+    return res;
+  };
+
+  const oldReplaceState = window.history.replaceState;
+  window.history.replaceState = function (...args) {
+    const res = oldReplaceState.apply(this, args);
+    onNavigation();
+    return res;
+  };
+
+  return () => {
+    window.removeEventListener("popstate", onNavigation);
+    window.history.pushState = oldPushState;
+    window.history.replaceState = oldReplaceState;
+  };
+}
+
 
 main();
