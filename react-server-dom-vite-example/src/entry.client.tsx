@@ -21,6 +21,7 @@ async function main() {
 		setPayload(payload);
 		return payload.returnValue;
 	};
+	Object.assign(globalThis, { __callServer: callServer });
 
 	async function onNavigation() {
 		const url = new URL(window.location.href);

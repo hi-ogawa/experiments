@@ -9,8 +9,9 @@ import {
 	defineConfig,
 } from "vite";
 
+// state for build orchestration
 let browserManifest: Manifest;
-let clientReferences: Record<string, string> = {};
+let clientReferences: Record<string, string> = {}; // TODO: normalize id
 let serverReferences: Record<string, string> = {};
 let buildScan = false;
 
@@ -166,7 +167,6 @@ export default defineConfig({
 	],
 	builder: {
 		sharedPlugins: true,
-		sharedConfigBuild: true,
 		async buildApp(builder) {
 			buildScan = true;
 			await builder.build(builder.environments.rsc);
@@ -220,8 +220,8 @@ function vitePluginUseServer(): Plugin[] {
 			name: vitePluginUseServer.name,
 			transform(code, id) {
 				if (/^(("use server")|('use server'))/.test(code)) {
+					serverReferences[id] = id;
 					if (this.environment.name === "rsc") {
-						serverReferences[id] = id;
 						const matches = code.matchAll(/export async function (\w+)\(/g);
 						const result = [
 							code,
@@ -233,7 +233,15 @@ function vitePluginUseServer(): Plugin[] {
 						].join(";\n");
 						return { code: result, map: null };
 					} else {
-						// TODO
+						const matches = code.matchAll(/export async function (\w+)\(/g);
+						const result = [
+							`import $$ReactClient from "@jacob-ebey/react-server-dom-vite/client"`,
+							...[...matches].map(
+								([, name]) =>
+									`export const ${name} = $$ReactClient.createServerReference(${JSON.stringify(id + "#" + name)}, (...args) => __callServer(...args))`,
+							),
+						].join(";\n");
+						return { code: result, map: null };
 					}
 				}
 			},

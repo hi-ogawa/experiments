@@ -1,5 +1,5 @@
 import { changeCounter, getCounter } from "./action";
-import { Counter, Hydrated } from "./client";
+import { Calculator, Counter, Hydrated } from "./client";
 
 export async function IndexPage() {
 	return (
@@ -22,6 +22,7 @@ export async function IndexPage() {
 					</button>
 				</div>
 			</form>
+			<Calculator />
 		</div>
 	);
 }
