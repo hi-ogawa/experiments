@@ -1,5 +1,5 @@
-import ReactServer from "@jacob-ebey/react-server-dom-vite/server";
 import type { ReactFormState } from "react-dom/client";
+import ReactServer from "react-server-dom-vite/server";
 import { Router } from "./app/routes";
 import type {
 	ClientReferenceMetadataManifest,

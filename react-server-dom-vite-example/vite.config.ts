@@ -19,6 +19,9 @@ export default defineConfig({
 	appType: "custom",
 	environments: {
 		client: {
+			optimizeDeps: {
+				include: ["react-dom/client", "react-server-dom-vite/client"],
+			},
 			build: {
 				manifest: true,
 				outDir: "dist/client",
@@ -41,7 +44,7 @@ export default defineConfig({
 					"react",
 					"react/jsx-runtime",
 					"react/jsx-dev-runtime",
-					"@jacob-ebey/react-server-dom-vite/server",
+					"react-server-dom-vite/server",
 				],
 			},
 			resolve: {
@@ -190,12 +193,15 @@ function vitePluginUseClient(): Plugin[] {
 							return;
 						}
 						clientReferences[id] = id; // TODO: normalize
-						const matches = code.matchAll(/export function (\w+)\(/g);
+						const matches = [
+							...code.matchAll(/export function (\w+)\(/g),
+							...code.matchAll(/export (default) (function|class) /g),
+						];
 						const result = [
-							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
+							`import $$ReactServer from "react-server-dom-vite/server"`,
 							...[...matches].map(
 								([, name]) =>
-									`export const ${name} = $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
+									`export ${name === "default" ? "default" : `const ${name} =`} $$ReactServer.registerClientReference({}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
 							),
 						].join(";\n");
 						return { code: result, map: null };
@@ -225,7 +231,7 @@ function vitePluginUseServer(): Plugin[] {
 						const matches = code.matchAll(/export async function (\w+)\(/g);
 						const result = [
 							code,
-							`import $$ReactServer from "@jacob-ebey/react-server-dom-vite/server"`,
+							`import $$ReactServer from "react-server-dom-vite/server"`,
 							...[...matches].map(
 								([, name]) =>
 									`${name} = $$ReactServer.registerServerReference(${name}, ${JSON.stringify(id)}, ${JSON.stringify(name)})`,
@@ -235,7 +241,7 @@ function vitePluginUseServer(): Plugin[] {
 					} else {
 						const matches = code.matchAll(/export async function (\w+)\(/g);
 						const result = [
-							`import $$ReactClient from "@jacob-ebey/react-server-dom-vite/client"`,
+							`import $$ReactClient from "react-server-dom-vite/client"`,
 							...[...matches].map(
 								([, name]) =>
 									`export const ${name} = $$ReactClient.createServerReference(${JSON.stringify(id + "#" + name)}, (...args) => __callServer(...args))`,

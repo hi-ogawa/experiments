@@ -1,6 +1,6 @@
-import ReactClient from "@jacob-ebey/react-server-dom-vite/client";
 import React from "react";
 import ReactDomClient from "react-dom/client";
+import ReactClient from "react-server-dom-vite/client";
 import type { ServerPayload } from "./entry.rsc";
 import type { CallServerFn } from "./types";
 import { clientReferenceManifest } from "./utils/client-reference";
