@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@vitejs/plugin-rsc':
+        specifier: link:./src/core
+        version: link:src/core
       react:
         specifier: ^19.0.0
         version: 19.0.0

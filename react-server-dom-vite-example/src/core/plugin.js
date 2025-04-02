@@ -1,12 +1,19 @@
-import type { Plugin } from "vite";
-
-export function vitePluginRscCore(rscOptions: {
-	getClientReferences: () => Record<string, string>;
-	getServerReferences: () => Record<string, string>;
-}): Plugin[] {
+/**
+ *
+ * @param {{ getClientReferences: () => Record<string, string>; getServerReferences: () => Record<string, string>; }} rscOptions
+ * @returns {import("vite").Plugin}
+ */
+export function vitePluginRscCore(rscOptions) {
 	return [
 		{
-			name: "rsc-manifest",
+			name: "rsc-core",
+			configEnvironment() {
+				return {
+					resolve: {
+						noExternal: ["@vitejs/plugin-rsc"],
+					},
+				};
+			},
 			resolveId(source) {
 				if (source.startsWith("virtual:vite-rsc/")) {
 					return "\0" + source;

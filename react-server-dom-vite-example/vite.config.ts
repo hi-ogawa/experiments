@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
+import { vitePluginRscCore } from "@vitejs/plugin-rsc/plugin";
 import {
 	type Manifest,
 	type Plugin,
@@ -8,7 +9,6 @@ import {
 	createRunnableDevEnvironment,
 	defineConfig,
 } from "vite";
-import { vitePluginRscCore } from "./src/core/plugin";
 
 // state for build orchestration
 let browserManifest: Manifest;

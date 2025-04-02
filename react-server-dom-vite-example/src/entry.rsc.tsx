@@ -1,10 +1,10 @@
-import type { ReactFormState } from "react-dom/client";
-import ReactServer from "react-server-dom-vite/server";
-import { Router } from "./app/routes";
 import {
 	clientReferenceMetadataManifest,
 	serverReferenceManifest,
-} from "./core/server";
+} from "@vitejs/plugin-rsc/server";
+import type { ReactFormState } from "react-dom/client";
+import ReactServer from "react-server-dom-vite/server";
+import { Router } from "./app/routes";
 import { fromPipeableToWebReadable } from "./utils/fetch";
 
 export interface RscHandlerResult {
