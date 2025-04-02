@@ -1,10 +1,10 @@
+import {
+	clientReferenceMetadataManifest,
+	serverReferenceManifest,
+} from "@vitejs/plugin-rsc/server";
 import type { ReactFormState } from "react-dom/client";
 import ReactServer from "react-server-dom-vite/server";
 import { Router } from "./app/routes";
-import type {
-	ClientReferenceMetadataManifest,
-	ServerReferenceManifest,
-} from "./types";
 import { fromPipeableToWebReadable } from "./utils/fetch";
 
 export interface RscHandlerResult {
@@ -70,32 +70,3 @@ export async function handler(
 		stream,
 	};
 }
-
-const serverReferenceManifest: ServerReferenceManifest = {
-	resolveServerReference(reference: string) {
-		const [id, name] = reference.split("#");
-		let resolved: unknown;
-		return {
-			async preload() {
-				let mod: Record<string, unknown>;
-				if (import.meta.env.DEV) {
-					mod = await import(/* @vite-ignore */ id);
-				} else {
-					const references = await import("virtual:build-server-references");
-					mod = await references.default[id]();
-				}
-				resolved = mod[name];
-			},
-			get() {
-				return resolved;
-			},
-		};
-	},
-};
-
-const clientReferenceMetadataManifest: ClientReferenceMetadataManifest = {
-	resolveClientReferenceMetadata(metadata) {
-		// console.log("[debug:resolveClientReferenceMetadata]", { metadata }, Object.getOwnPropertyDescriptors(metadata));
-		return metadata.$$id;
-	},
-};
