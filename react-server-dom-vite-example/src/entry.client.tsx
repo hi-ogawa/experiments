@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDomClient from "react-dom/client";
 import ReactClient from "react-server-dom-vite/client";
+import { clientReferenceManifest } from "./core/client";
 import type { ServerPayload } from "./entry.rsc";
 import type { CallServerFn } from "./types";
-import { clientReferenceManifest } from "./utils/client-reference";
 import { getFlightStreamBrowser } from "./utils/stream-script";
 
 async function main() {

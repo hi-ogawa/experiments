@@ -10,9 +10,8 @@ export const clientReferenceManifest: ClientReferenceManifest = {
 				if (import.meta.env.DEV) {
 					mod = await import(/* @vite-ignore */ id);
 				} else {
-					const references = await import(
-						"virtual:build-client-references" as string
-					);
+					// @ts-ignore
+					const references = await import("virtual:vite-rsc/client-references");
 					mod = await references.default[id]();
 				}
 				resolved = mod[name];

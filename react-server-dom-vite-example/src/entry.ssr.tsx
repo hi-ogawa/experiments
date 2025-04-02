@@ -2,8 +2,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import ReactDomServer from "react-dom/server";
 import ReactClient from "react-server-dom-vite/client";
 import type { ModuleRunner } from "vite/module-runner";
+import { clientReferenceManifest } from "./core/client";
 import type { ServerPayload } from "./entry.rsc";
-import { clientReferenceManifest } from "./utils/client-reference";
 import {
 	createRequest,
 	fromPipeableToWebReadable,

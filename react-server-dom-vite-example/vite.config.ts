@@ -8,6 +8,7 @@ import {
 	createRunnableDevEnvironment,
 	defineConfig,
 } from "vite";
+import { vitePluginRscCore } from "./src/core/plugin";
 
 // state for build orchestration
 let browserManifest: Manifest;
@@ -167,6 +168,10 @@ export default defineConfig({
 		vitePluginUseServer(),
 		vitePluginSilenceDirectiveBuildWarning(),
 		react(),
+		vitePluginRscCore({
+			getClientReferences: () => clientReferences,
+			getServerReferences: () => serverReferences,
+		}),
 	],
 	builder: {
 		sharedPlugins: true,
@@ -209,14 +214,6 @@ function vitePluginUseClient(): Plugin[] {
 				}
 			},
 		},
-		createVirtualPlugin("build-client-references", () => {
-			const code = Object.keys(clientReferences)
-				.map(
-					(id) => `${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
-				)
-				.join("\n");
-			return `export default {${code}}`;
-		}),
 	];
 }
 
@@ -252,14 +249,6 @@ function vitePluginUseServer(): Plugin[] {
 				}
 			},
 		},
-		createVirtualPlugin("build-server-references", () => {
-			const code = Object.keys(serverReferences)
-				.map(
-					(id) => `${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
-				)
-				.join("\n");
-			return `export default {${code}}`;
-		}),
 	];
 }
 
