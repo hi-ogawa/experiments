@@ -20,7 +20,7 @@ export function vitePluginRscCore(rscOptions: {
 							? rscOptions.getServerReferences()
 							: undefined;
 				if (references) {
-					const code = Object.keys(rscOptions.getClientReferences())
+					const code = Object.keys(references)
 						.map(
 							(id) =>
 								`${JSON.stringify(id)}: () => import(${JSON.stringify(id)}),`,
