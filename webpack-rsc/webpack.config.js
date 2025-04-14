@@ -6,10 +6,6 @@ import { webToNodeHandler } from "@hiogawa/utils-node";
 import webpack from "webpack";
 import { BuildManager } from "./src/lib/build-manager.js";
 
-// TODO: ensure initialized in server entry
-import { AsyncLocalStorage } from "node:async_hooks";
-Object.assign(globalThis, { AsyncLocalStorage });
-
 // SSR setup is based on
 // https://github.com/hi-ogawa/reproductions/tree/main/webpack-react-ssr
 

@@ -1,3 +1,4 @@
+import "./entry-ssr-init";
 import React from "react";
 import ReactDOMServer from "react-dom/server.edge";
 import ReactClient from "react-server-dom-webpack/client.edge";
