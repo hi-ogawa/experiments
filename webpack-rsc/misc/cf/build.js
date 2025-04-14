@@ -62,6 +62,12 @@ export default { fetch: server.handler };
 			"ignored-bare-import": "silent",
 		},
 		external: ["node:async_hooks"],
+		banner: {
+			js: `\
+import { AsyncLocalStorage } from "node:async_hooks";
+Object.assign(globalThis, { AsyncLocalStorage });
+`,
+		},
 	});
 }
 
