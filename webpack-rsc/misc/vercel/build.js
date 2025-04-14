@@ -79,7 +79,7 @@ export default server.handler;
 			js: `\
 import { AsyncLocalStorage } from "node:async_hooks";
 Object.assign(globalThis, { AsyncLocalStorage });
-`
+`,
 		},
 	});
 }
