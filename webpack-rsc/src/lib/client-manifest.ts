@@ -70,7 +70,7 @@ export async function getClientManifest() {
 	);
 	const ssrManifest: SsrManifest = {
 		moduleMap: ssrModuleMap,
-		moduleLoading: null,
+		moduleLoading: { prefix: "" },
 	};
 
 	return { browserManifest, ssrManifest };
