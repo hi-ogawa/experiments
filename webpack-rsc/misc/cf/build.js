@@ -61,6 +61,7 @@ export default { fetch: server.handler };
 		logOverride: {
 			"ignored-bare-import": "silent",
 		},
+		external: ["node:async_hooks"],
 	});
 }
 
