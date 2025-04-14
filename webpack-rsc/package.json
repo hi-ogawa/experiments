@@ -14,7 +14,7 @@
 		"lint": "biome check --write .",
 		"lint-check": "biome check .",
 		"cf-build": "pnpm build && node misc/cf/build.js",
-		"cf-preview": "cd misc/cf && wrangler pages dev ./dist --compatibility-date=2024-01-01",
+		"cf-preview": "cd misc/cf && wrangler pages dev ./dist --compatibility-date=2024-01-01 --compatibility-flags=nodejs_compat",
 		"cf-release": "cd misc/cf && wrangler pages deploy ./dist --commit-dirty --branch main --project-name webpack-rsc-hiroshi",
 		"vc-build": "pnpm build && node misc/vercel/build.js",
 		"vc-release": "vercel deploy --prebuilt --prod misc/vercel",
