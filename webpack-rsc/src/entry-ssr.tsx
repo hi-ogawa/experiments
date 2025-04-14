@@ -1,3 +1,5 @@
+import "./entry-ssr-init";
+import React from "react";
 import ReactDOMServer from "react-dom/server.edge";
 import ReactClient from "react-server-dom-webpack/client.edge";
 import type { FlightData } from "./entry-server";
@@ -23,13 +25,6 @@ export async function handler(request: Request) {
 
 	const [flightStream1, flightStream2] = flightStream.tee();
 
-	// react client (flight -> react node)
-	const { ssrManifest } = await getClientManifest();
-	const flightData = await ReactClient.createFromReadableStream<FlightData>(
-		flightStream1,
-		{ ssrManifest },
-	);
-
 	const assets = await getClientAssets();
 	const links = (
 		<>
@@ -46,18 +41,31 @@ export async function handler(request: Request) {
 		</>
 	);
 
-	const ssrRoot = (
-		<>
-			{flightData.node}
-			{links}
-		</>
-	);
+	// react client (flight -> react node)
+	const { ssrManifest } = await getClientManifest();
+
+	let flightData: Promise<FlightData>;
+
+	function SsrRoot() {
+		// flight deserialization needs to be kicked in inside SSR context
+		// for react-dom preinit/preloading to work
+		flightData ??= ReactClient.createFromReadableStream<FlightData>(
+			flightStream1,
+			{ ssrManifest },
+		);
+		return (
+			<>
+				{React.use(flightData).node}
+				{links}
+			</>
+		);
+	}
 
 	// react dom ssr (react node -> html)
 	let status = 200;
 	let htmlStream: ReadableStream<Uint8Array>;
 	try {
-		htmlStream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
+		htmlStream = await ReactDOMServer.renderToReadableStream(<SsrRoot />, {
 			bootstrapScripts: assets.bootstrapScripts,
 			formState: actionResult,
 		});

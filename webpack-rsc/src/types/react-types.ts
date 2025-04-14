@@ -18,8 +18,9 @@ export type ModuleMap = {
 
 export interface SsrManifest {
 	moduleMap: ModuleMap;
-	// TODO
-	moduleLoading: null;
+	moduleLoading: {
+		prefix: string;
+	};
 }
 
 export type CallServerCallback = (id: string, args: unknown[]) => unknown;

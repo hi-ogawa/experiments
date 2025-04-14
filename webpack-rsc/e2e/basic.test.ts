@@ -1,10 +1,13 @@
-import { type Page, test } from "@playwright/test";
+import { createRequire } from "node:module";
+import { type Page, expect, test } from "@playwright/test";
 import {
 	createEditor,
 	createReloadChecker,
 	testNoJs,
 	waitForHydration,
 } from "./helper";
+
+const require = createRequire(import.meta.url);
 
 test("basic @js", async ({ page }) => {
 	await page.goto("/");
@@ -144,4 +147,16 @@ test("client hmr @dev", async ({ page }) => {
 	editor.edit((s) => s.replace("count is", "count [EDIT2] is"));
 	// 1 -> 2
 	await page.getByRole("button", { name: "count [EDIT2] is 1" }).click();
+});
+
+testNoJs("ssr preinit scripts @nojs", async ({ page }) => {
+	await page.goto("/");
+	const srcs = await Promise.all(
+		(await page.locator("head >> script[async]").all()).map((s) =>
+			s.getAttribute("src"),
+		),
+	);
+	const refs = require("../dist/server/__client_reference_browser.cjs");
+	const chunk: string = refs["src/routes/_client.tsx"].chunks[1];
+	expect(srcs).toContain(`/assets/${chunk}`);
 });
