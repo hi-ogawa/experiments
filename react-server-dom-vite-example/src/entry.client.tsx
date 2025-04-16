@@ -1,4 +1,7 @@
-import { clientReferenceManifest } from "@vitejs/plugin-rsc/client";
+import {
+	getClientReferenceManifest,
+	setRequireModule,
+} from "@vitejs/plugin-rsc/client";
 import React from "react";
 import ReactDomClient from "react-dom/client";
 import ReactClient from "react-server-dom-vite/client";
@@ -7,6 +10,16 @@ import type { CallServerFn } from "./types";
 import { getFlightStreamBrowser } from "./utils/stream-script";
 
 async function main() {
+	setRequireModule(async (id: string) => {
+		if (import.meta.env.DEV) {
+			return import(/* @vite-ignore */ id);
+		} else {
+			// @ts-ignore
+			const references = await import("virtual:vite-rsc/client-references");
+			return references.default[id]();
+		}
+	});
+
 	const callServer: CallServerFn = async (id, args) => {
 		const url = new URL(window.location.href);
 		url.searchParams.set("__rsc", id);
@@ -15,7 +28,7 @@ async function main() {
 				method: "POST",
 				body: await ReactClient.encodeReply(args),
 			}),
-			clientReferenceManifest,
+			getClientReferenceManifest(),
 			{ callServer },
 		);
 		setPayload(payload);
@@ -28,7 +41,7 @@ async function main() {
 		url.searchParams.set("__rsc", "");
 		const payload = await ReactClient.createFromFetch<ServerPayload>(
 			fetch(url),
-			clientReferenceManifest,
+			getClientReferenceManifest(),
 			{ callServer },
 		);
 		setPayload(payload);
@@ -37,7 +50,7 @@ async function main() {
 	const initialPayload =
 		await ReactClient.createFromReadableStream<ServerPayload>(
 			getFlightStreamBrowser(),
-			clientReferenceManifest,
+			getClientReferenceManifest(),
 			{ callServer },
 		);
 

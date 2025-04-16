@@ -1,5 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { clientReferenceManifest } from "@vitejs/plugin-rsc/client";
+import {
+	getClientReferenceManifest,
+	setRequireModule,
+} from "@vitejs/plugin-rsc/client";
 import ReactDomServer from "react-dom/server";
 import ReactClient from "react-server-dom-vite/client";
 import type { ModuleRunner } from "vite/module-runner";
@@ -16,6 +19,16 @@ export default async function handler(
 	req: IncomingMessage,
 	res: ServerResponse,
 ) {
+	setRequireModule(async (id: string) => {
+		if (import.meta.env.DEV) {
+			return import(/* @vite-ignore */ id);
+		} else {
+			// @ts-ignore
+			const references = await import("virtual:vite-rsc/client-references");
+			return references.default[id]();
+		}
+	});
+
 	const request = createRequest(req, res);
 	const url = new URL(request.url);
 	const rscEntry = await importRscEntry();
@@ -35,7 +48,7 @@ export default async function handler(
 
 	const payload = await ReactClient.createFromNodeStream<ServerPayload>(
 		fromWebToNodeReadable(flightStream1),
-		clientReferenceManifest,
+		getClientReferenceManifest(),
 	);
 
 	const ssrAssets = await import("virtual:ssr-assets");
