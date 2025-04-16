@@ -20,6 +20,9 @@ export default async function handler(
 	res: ServerResponse,
 ) {
 	setRequireModule(async (id: string) => {
+		// NOTE:
+		// prepareDestinationForModule like logic needs to be implemented on user land
+		// as it requires framework-specific multi builds info
 		if (import.meta.env.DEV) {
 			return import(/* @vite-ignore */ id);
 		} else {
