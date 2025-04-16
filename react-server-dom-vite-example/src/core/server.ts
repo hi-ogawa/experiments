@@ -15,6 +15,7 @@ export async function loadServerAction(id: string) {
 	return mod[name];
 }
 
+// NOTE: this can be hard-coded in react-server-dom-vite
 export function getServerReferenceManifest() {
 	return serverReferenceManifest;
 }
@@ -35,6 +36,7 @@ const serverReferenceManifest: ServerReferenceManifest = {
 	},
 };
 
+// NOTE: this can be hard-coded in react-server-dom-vite
 export const clientReferenceMetadataManifest: ClientReferenceMetadataManifest =
 	{
 		resolveClientReferenceMetadata(metadata) {
