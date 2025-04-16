@@ -262,7 +262,7 @@ function generateDynamicImportCode(map: Record<string, string>) {
 				`${JSON.stringify(key)}: () => import(${JSON.stringify(id)}),`,
 		)
 		.join("\n");
-	return `export default {${code}};\n`;
+	return code;
 }
 
 function createVirtualPlugin(name: string, load: Plugin["load"]) {
