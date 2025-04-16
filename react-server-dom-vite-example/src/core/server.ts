@@ -3,20 +3,29 @@ import type {
 	ServerReferenceManifest,
 } from "../types";
 
-export const serverReferenceManifest: ServerReferenceManifest = {
+let requireModule: (id: string) => Promise<any>;
+
+export function setRequireModule(fn: (id: string) => Promise<unknown>) {
+	requireModule = fn;
+}
+
+export async function loadServerAction(id: string) {
+	const [id2, name] = id.split("#");
+	const mod: any = await requireModule(id2);
+	return mod[name];
+}
+
+export function getServerReferenceManifest() {
+	return serverReferenceManifest;
+}
+
+const serverReferenceManifest: ServerReferenceManifest = {
 	resolveServerReference(reference: string) {
 		const [id, name] = reference.split("#");
 		let resolved: unknown;
 		return {
 			async preload() {
-				let mod: Record<string, unknown>;
-				if (import.meta.env.DEV) {
-					mod = await import(/* @vite-ignore */ id);
-				} else {
-					// @ts-ignore
-					const references = await import("virtual:vite-rsc/server-references");
-					mod = await references.default[id]();
-				}
+				const mod = await requireModule(id);
 				resolved = mod[name];
 			},
 			get() {

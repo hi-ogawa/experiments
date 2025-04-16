@@ -1,6 +1,8 @@
 import {
 	clientReferenceMetadataManifest,
-	serverReferenceManifest,
+	getServerReferenceManifest,
+	loadServerAction,
+	setRequireModule,
 } from "@vitejs/plugin-rsc/server";
 import type { ReactFormState } from "react-dom/client";
 import ReactServer from "react-server-dom-vite/server";
@@ -21,6 +23,16 @@ export async function handler(
 	url: URL,
 	request: Request,
 ): Promise<RscHandlerResult> {
+	setRequireModule(async (id: string) => {
+		if (import.meta.env.DEV) {
+			return await import(/* @vite-ignore */ id);
+		} else {
+			// @ts-ignore
+			const references = await import("virtual:vite-rsc/server-references");
+			return await references.default[id]();
+		}
+	});
+
 	// handle action
 	let returnValue: unknown | undefined;
 	let formState: ReactFormState | undefined;
@@ -33,22 +45,19 @@ export async function handler(
 				? await request.formData()
 				: await request.text();
 			const args = await ReactServer.decodeReply(body);
-			const reference =
-				serverReferenceManifest.resolveServerReference(actionId);
-			await reference.preload();
-			const action = await reference.get();
+			const action = await loadServerAction(actionId);
 			returnValue = await (action as any).apply(null, args);
 		} else {
 			// progressive enhancement
 			const formData = await request.formData();
 			const decodedAction = await ReactServer.decodeAction(
 				formData,
-				serverReferenceManifest,
+				getServerReferenceManifest(),
 			);
 			formState = await ReactServer.decodeFormState(
 				await decodedAction(),
 				formData,
-				serverReferenceManifest,
+				getServerReferenceManifest(),
 			);
 		}
 	}
