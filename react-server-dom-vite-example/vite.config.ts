@@ -210,7 +210,7 @@ function vitePluginUseClient(): Plugin[] {
 			},
 		},
 		createVirtualPlugin("vite-rsc/client-references", () => {
-			const code = generateDynamicImportCode(serverReferences);
+			const code = generateDynamicImportCode(clientReferences);
 			return { code: `export default {${code}}`, map: { mappings: "" } };
 		}),
 	];
