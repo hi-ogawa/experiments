@@ -1,7 +1,6 @@
 import assert from "node:assert";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
-import { vitePluginRscCore } from "@vitejs/plugin-rsc/plugin";
 import {
 	type Manifest,
 	type Plugin,
@@ -168,10 +167,6 @@ export default defineConfig({
 		vitePluginUseServer(),
 		vitePluginSilenceDirectiveBuildWarning(),
 		react(),
-		vitePluginRscCore({
-			getClientReferences: () => clientReferences,
-			getServerReferences: () => serverReferences,
-		}),
 	],
 	builder: {
 		sharedPlugins: true,
@@ -214,6 +209,10 @@ function vitePluginUseClient(): Plugin[] {
 				}
 			},
 		},
+		createVirtualPlugin("vite-rsc/client-references", () => {
+			const code = generateDynamicImportCode(clientReferences);
+			return { code: `export default {${code}}`, map: { mappings: "" } };
+		}),
 	];
 }
 
@@ -249,7 +248,21 @@ function vitePluginUseServer(): Plugin[] {
 				}
 			},
 		},
+		createVirtualPlugin("vite-rsc/server-references", () => {
+			const code = generateDynamicImportCode(serverReferences);
+			return { code: `export default {${code}}`, map: { mappings: "" } };
+		}),
 	];
+}
+
+function generateDynamicImportCode(map: Record<string, string>) {
+	let code = Object.entries(map)
+		.map(
+			([key, id]) =>
+				`${JSON.stringify(key)}: () => import(${JSON.stringify(id)}),`,
+		)
+		.join("\n");
+	return code;
 }
 
 function createVirtualPlugin(name: string, load: Plugin["load"]) {
