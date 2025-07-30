@@ -33,7 +33,7 @@ export default async function handler(request: Request): Promise<Response> {
   // }
 
   const rscPayload: RscPayload = { 
-    root: <div>test</div>
+    root: <div>rsc ({new Date().toISOString()})</div>
     // root: <Root />,
     // formState,
     // returnValue

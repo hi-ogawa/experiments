@@ -11,6 +11,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { NotFoundError, fetchPost, fetchPosts } from './posts'
 import type { ErrorComponentProps } from '@tanstack/react-router'
+import { fetchRsc } from './framework/browser'
 
 const rootRoute = createRootRoute({
   component: RootComponent,
@@ -36,6 +37,15 @@ function RootComponent() {
           activeOptions={{ exact: true }}
         >
           Home
+        </Link>{' '}
+        <Link
+          to="/rsc"
+          activeProps={{
+            className: 'font-bold',
+          }}
+          activeOptions={{ exact: true }}
+        >
+          RSC
         </Link>{' '}
         <Link
           to="/posts"
@@ -198,6 +208,26 @@ function PathlessLayoutBComponent() {
   return <div>I'm route B!</div>
 }
 
+const rscRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/rsc',
+  loader: async () => {
+    const rsc = await fetchRsc();
+    return {
+      tsrLoader: <span>TSR Loader</span>,
+      rsc,
+    }
+  },
+  component: () => {
+    const loaderData = rscRoute.useLoaderData()
+    return <div>
+      <div>tsr-component</div>
+      <div>tsr-loader-data: {loaderData.tsrLoader}</div>
+      <div>tsr-loader-data: {loaderData.rsc}</div>
+    </div>
+  },
+})
+
 const routeTree = rootRoute.addChildren([
   postsLayoutRoute.addChildren([postRoute, postsIndexRoute]),
   pathlessLayoutRoute.addChildren([
@@ -206,6 +236,7 @@ const routeTree = rootRoute.addChildren([
       pathlessLayoutBRoute,
     ]),
   ]),
+  rscRoute,
   indexRoute,
 ])
 
