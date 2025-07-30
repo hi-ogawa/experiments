@@ -2,6 +2,10 @@ import * as ReactClient from "@vitejs/plugin-rsc/browser";
 import { RscPayload } from "./entry.rsc";
 import React from "react";
 
+// TODO:
+// fork client utilities for browser and ssr.
+// this is currently browser only.
+
 // TODO:ergnomic helper?
 // - <FetchRsc ... />
 // - import { Post } from "./post.server" with { tsr: "rsc" }

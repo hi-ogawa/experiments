@@ -11,7 +11,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { NotFoundError, fetchPost, fetchPosts } from "./posts";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { fetchRscStream, useRscStream } from "./framework/browser";
+import { fetchRscStream, useRscStream } from "./framework/client";
 
 const rootRoute = createRootRoute({
   component: RootComponent,
