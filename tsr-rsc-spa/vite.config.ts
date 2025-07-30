@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 
-import { defineConfig, Plugin } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, Plugin } from "vite";
+import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import fsp from 'node:fs/promises'
+import fsp from "node:fs/promises";
 
 export default defineConfig({
   plugins: [
@@ -11,57 +11,57 @@ export default defineConfig({
     react(),
     rsc({
       entries: {
-        rsc: './src/framework/entry.rsc.tsx',
+        rsc: "./src/framework/entry.rsc.tsx",
       },
     }),
   ],
-})
+});
 
 function spaPlugin(): Plugin[] {
   // serve index.html before rsc server
   return [
     {
-      name: 'serve-spa',
+      name: "serve-spa",
       configureServer(server) {
         return () => {
           server.middlewares.use(async (req, res, next) => {
             try {
-              if (req.headers.accept?.includes('text/html')) {
-                const html = await fsp.readFile('index.html', 'utf-8')
-                const transformed = await server.transformIndexHtml('/', html)
-                res.setHeader('Content-type', 'text/html')
-                res.setHeader('Vary', 'accept')
-                res.end(transformed)
-                return
+              if (req.headers.accept?.includes("text/html")) {
+                const html = await fsp.readFile("index.html", "utf-8");
+                const transformed = await server.transformIndexHtml("/", html);
+                res.setHeader("Content-type", "text/html");
+                res.setHeader("Vary", "accept");
+                res.end(transformed);
+                return;
               }
             } catch (error) {
-              next(error)
-              return
+              next(error);
+              return;
             }
-            next()
-          })
-        }
+            next();
+          });
+        };
       },
       configurePreviewServer(server) {
         return () => {
           server.middlewares.use(async (req, res, next) => {
             try {
-              if (req.headers.accept?.includes('text/html')) {
+              if (req.headers.accept?.includes("text/html")) {
                 const html = await fsp.readFile(
-                  'dist/client/index.html',
-                  'utf-8',
-                )
-                res.end(html)
-                return
+                  "dist/client/index.html",
+                  "utf-8",
+                );
+                res.end(html);
+                return;
               }
             } catch (error) {
-              next(error)
-              return
+              next(error);
+              return;
             }
-            next()
-          })
-        }
+            next();
+          });
+        };
       },
     },
-  ]
+  ];
 }

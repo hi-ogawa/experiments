@@ -1,12 +1,12 @@
-import * as ReactServer from '@vitejs/plugin-rsc/rsc'
+import * as ReactServer from "@vitejs/plugin-rsc/rsc";
 // import type { ReactFormState } from 'react-dom/client'
 // import { Root } from '../root.tsx'
 
 export type RscPayload = {
-  root: React.ReactNode
+  root: React.ReactNode;
   // returnValue?: unknown
   // formState?: ReactFormState
-}
+};
 
 export default async function handler(request: Request): Promise<Response> {
   // const isAction = request.method === 'POST'
@@ -32,28 +32,28 @@ export default async function handler(request: Request): Promise<Response> {
   //   }
   // }
 
-  const rscPayload: RscPayload = { 
-    root: <div>rsc ({new Date().toISOString()})</div>
+  const rscPayload: RscPayload = {
+    root: <div>rsc ({new Date().toISOString()})</div>,
     // root: <Root />,
     // formState,
     // returnValue
-  }
-  const rscOptions = { 
+  };
+  const rscOptions = {
     // temporaryReferences
-  }
+  };
   const rscStream = ReactServer.renderToReadableStream<RscPayload>(
     rscPayload,
     rscOptions,
-  )
+  );
 
   return new Response(rscStream, {
     headers: {
-      'content-type': 'text/x-component;charset=utf-8',
-      vary: 'accept',
+      "content-type": "text/x-component;charset=utf-8",
+      vary: "accept",
     },
-  })
+  });
 }
 
 if (import.meta.hot) {
-  import.meta.hot.accept()
+  import.meta.hot.accept();
 }
