@@ -11,7 +11,11 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { NotFoundError, fetchPost, fetchPosts } from "./posts";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { fetchRscStream, useRscStream } from "./framework/client";
+import { tsrRscComponent, tsrRscLoader } from "./framework/client";
+
+//
+// root
+//
 
 const rootRoute = createRootRoute({
   component: RootComponent,
@@ -39,13 +43,13 @@ function RootComponent() {
           Home
         </Link>{" "}
         <Link
-          to="/rsc"
+          to="/test"
           activeProps={{
             className: "font-bold",
           }}
           activeOptions={{ exact: true }}
         >
-          RSC
+          Test
         </Link>{" "}
         <Link
           to="/posts"
@@ -61,6 +65,11 @@ function RootComponent() {
     </>
   );
 }
+
+//
+// index
+//
+
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
@@ -74,6 +83,10 @@ function IndexComponent() {
     </div>
   );
 }
+
+//
+// posts
+//
 
 const postsLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -119,26 +132,20 @@ function PostComponent() {
   );
 }
 
+//
+// test
+//
+
 const rscRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/rsc",
-  // TODO: SSR can also hold readable stream?
-  // https://github.com/TanStack/router/blob/7f290adb41b0f392cedcf01f74f5e867f44dad7f/packages/router-core/src/ssr/ssr-server.ts#L112
-  loader: async () => {
-    return {
-      stream: await fetchRscStream(),
-    };
-  },
-  component: () => {
-    const loaderData = rscRoute.useLoaderData();
-    const rsc = useRscStream(loaderData.stream);
-    return (
-      <div>
-        <div>{rsc}</div>
-      </div>
-    );
-  },
+  path: "/test",
+  loader: tsrRscLoader as any,
+  component: tsrRscComponent,
 });
+
+//
+// route tree
+//
 
 const routeTree = rootRoute.addChildren([
   postsLayoutRoute.addChildren([postRoute, postsIndexRoute]),

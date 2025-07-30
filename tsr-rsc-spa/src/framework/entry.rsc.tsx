@@ -9,6 +9,7 @@ export type RscPayload = {
 };
 
 export default async function handler(request: Request): Promise<Response> {
+  // TODO: server action?
   // const isAction = request.method === 'POST'
   // let returnValue: unknown | undefined
   // let formState: ReactFormState | undefined
@@ -32,8 +33,22 @@ export default async function handler(request: Request): Promise<Response> {
   //   }
   // }
 
+  const url = new URL(request.url);
+  let root: React.ReactNode;
+  switch (url.pathname) {
+    case "/test": {
+      const mod = await import("../routes/test");
+      root = <mod.default />;
+      break;
+    }
+    default: {
+      root = <div>Unknown RSC request</div>;
+      break;
+    }
+  }
+
   const rscPayload: RscPayload = {
-    root: <div>Test RSC (rendered at: {new Date().toISOString()})</div>,
+    root,
     // root: <Root />,
     // formState,
     // returnValue
