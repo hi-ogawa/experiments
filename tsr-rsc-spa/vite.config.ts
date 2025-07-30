@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { defineConfig, Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import rsc from "@vitejs/plugin-rsc";
