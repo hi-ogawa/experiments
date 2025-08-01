@@ -51,7 +51,7 @@ export default async function handler(request: Request): Promise<Response> {
   let root: React.ReactNode;
   switch (meta.routeId) {
     case "/test": {
-      const mod = await import("../routes/test");
+      const mod = await import("../routes/-test.server");
       root = <mod.default />;
       break;
     }

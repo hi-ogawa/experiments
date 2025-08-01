@@ -1,4 +1,7 @@
-export default async function TestPage() {
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  return <div>Test RSC (rendered at: {new Date().toISOString()})</div>;
-}
+import { createFileRoute } from '@tanstack/react-router'
+import { tsrRscComponent, tsrRscLoader } from '../framework/client'
+
+export const Route = createFileRoute('/test')({
+  loader: tsrRscLoader as any,
+  component: tsrRscComponent,
+})

@@ -4,6 +4,7 @@ import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import fsp from "node:fs/promises";
+import { tanstackRouterGenerator } from '@tanstack/router-plugin/vite'
 
 export default defineConfig({
   plugins: [
@@ -14,6 +15,7 @@ export default defineConfig({
         rsc: "./src/framework/entry.rsc.tsx",
       },
     }),
+    tanstackRouterGenerator(),
   ],
 });
 
