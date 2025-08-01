@@ -1,5 +1,5 @@
 import * as ReactClient from "@vitejs/plugin-rsc/browser";
-import { RscPayload } from "./entry.rsc";
+import { RscPayload, RscRequestMeta } from "./entry.rsc";
 import React from "react";
 import { LoaderFnContext } from "@tanstack/router-core";
 import { useLoaderData } from "@tanstack/react-router";
@@ -11,11 +11,13 @@ import { useLoaderData } from "@tanstack/react-router";
 export async function tsrRscLoader(
   ctx: LoaderFnContext,
 ): Promise<ReadableStream> {
-  const res = await fetch(ctx.location.href, {
-    headers: {
-      "x-tanstack-loader-params": JSON.stringify(ctx.params),
-    },
-  });
+  const url = new URL("/__rsc", window.location.href);
+  const meta: RscRequestMeta = {
+    routeId: ctx.route.id,
+    params: ctx.params,
+  }
+  url.searchParams.set("meta", JSON.stringify(meta));
+  const res = await fetch(url);
   // ReadableStream as loader data. SSR can also handoff it to CSR.
   // https://github.com/TanStack/router/blob/7f290adb41b0f392cedcf01f74f5e867f44dad7f/packages/router-core/src/ssr/ssr-server.ts#L112
   return res.body!;
@@ -34,7 +36,6 @@ function useRscStream(stream: ReadableStream) {
     payloadPromise = ReactClient.createFromReadableStream<RscPayload>(stream);
     streamMap.set(stream, payloadPromise);
   }
-  // TODO: this flickers because router doesn't use transition and always renders fallback?
   const payload = React.use(payloadPromise);
   return payload.root;
 }

@@ -8,6 +8,11 @@ export type RscPayload = {
   // formState?: ReactFormState
 };
 
+export type RscRequestMeta = {
+  routeId: string,
+  params: object,
+}
+
 export default async function handler(request: Request): Promise<Response> {
   // TODO: server action?
   // const isAction = request.method === 'POST'
@@ -34,16 +39,24 @@ export default async function handler(request: Request): Promise<Response> {
   // }
 
   const url = new URL(request.url);
+  if (url.pathname !== "/__rsc") {
+    return notFound();
+  }
+  const metaRaw = url.searchParams.get("meta")
+  if (!metaRaw) {
+    return notFound();
+  }
+
+  const meta = JSON.parse(metaRaw) as RscRequestMeta;
   let root: React.ReactNode;
-  switch (url.pathname) {
+  switch (meta.routeId) {
     case "/test": {
       const mod = await import("../routes/test");
       root = <mod.default />;
       break;
     }
     default: {
-      root = <div>Unknown RSC request</div>;
-      break;
+      return notFound();
     }
   }
 
@@ -67,6 +80,10 @@ export default async function handler(request: Request): Promise<Response> {
       vary: "accept",
     },
   });
+}
+
+function notFound() {
+  return new Response("Not Found", { status: 404 });
 }
 
 if (import.meta.hot) {
