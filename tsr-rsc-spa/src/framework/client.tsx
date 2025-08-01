@@ -15,7 +15,7 @@ export async function tsrRscLoader(
   const meta: RscRequestMeta = {
     routeId: ctx.route.id,
     params: ctx.params,
-  }
+  };
   url.searchParams.set("meta", JSON.stringify(meta));
   const res = await fetch(url);
   // ReadableStream as loader data. SSR can also handoff it to CSR.
@@ -27,6 +27,15 @@ export function tsrRscComponent() {
   const stream = useLoaderData({ strict: false }) as ReadableStream;
   return useRscStream(stream);
 }
+
+export function tsrRscRoute() {
+  return {
+    loader: tsrRscLoader as any,
+    component: tsrRscComponent,
+  };
+}
+
+// TODO: stream mixed up between server route navigation?
 
 const streamMap = new WeakMap<ReadableStream, Promise<RscPayload>>();
 

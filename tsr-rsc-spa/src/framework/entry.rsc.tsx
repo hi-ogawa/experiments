@@ -9,9 +9,9 @@ export type RscPayload = {
 };
 
 export type RscRequestMeta = {
-  routeId: string,
-  params: object,
-}
+  routeId: string;
+  params: object;
+};
 
 export default async function handler(request: Request): Promise<Response> {
   // TODO: server action?
@@ -42,7 +42,7 @@ export default async function handler(request: Request): Promise<Response> {
   if (url.pathname !== "/__rsc") {
     return notFound();
   }
-  const metaRaw = url.searchParams.get("meta")
+  const metaRaw = url.searchParams.get("meta");
   if (!metaRaw) {
     return notFound();
   }
@@ -52,7 +52,17 @@ export default async function handler(request: Request): Promise<Response> {
   switch (meta.routeId) {
     case "/test": {
       const mod = await import("../routes/-test.server");
-      root = <mod.default />;
+      root = <mod.default {...(meta as any)} />;
+      break;
+    }
+    case "/posts": {
+      const mod = await import("../routes/-posts.route.server");
+      root = <mod.default {...(meta as any)} />;
+      break;
+    }
+    case "/posts/$postId": {
+      const mod = await import("../routes/-posts.$postId.server");
+      root = <mod.default {...(meta as any)} />;
       break;
     }
     default: {

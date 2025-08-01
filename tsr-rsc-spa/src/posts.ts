@@ -1,5 +1,6 @@
 import axios from "redaxios";
 
+// TODO: custom error needs to be handled throgh RSC render error digest
 export class NotFoundError extends Error {}
 
 type PostType = {

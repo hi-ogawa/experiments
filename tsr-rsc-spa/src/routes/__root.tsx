@@ -1,5 +1,5 @@
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -9,9 +9,9 @@ export const Route = createRootRoute({
         <p>This is the notFoundComponent configured on root route</p>
         <Link to="/">Start Over</Link>
       </div>
-    )
+    );
   },
-})
+});
 
 function RootComponent() {
   return (
@@ -20,33 +20,33 @@ function RootComponent() {
         <Link
           to="/"
           activeProps={{
-            className: 'font-bold',
+            className: "font-bold",
           }}
           activeOptions={{ exact: true }}
         >
           Home
-        </Link>{' '}
+        </Link>{" "}
         <Link
           to="/test"
           activeProps={{
-            className: 'font-bold',
+            className: "font-bold",
           }}
           activeOptions={{ exact: true }}
         >
           Test
-        </Link>{' '}
+        </Link>{" "}
         <Link
           to="/posts"
           activeProps={{
-            className: 'font-bold',
+            className: "font-bold",
           }}
         >
           Posts
-        </Link>{' '}
+        </Link>{" "}
       </div>
       <hr />
       <Outlet />
       <TanStackRouterDevtools position="bottom-right" />
     </>
-  )
+  );
 }
