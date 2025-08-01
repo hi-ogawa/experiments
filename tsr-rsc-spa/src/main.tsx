@@ -12,6 +12,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { NotFoundError, fetchPost, fetchPosts } from "./posts";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { tsrRscComponent, tsrRscLoader } from "./framework/client";
+import React from "react";
 
 //
 // root
@@ -156,10 +157,17 @@ const routeTree = rootRoute.addChildren([
 // Set up a Router instance
 const router = createRouter({
   routeTree,
-  defaultPreload: "intent",
+  defaultPreload: false,
   defaultStaleTime: 5000,
   scrollRestoration: true,
+  // by default suspend until loader resolves to avoid flashing fallback.
+  defaultPendingComponent: () => {
+    React.use(pendingPromise);
+    return null;
+  },
 });
+
+const pendingPromise = new Promise(() => {});
 
 // Register things for typesafety
 declare module "@tanstack/react-router" {
