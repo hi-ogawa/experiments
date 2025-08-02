@@ -1,4 +1,5 @@
 import * as ReactServer from "@vitejs/plugin-rsc/rsc";
+import { ServerError } from "./error/server";
 // import type { ReactFormState } from 'react-dom/client'
 // import { Root } from '../root.tsx'
 
@@ -79,8 +80,11 @@ export default async function handler(request: Request): Promise<Response> {
   const rscOptions = {
     // temporaryReferences,
     onError(e: unknown) {
-      // e instanceof Error && 
-    }
+      if (e instanceof ServerError) {
+        return e.digest;
+      }
+      console.error("[RSC renderToReadableStream error]", e);
+    },
   };
   const rscStream = ReactServer.renderToReadableStream<RscPayload>(
     rscPayload,

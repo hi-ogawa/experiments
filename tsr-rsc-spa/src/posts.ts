@@ -1,7 +1,5 @@
 import axios from "redaxios";
-
-// TODO: custom error needs to be handled throgh RSC render error digest
-export class NotFoundError extends Error {}
+import { createError } from "./framework/error/server";
 
 type PostType = {
   id: string;
@@ -18,14 +16,12 @@ export const fetchPosts = async () => {
 
 export const fetchPost = async (postId: string) => {
   console.info(`Fetching post with id ${postId}...`);
-  const post = await axios
-    .get<PostType>(`https://jsonplaceholder.typicode.com/posts/${postId}`)
-    .then((r) => r.data);
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!post) {
-    throw new NotFoundError(`Post with id "${postId}" not found!`);
+  const res = await fetch(
+    `https://jsonplaceholder.typicode.com/posts/${postId}`,
+  );
+  if (res.status === 404) {
+    throw createError({ type: "not-found" });
   }
-
+  const post: PostType = await res.json();
   return post;
 };

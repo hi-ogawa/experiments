@@ -31,7 +31,8 @@ type RscLoaderReturn = {
 
 export function tsrRscComponent() {
   const result = useLoaderData({ strict: false }) as any;
-  return useRscStream(result);
+  const root = useRscStream(result);
+  return root;
 }
 
 export function tsrRscRoute() {
