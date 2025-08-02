@@ -1,4 +1,3 @@
-import axios from "redaxios";
 import { createError } from "./framework/error/server";
 
 type PostType = {
@@ -9,9 +8,9 @@ type PostType = {
 
 export const fetchPosts = async () => {
   console.info("Fetching posts...");
-  return axios
-    .get<Array<PostType>>("https://jsonplaceholder.typicode.com/posts")
-    .then((r) => r.data.slice(0, 10));
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts");
+  const data: PostType[] = await res.json();
+  return data.slice(0, 10);
 };
 
 export const fetchPost = async (postId: string) => {
