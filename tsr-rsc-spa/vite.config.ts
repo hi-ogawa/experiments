@@ -6,7 +6,7 @@ import rsc from "@vitejs/plugin-rsc";
 import fsp from "node:fs/promises";
 import { tanstackRouterGenerator } from '@tanstack/router-plugin/vite'
 
-export default defineConfig({
+export default defineConfig((env) => ({
   plugins: [
     spaPlugin(),
     react(),
@@ -15,9 +15,9 @@ export default defineConfig({
         rsc: "./src/framework/entry.rsc.tsx",
       },
     }),
-    tanstackRouterGenerator(),
+    env.command === 'serve' && tanstackRouterGenerator(),
   ],
-});
+}));
 
 function spaPlugin(): Plugin[] {
   // serve index.html before rsc server
