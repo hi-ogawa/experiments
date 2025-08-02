@@ -1,4 +1,4 @@
-import { SERVER_ERROR_DIGEST_TAG, ServerErrorMeta } from "./shared";
+import { SERVER_ERROR_DIGEST_TAG, type ServerErrorMeta } from "./shared";
 
 export class ServerError extends Error {
   constructor(public digest: string) {
