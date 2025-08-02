@@ -6,7 +6,8 @@ import React from "react";
 const router = createRouter({
   routeTree,
   defaultPreload: false,
-  defaultStaleTime: 5000,
+  defaultStaleTime: 0,
+  defaultGcTime: 0,
   scrollRestoration: true,
   // by default let loader suspend to avoid flashing fallback.
   defaultPendingComponent: () => {
