@@ -77,7 +77,10 @@ export default async function handler(request: Request): Promise<Response> {
     // returnValue
   };
   const rscOptions = {
-    // temporaryReferences
+    // temporaryReferences,
+    onError(e: unknown) {
+      // e instanceof Error && 
+    }
   };
   const rscStream = ReactServer.renderToReadableStream<RscPayload>(
     rscPayload,
