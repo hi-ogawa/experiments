@@ -17,9 +17,17 @@ export async function renderHtml({ request }: { request: Request }) {
 
   const response = await handler(async ({ responseHeaders, router }) => {
     const ssrRoot = <RouterServer router={router} />;
-    const stream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
-      bootstrapScriptContent,
-    });
+    let stream: ReadableStream | undefined;
+    try {
+      stream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
+        bootstrapScriptContent,
+        onError(e: unknown) {
+          console.error("[SSR renderToReadableStream - onError]", e);
+        },
+      });
+    } catch (e) {
+      console.error("[SSR renderToReadableStream - try/catch]", e);
+    }
     const responseStream = transformReadableStreamWithRouter(
       router,
       stream as any,

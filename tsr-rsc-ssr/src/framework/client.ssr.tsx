@@ -45,12 +45,6 @@ const streamMap = new WeakMap<RscLoaderReturn, Promise<RscPayload>>();
 
 function useRscStream(result: RscLoaderReturn) {
   let payloadPromise = streamMap.get(result)!;
-  // if (!payloadPromise) {
-  //   payloadPromise = ReactClient.createFromReadableStream<RscPayload>(
-  //     result.stream,
-  //   );
-  //   streamMap.set(result, payloadPromise);
-  // }
   const payload = React.use(payloadPromise);
   return payload.root;
 }

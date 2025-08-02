@@ -8,7 +8,10 @@ export function createRouter() {
     defaultPreload: "intent",
     scrollRestoration: true,
     // by default let loader suspend to avoid flashing fallback.
+    // TODO: however, this breaks SSR error handling.
     defaultPendingComponent: () => {
+      // if (import.meta.env.SSR) return null;
+
       React.use(pendingPromise);
       return null;
     },
