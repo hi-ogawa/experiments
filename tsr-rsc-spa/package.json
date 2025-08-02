@@ -3,11 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "gen": "tsr generate",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview",
-    "start": "vite"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.130.8",
