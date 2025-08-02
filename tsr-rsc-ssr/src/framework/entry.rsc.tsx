@@ -16,17 +16,14 @@ export default async function handler(request: Request): Promise<Response> {
     return rscResponse;
   }
 
-  const ssr = await import.meta.viteRsc.loadModule<typeof import("./entry.ssr")>("ssr", "index");
-  const htmlStream = await ssr.renderHtml();
-  return new Response(htmlStream, {
-    headers: {
-      "content-type": "text/html;charset=utf-8",
-      vary: "accept",
-    },
-  });
+  const ssr = await import.meta.viteRsc.loadModule<
+    typeof import("./entry.ssr")
+  >("ssr", "index");
+  const htmlResponse = await ssr.renderHtml({ request });
+  return htmlResponse;
 }
 
-async function handleRscRequest(
+export async function handleRscRequest(
   request: Request,
 ): Promise<Response | undefined> {
   const url = new URL(request.url);

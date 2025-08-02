@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "verbatimModuleSyntax": true,
     "noEmit": true,
     "noUnusedLocals": true,
     "strict": true,

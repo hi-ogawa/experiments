@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ErrorComponent } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { tsrRscRoute } from "../framework/client";
 import { getErrorMeta } from "../framework/error/shared";
+import { tsrRscRoute } from "tsr-rsc:client";
 
 export const Route = createFileRoute("/posts/$postId")({
   ...tsrRscRoute(),

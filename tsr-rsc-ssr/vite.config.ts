@@ -17,5 +17,29 @@ export default defineConfig((env) => ({
       },
     }),
     env.command === 'serve' && tanstackRouterGenerator(),
+    {
+      name: 'fork-tsr-client',
+      async resolveId(source, importer, options) {
+        if (source === 'tsr-rsc:client') {
+          if (this.environment.name === 'client') {
+            return this.resolve("/src/framework/client.browser.tsx");
+          }
+          if (this.environment.name === 'ssr') {
+            return this.resolve("/src/framework/client.ssr.tsx");
+          }
+          throw new Error("tsr-rsc:client can only be used in client or ssr environment");
+        }
+      },
+    }
   ],
+  environments: {
+    ssr: {
+      optimizeDeps: {
+        include: [
+          "@tanstack/react-router > @tanstack/react-store > use-sync-external-store/shim/with-selector.js",
+          "react-dom/server",
+        ],
+      }
+    }
+  }
 }));

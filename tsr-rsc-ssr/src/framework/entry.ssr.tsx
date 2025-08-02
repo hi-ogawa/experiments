@@ -1,25 +1,34 @@
-import { renderToReadableStream } from "react-dom/server.edge";
+import {
+  RouterServer,
+  createRequestHandler,
+  transformReadableStreamWithRouter,
+} from "@tanstack/react-router/ssr/server";
+import { createRouter } from "../router";
+import ReactDOMServer from "react-dom/server.edge";
 
-export async function renderHtml() {
+export async function renderHtml({ request }: { request: Request }) {
+  const handler = createRequestHandler({
+    request,
+    createRouter,
+  });
+
   const bootstrapScriptContent =
     await import.meta.viteRsc.loadBootstrapScriptContent("index");
-  const htmlStream = renderToReadableStream(<Root />, {
-    bootstrapScriptContent,
-  });
-  return htmlStream;
-}
 
-function Root() {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Vite App</title>
-      </head>
-      <body>
-        <div id="app"></div>
-      </body>
-    </html>
-  );
+  const response = await handler(async ({ responseHeaders, router }) => {
+    const ssrRoot = <RouterServer router={router} />;
+    const stream = await ReactDOMServer.renderToReadableStream(ssrRoot, {
+      bootstrapScriptContent,
+    });
+    const responseStream = transformReadableStreamWithRouter(
+      router,
+      stream as any,
+    );
+    return new Response(responseStream as any, {
+      status: router.state.statusCode,
+      headers: responseHeaders,
+    });
+  });
+
+  return response;
 }
