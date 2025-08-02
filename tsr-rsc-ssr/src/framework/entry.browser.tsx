@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
-import { router } from "./router";
+import { router } from "../router";
 
 function main() {
   const rootElement = document.getElementById("app")!;
