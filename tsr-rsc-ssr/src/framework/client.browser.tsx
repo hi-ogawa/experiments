@@ -13,8 +13,6 @@ async function tsrRscLoader(ctx: LoaderFnContext): Promise<RscLoaderReturn> {
   };
   url.searchParams.set("meta", JSON.stringify(meta));
   const res = await fetch(url);
-  // ReadableStream as loader data. SSR can also handoff it to CSR.
-  // https://github.com/TanStack/router/blob/7f290adb41b0f392cedcf01f74f5e867f44dad7f/packages/router-core/src/ssr/ssr-server.ts#L112
   return { stream: res.body! };
 }
 
