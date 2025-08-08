@@ -1,4 +1,4 @@
-import { fetchPost } from "../posts";
+import { fetchPost } from "./-utils";
 
 // TODO: loader type?
 export default async function PostComponent({ params: { postId } }: any) {
