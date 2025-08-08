@@ -2,21 +2,23 @@
 
 Integration of TanStack Router with React Server Components using `@vitejs/plugin-rsc`.
 
-## Core Implementation: Environment-Based Module Forking
+## Core Implementation: RSC Streams as Loader Data
 
-The main technique is environment-specific module resolution via `virtual:client-internal`. Same import, different implementations:
+Two main techniques:
 
-- **Browser**: Fetches RSC streams from `/__rsc` endpoint 
-- **SSR**: Direct RSC handler calls in-process
+1. **RSC Stream as Loader Data**: TanStack Router loaders return RSC streams instead of JSON data
+2. **Environment-Based Module Forking**: `virtual:client-internal` resolves to different implementations:
+   - **Browser**: Fetches RSC streams from `/__rsc` endpoint 
+   - **SSR**: Direct RSC handler calls in-process
 
-This allows identical TanStack Router code across environments.
+This allows identical TanStack Router code across environments while treating RSC streams as standard loader data.
 
 ## Implementation Details
 
+- RSC streams as TanStack Router loader data (not JSON)
 - Module forking: Same code, different behavior per environment
 - Dual route files: Client (`.tsx`) and server (`.rsc.tsx`) components  
-- Server components stream to client
-- Client-side routing with server-rendered content
+- Components consume streams via `React.use()` in route components
 
 ## Architecture
 
@@ -47,17 +49,19 @@ src/routes/posts/
 
 ### How It Works
 
-1. Routes use `tsrRscRoute()` importing from `virtual:client-internal`:
-   - `__fetchRsc` (environment-specific implementation)
-   - `__useRsc` hook (environment-specific implementation)
+1. **Loader Setup**: Routes use `tsrRscRoute()` which sets loader to `__fetchRsc`
+   - Loader returns `{ stream: ReadableStream }` instead of JSON data
+   - Stream contains serialized RSC components
 
-2. Environment execution:
-   - Browser: `__fetchRsc` HTTP request to `/__rsc`
-   - SSR: `__fetchRsc` direct RSC handler call, stream tee
+2. **Environment-Specific Stream Fetching**:
+   - Browser: `__fetchRsc` HTTP request to `/__rsc` → RSC stream
+   - SSR: `__fetchRsc` direct RSC handler call → stream tee
 
-3. RSC handler (`entry.rsc.tsx`) maps route IDs to `.rsc.tsx` modules
+3. **Component Rendering**: `__useRsc` consumes loader data stream:
+   - `React.use(createFromReadableStream(stream))` → rendered components
+   - Same API across browser/SSR environments
 
-4. Stream handling:
+4. **Stream Processing**:
    - Browser: Single stream → `React.use()`
    - SSR: Dual streams → HTML serialization + `React.use()`
 
