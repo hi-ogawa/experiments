@@ -4,17 +4,17 @@ Integration of TanStack Router with React Server Components using `@vitejs/plugi
 
 Contrasts with the original [basic-ssr-file-based](https://github.com/TanStack/router/tree/main/examples/react/basic-ssr-file-based) example which uses traditional SSR.
 
-## Core Implementation: Forking `{ loader, component }` Pair
+## Core Implementation: Swapping Out Router "Loader/Component" Implementation
 
-The fundamental technique is **forking the `{ loader, component }` pair**:
+The fundamental technique is **swapping out the router "loader/component" implementation**:
 
-- **Helper function**: `tsrRscRoute()` returns a `{ loader, component }` pair
+- **Helper function**: `tsrRscRoute()` provides RSC-based loader/component implementation
 - **Same route definition**: `createFileRoute("/posts")(tsrRscRoute())`
-- **Environment-specific behavior**: The loader and component implementations fork based on execution context
+- **Environment-specific behavior**: The swapped loader/component implementations fork based on execution context
   - **Browser**: Loader fetches RSC stream via HTTP, component deserializes
   - **SSR**: Loader calls RSC handler directly, component deserializes in-process
 
-This allows identical TanStack Router route definitions to work across environments while the actual implementation forks behind the scenes.
+This allows identical TanStack Router route definitions to work across environments while using RSC streams instead of traditional loader data.
 
 ## Contrast with Traditional SSR
 
@@ -34,10 +34,10 @@ This allows identical TanStack Router route definitions to work across environme
 
 ### Core Files
 
-**`{ loader, component }` Forking**:
-- `src/framework/client.tsx`: `tsrRscRoute()` helper returns `{ loader, component }` pair
-- `vite.config.ts`: Custom plugin enables forking via `virtual:client-internal`
-- Same route definition works across environments, implementation forks behind the scenes
+**Router Implementation Swapping**:
+- `src/framework/client.tsx`: `tsrRscRoute()` helper swaps out router "loader/component" implementation
+- `vite.config.ts`: Custom plugin enables implementation forking via `virtual:client-internal`
+- Same route definition works across environments, swapped implementation forks behind the scenes
 
 **RSC Setup**:
 - `vite.config.ts`: RSC plugin with three entry points (client/ssr/rsc)
