@@ -15,7 +15,10 @@ export default defineConfig((env) => ({
         rsc: "./src/framework/entry.rsc.tsx",
       },
     }),
-    env.command === 'serve' && tanstackRouterGenerator(),
+    !env.isPreview &&
+      tanstackRouterGenerator({
+        routeFileIgnorePattern: "\\.rsc\\.",
+      }),
   ],
 }));
 

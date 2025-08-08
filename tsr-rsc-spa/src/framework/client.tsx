@@ -4,11 +4,7 @@ import React from "react";
 import { LoaderFnContext } from "@tanstack/router-core";
 import { useLoaderData } from "@tanstack/react-router";
 
-// TODO:
-// fork client utilities for browser and ssr.
-// this is currently browser only.
-
-export async function tsrRscLoader(
+async function tsrRscLoader(
   ctx: LoaderFnContext,
 ): Promise<RscLoaderReturn> {
   const url = new URL("/__rsc", window.location.href);
@@ -29,7 +25,7 @@ type RscLoaderReturn = {
   stream: ReadableStream;
 };
 
-export function tsrRscComponent() {
+function tsrRscComponent() {
   const result = useLoaderData({ strict: false }) as any;
   const root = useRscStream(result);
   return root;

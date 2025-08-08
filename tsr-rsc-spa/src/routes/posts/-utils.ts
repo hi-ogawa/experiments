@@ -1,4 +1,4 @@
-import { createError } from "./framework/error/server";
+import { createError } from "../../framework/error/server";
 
 type PostType = {
   id: string;

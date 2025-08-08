@@ -1,5 +1,5 @@
-import { Link, Outlet } from "../client-export";
-import { fetchPosts } from "../posts";
+import { Link, Outlet } from "../../client-export";
+import { fetchPosts } from "./-utils";
 
 export default async function PostsLayoutComponent() {
   const posts = await fetchPosts();
