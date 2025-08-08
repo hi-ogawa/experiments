@@ -1,4 +1,4 @@
-// directly using `stream` as `WeakMap` is somehow broken.
+// directly using `stream` as `WeakMap` key is somehow broken.
 // for now, we wrap with `RscLoaderReturn` object.
 export type RscLoaderReturn = {
   stream: ReadableStream;
