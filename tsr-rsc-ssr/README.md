@@ -2,6 +2,8 @@
 
 RSC port of the original [basic-ssr-file-based](https://github.com/TanStack/router/tree/main/examples/react/basic-ssr-file-based) example based on [`@vitejs/plugin-rsc`](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc).
 
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/hi-ogawa/experiments/tree/main/tsr-rsc-ssr)
+
 ## Concepts
 
 See [`@vitejs/plugin-rsc`](https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-rsc) documentation for environment concepts and APIs.
@@ -42,6 +44,8 @@ The `tsrRscRoute` helper provides different `loader/component` implementations d
   - SSR (ssr environment): communicates with the `rsc` environment via `import.meta.viteRsc.loadModule` API to call `handleRscRequest` directly in the same Node process.
 
 - `component` uses `useLoaderData` to access the RSC stream, then `createFromReadableStream` to deserialize into React nodes.
+
+This implementation branching is achieved via aliasing `virtual:client-internal` by environment name (see the plugin in `vite.config.ts`).
 
 ### `handleRscRequest` (rsc environment)
 
