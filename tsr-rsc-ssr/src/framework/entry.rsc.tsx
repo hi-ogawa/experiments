@@ -33,10 +33,7 @@ export async function handleRscRequest(
 
   const meta = JSON.parse(metaRaw) as RscRequestMeta;
   let root: React.ReactNode;
-
-  // TODO: use import.meta.glob?
-  // import.meta.glob("/src/routes/**/*.rsc.*")
-
+  
   switch (meta.routeId) {
     case "/test": {
       const mod = await import("../routes/test.rsc");
