@@ -38,14 +38,14 @@ export default async function PostComponent({ params: { postId } }) {
 `tsrRscRoute` helper provides different `loader/component` implementations depending on SSR and CSR. 
 
 - `loader` fetches RSC streams and return directly as loader data:
-  - CSR (client environment): request to a server `fetch("/__rsc")`
-  - SSR (ssr environment): communicate with `rsc` environment via `import.meta.viteRsc.loadModule` API to call `handleRscRequest()` directly in the same Node process.
+  - CSR (client environment): requests to a server `fetch("/__rsc?meta=...")`
+  - SSR (ssr environment): communicates with `rsc` environment via `import.meta.viteRsc.loadModule` API to call `handleRscRequest` directly in the same Node process.
 
-- `component` uses `useLoaderData()` to access RSC stream, then `createFromReadableStream()` to deserialize into React nodes.
+- `component` uses `useLoaderData` to access RSC stream, then `createFromReadableStream` to deserialize into React nodes.
 
-### `handleRscRequest()` (rsc environment)
+### `handleRscRequest` (rsc environment)
 
-`rsc` environment handles RSC stream request via `handleRscRequest()`, which imports server component module corresponding to a requested route and serialize React nodes into a RSC stream via `renderToReadableStream()`.
+`rsc` environment handles RSC stream request via `handleRscRequest`, which imports server component module corresponding to a requested route and serialize React nodes into a RSC stream via `renderToReadableStream`.
 
 ## How to run
 
