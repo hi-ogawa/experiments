@@ -1,4 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { tsrRscRoute } from "tsr-rsc:client";
+import { tsrRscRoute } from "../framework/client";
 
 export const Route = createFileRoute("/test")(tsrRscRoute());

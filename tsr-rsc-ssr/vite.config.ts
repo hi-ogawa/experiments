@@ -16,21 +16,22 @@ export default defineConfig((env) => ({
         rsc: "./src/framework/entry.rsc.tsx",
       },
     }),
-    !env.isPreview && tanstackRouterGenerator({
-      routeFileIgnorePattern: "\\.rsc\\.",
-    }),
+    !env.isPreview &&
+      tanstackRouterGenerator({
+        routeFileIgnorePattern: "\\.rsc\\.",
+      }),
     {
-      name: "fork-tsr-client",
+      name: "client-internal",
       async resolveId(source, importer, options) {
-        if (source === "tsr-rsc:client") {
+        if (source === "virtual:client-internal") {
           if (this.environment.name === "client") {
-            return this.resolve("/src/framework/client.browser.tsx");
+            return this.resolve("/src/framework/client-internal/browser");
           }
           if (this.environment.name === "ssr") {
-            return this.resolve("/src/framework/client.ssr.tsx");
+            return this.resolve("/src/framework/client-internal/ssr");
           }
           throw new Error(
-            "tsr-rsc:client can only be used in client or ssr environment",
+            `'${source}' can only be used in client or ssr environment`,
           );
         }
       },
