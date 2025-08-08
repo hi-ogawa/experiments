@@ -7,16 +7,22 @@ export function createRouter() {
     routeTree,
     defaultPreload: "intent",
     scrollRestoration: true,
-    // by default let loader suspend to avoid flashing fallback.
-    // TODO: however, this breaks SSR error handling.
+    // Tanstack router's deafult pending makes rendering flahses,
+    // so make transition always suspend until they are resolved.
     defaultPendingComponent: () => {
-      // if (import.meta.env.SSR) return null;
+      // However, suspending forever can break SSR error handling,
+      // so it uses a timeout to bail out.
+      if (import.meta.env.SSR) {
+        return sleep(3000);
+      }
 
       React.use(pendingPromise);
       return null;
     },
   });
 }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const pendingPromise = new Promise(() => {});
 
