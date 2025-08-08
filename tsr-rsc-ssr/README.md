@@ -54,3 +54,7 @@ pnpm dev
 pnpm build
 pnpm preview
 ```
+
+## "No SSR" example
+
+As understood from the above concepts, SSR part is entirely optional. See [tsr-rsc-spa](../tsr-rsc-spa/) for "No SSR" version of this example.
