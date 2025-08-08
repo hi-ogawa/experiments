@@ -25,8 +25,8 @@ This allows identical TanStack Router code across environments while treating RS
 
 **RSC Integration** (this PoC):
 - Loaders return RSC stream objects
-- Server components render on server to RSC streams
-- Client components consume streams via `React.use()`
+- Server components render via `renderToReadableStream()` to RSC streams  
+- Client components consume streams via `createFromReadableStream()` + `React.use()`
 - Same consuming code works in both SSR and browser environments
 
 ## Architecture
@@ -40,8 +40,9 @@ This allows identical TanStack Router code across environments while treating RS
 
 **RSC Setup**:
 - `vite.config.ts`: RSC plugin with three entry points (client/ssr/rsc)
-- `src/framework/entry.rsc.tsx`: RSC request handler, routes to `.rsc.tsx` files
+- `src/framework/entry.rsc.tsx`: RSC request handler, uses `renderToReadableStream()` to serialize server components
 - `src/framework/client.tsx`: TanStack Router integration (`tsrRscRoute()`)
+- `src/framework/client-internal/*`: Use `createFromReadableStream()` to deserialize RSC streams
 
 ### Route Structure
 
@@ -67,7 +68,8 @@ src/routes/posts/
    - SSR: `__fetchRsc` direct RSC handler call → stream tee
 
 3. **Component Rendering**: `__useRsc` consumes loader data stream:
-   - `React.use(createFromReadableStream(stream))` → rendered components
+   - Uses `createFromReadableStream(stream)` to deserialize RSC stream
+   - `React.use()` consumes the resulting promise → rendered components
    - Same API across browser/SSR environments
 
 4. **Stream Processing**:
