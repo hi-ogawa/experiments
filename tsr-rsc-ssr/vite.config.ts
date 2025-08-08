@@ -4,7 +4,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { tanstackRouterGenerator } from '@tanstack/router-plugin/vite'
+import { tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
 
 export default defineConfig((env) => ({
   plugins: [
@@ -16,30 +16,29 @@ export default defineConfig((env) => ({
         rsc: "./src/framework/entry.rsc.tsx",
       },
     }),
-    env.command === 'serve' && tanstackRouterGenerator(),
+    env.command === "serve" && tanstackRouterGenerator(),
     {
-      name: 'fork-tsr-client',
+      name: "fork-tsr-client",
       async resolveId(source, importer, options) {
-        if (source === 'tsr-rsc:client') {
-          if (this.environment.name === 'client') {
+        if (source === "tsr-rsc:client") {
+          if (this.environment.name === "client") {
             return this.resolve("/src/framework/client.browser.tsx");
           }
-          if (this.environment.name === 'ssr') {
+          if (this.environment.name === "ssr") {
             return this.resolve("/src/framework/client.ssr.tsx");
           }
-          throw new Error("tsr-rsc:client can only be used in client or ssr environment");
+          throw new Error(
+            "tsr-rsc:client can only be used in client or ssr environment",
+          );
         }
       },
-    }
+    },
   ],
   environments: {
     ssr: {
       optimizeDeps: {
-        include: [
-          "@tanstack/react-router > @tanstack/react-store > use-sync-external-store/shim/with-selector.js",
-          "react-dom/server",
-        ],
-      }
-    }
-  }
+        include: ["react-dom/server"],
+      },
+    },
+  },
 }));
