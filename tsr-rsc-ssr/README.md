@@ -2,6 +2,8 @@
 
 Integration of TanStack Router with React Server Components using `@vitejs/plugin-rsc`.
 
+Contrasts with the original [basic-ssr-file-based](https://github.com/TanStack/router/tree/main/examples/react/basic-ssr-file-based) example which uses traditional SSR.
+
 ## Core Implementation: RSC Streams as Loader Data
 
 Two main techniques:
@@ -13,12 +15,19 @@ Two main techniques:
 
 This allows identical TanStack Router code across environments while treating RSC streams as standard loader data.
 
-## Implementation Details
+## Contrast with Traditional SSR
 
-- RSC streams as TanStack Router loader data
-- Module forking: Same code, different behavior per environment
-- Dual route files: Client (`.tsx`) and server (`.rsc.tsx`) components  
-- Components consume streams via `React.use()` in route components
+**Traditional SSR** (basic-ssr-file-based):
+- Loaders return serializable data (JSON, promises)
+- Components consume via `useLoaderData()`
+- Server renders client components to HTML
+- Data serialized for client hydration
+
+**RSC Integration** (this PoC):
+- Loaders return RSC stream objects
+- Server components render on server to RSC streams
+- Client components consume streams via `React.use()`
+- Same consuming code works in both SSR and browser environments
 
 ## Architecture
 
