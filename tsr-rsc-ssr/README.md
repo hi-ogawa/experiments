@@ -4,16 +4,17 @@ Integration of TanStack Router with React Server Components using `@vitejs/plugi
 
 Contrasts with the original [basic-ssr-file-based](https://github.com/TanStack/router/tree/main/examples/react/basic-ssr-file-based) example which uses traditional SSR.
 
-## Core Implementation: RSC Streams as Loader Data
+## Core Implementation: Forking `{ loader, component }` Pair
 
-Two main techniques:
+The fundamental technique is **forking the `{ loader, component }` pair**:
 
-1. **RSC Stream as Loader Data**: TanStack Router loaders return RSC streams as loader data
-2. **Environment-Based Module Forking**: `virtual:client-internal` resolves to different implementations:
-   - **Browser**: Fetches RSC streams from `/__rsc` endpoint 
-   - **SSR**: Direct RSC handler calls in-process
+- **Helper function**: `tsrRscRoute()` returns a `{ loader, component }` pair
+- **Same route definition**: `createFileRoute("/posts")(tsrRscRoute())`
+- **Environment-specific behavior**: The loader and component implementations fork based on execution context
+  - **Browser**: Loader fetches RSC stream via HTTP, component deserializes
+  - **SSR**: Loader calls RSC handler directly, component deserializes in-process
 
-This allows identical TanStack Router code across environments while treating RSC streams as standard loader data.
+This allows identical TanStack Router route definitions to work across environments while the actual implementation forks behind the scenes.
 
 ## Contrast with Traditional SSR
 
@@ -33,10 +34,10 @@ This allows identical TanStack Router code across environments while treating RS
 
 ### Core Files
 
-**Module Forking**:
-- `vite.config.ts`: Custom plugin resolves `virtual:client-internal` per environment
-- `src/framework/client-internal/browser.tsx`: HTTP fetch to `/__rsc`
-- `src/framework/client-internal/ssr.tsx`: Direct RSC calls with stream tee
+**`{ loader, component }` Forking**:
+- `src/framework/client.tsx`: `tsrRscRoute()` helper returns `{ loader, component }` pair
+- `vite.config.ts`: Custom plugin enables forking via `virtual:client-internal`
+- Same route definition works across environments, implementation forks behind the scenes
 
 **RSC Setup**:
 - `vite.config.ts`: RSC plugin with three entry points (client/ssr/rsc)
@@ -59,22 +60,12 @@ src/routes/posts/
 
 ### How It Works
 
-1. **Loader Setup**: Routes use `tsrRscRoute()` which sets loader to `__fetchRsc`
-   - Loader returns `{ stream: ReadableStream }`
-   - Stream contains serialized RSC components
-
-2. **Environment-Specific Stream Fetching**:
-   - Browser: `__fetchRsc` HTTP request to `/__rsc` → RSC stream
-   - SSR: `__fetchRsc` direct RSC handler call → stream tee
-
-3. **Component Rendering**: `__useRsc` consumes loader data stream:
-   - Uses `createFromReadableStream(stream)` to deserialize RSC stream
-   - `React.use()` consumes the resulting promise → rendered components
-   - Same API across browser/SSR environments
-
-4. **Stream Processing**:
-   - Browser: Single stream → `React.use()`
-   - SSR: Dual streams → HTML serialization + `React.use()`
+1. **Helper Usage**: Routes call `tsrRscRoute()` to get a `{ loader, component }` pair
+2. **Forking**: The loader and component implementations fork per environment
+3. **Stream Flow**: 
+   - Loader returns RSC stream objects
+   - Component deserializes streams with `createFromReadableStream()` + `React.use()`
+4. **Environment Transparency**: Same route definition works everywhere, forking happens transparently
 
 ## Usage
 
