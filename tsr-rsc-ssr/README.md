@@ -6,7 +6,7 @@ Integration of TanStack Router with React Server Components using `@vitejs/plugi
 
 Two main techniques:
 
-1. **RSC Stream as Loader Data**: TanStack Router loaders return RSC streams instead of JSON data
+1. **RSC Stream as Loader Data**: TanStack Router loaders return RSC streams as loader data
 2. **Environment-Based Module Forking**: `virtual:client-internal` resolves to different implementations:
    - **Browser**: Fetches RSC streams from `/__rsc` endpoint 
    - **SSR**: Direct RSC handler calls in-process
@@ -15,7 +15,7 @@ This allows identical TanStack Router code across environments while treating RS
 
 ## Implementation Details
 
-- RSC streams as TanStack Router loader data (not JSON)
+- RSC streams as TanStack Router loader data
 - Module forking: Same code, different behavior per environment
 - Dual route files: Client (`.tsx`) and server (`.rsc.tsx`) components  
 - Components consume streams via `React.use()` in route components
@@ -50,7 +50,7 @@ src/routes/posts/
 ### How It Works
 
 1. **Loader Setup**: Routes use `tsrRscRoute()` which sets loader to `__fetchRsc`
-   - Loader returns `{ stream: ReadableStream }` instead of JSON data
+   - Loader returns `{ stream: ReadableStream }`
    - Stream contains serialized RSC components
 
 2. **Environment-Specific Stream Fetching**:
