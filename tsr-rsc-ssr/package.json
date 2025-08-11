@@ -21,7 +21,7 @@
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^4.7.0",
-    "@vitejs/plugin-rsc": "https://pkg.pr.new/@vitejs/plugin-rsc@687",
+    "@vitejs/plugin-rsc": "^0.4.19",
     "typescript": "^5.9.2",
     "vite": "^7.0.6"
   },

@@ -37,11 +37,4 @@ export default defineConfig((env) => ({
       },
     },
   ],
-  environments: {
-    ssr: {
-      optimizeDeps: {
-        include: ["react-dom/server"],
-      },
-    },
-  },
 }));
