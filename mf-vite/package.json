@@ -1,0 +1,25 @@
+{
+	"name": "@hiogawa/mf-vite",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"tsc": "tsc -b",
+		"tsc-dev": "pnpm tsc --watch --preserveWatchOutput",
+		"lint": "biome check --write .",
+		"lint-check": "biome check .",
+		"dev": "pnpm --filter 'example-*' dev"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.8.3",
+		"@module-federation/runtime": "^0.5.1",
+		"@module-federation/sdk": "^0.5.1",
+		"@types/react": "^18.3.4",
+		"@types/react-dom": "^18.3.0",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"tsup": "^8.2.4",
+		"typescript": "^5.5.4",
+		"vite": "^5.4.2"
+	},
+	"packageManager": "pnpm@9.8.0+sha512.8e4c3550fb500e808dbc30bb0ce4dd1eb614e30b1c55245f211591ec2cdf9c611cabd34e1364b42f564bd54b3945ed0f49d61d1bbf2ec9bd74b866fcdc723276"
+}
