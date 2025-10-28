@@ -4,7 +4,7 @@
 
 This integration enables React Server Components (RSC) in TanStack Start through a custom serialization pipeline:
 
-1. **Custom Serializer Registration** (`tanstack-start-rsc/src/start.tsx`)
+1. **Custom Serializer Registration** (`src/start.tsx`)
    Registers a custom serialization adapter with TanStack Start to handle React elements.
 
 2. **Server Functions**
@@ -15,6 +15,12 @@ This integration enables React Server Components (RSC) in TanStack Start through
 
 4. **Deserialization** (`runtime/ssr` and `runtime/browser`)
    Both the SSR runtime and browser runtime deserialize using React's `createFromReadableStream`, which reconstructs the React element tree from the RSC stream.
+
+## Example
+
+Example usage:
+- **Server Function**: `src/utils/rsc.tsx` - Defines a server function that returns React elements
+- **Route Usage**: `src/routes/rsc.tsx` - Uses RSC-returning server functions in route loaders
 
 ## TODO
 
