@@ -9,6 +9,7 @@ export const Route = createFileRoute("/rsc")({
 
 function PostsComponent() {
   let posts = Route.useLoaderData();
+  // TODO(tanstack): loader data is promise only browser
   posts = posts instanceof Promise ? React.use(posts) : posts;
 
   return (

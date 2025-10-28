@@ -1,5 +1,6 @@
 import { createFromReadableStream } from "@vitejs/plugin-rsc/ssr";
 import type React from "react";
+import { arrayToStream } from "./utils";
 
 export type SerInput = React.ReactNode;
 export type SerOutput = ReturnType<typeof __serialize>;
@@ -10,8 +11,9 @@ export async function __serialize(data: SerInput) {
 }
 
 export async function __deserialize(serialized: SerOutput) {
+  const array = await serialized;
   const deserialized = await createFromReadableStream<SerInput>(
-    await serialized,
+    arrayToStream(array),
   );
   return deserialized;
 }
