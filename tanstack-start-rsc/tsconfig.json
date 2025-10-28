@@ -1,6 +1,8 @@
 {
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "types": ["vite/client", "@vitejs/plugin-rsc/types"],
     "strict": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",

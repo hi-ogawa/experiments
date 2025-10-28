@@ -50,12 +50,6 @@ export const Route = createRootRoute({
       { rel: "manifest", href: "/site.webmanifest", color: "#fffff" },
       { rel: "icon", href: "/favicon.ico" },
     ],
-    scripts: [
-      {
-        src: "/customScript.js",
-        type: "text/javascript",
-      },
-    ],
   }),
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
@@ -86,6 +80,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             }}
           >
             Posts
+          </Link>{" "}
+          <Link
+            to="/rsc"
+            activeProps={{
+              className: "font-bold",
+            }}
+          >
+            RSC
           </Link>{" "}
         </div>
         <hr />

@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RscRouteImport } from './routes/rsc'
 import { Route as PostsRouteImport } from './routes/posts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PostsIndexRouteImport } from './routes/posts.index'
 import { Route as PostsPostIdRouteImport } from './routes/posts.$postId'
 import { Route as PostsPostIdDeepRouteImport } from './routes/posts_.$postId.deep'
 
+const RscRoute = RscRouteImport.update({
+  id: '/rsc',
+  path: '/rsc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PostsRoute = PostsRouteImport.update({
   id: '/posts',
   path: '/posts',
@@ -44,12 +50,14 @@ const PostsPostIdDeepRoute = PostsPostIdDeepRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/posts': typeof PostsRouteWithChildren
+  '/rsc': typeof RscRoute
   '/posts/$postId': typeof PostsPostIdRoute
   '/posts/': typeof PostsIndexRoute
   '/posts/$postId/deep': typeof PostsPostIdDeepRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/rsc': typeof RscRoute
   '/posts/$postId': typeof PostsPostIdRoute
   '/posts': typeof PostsIndexRoute
   '/posts/$postId/deep': typeof PostsPostIdDeepRoute
@@ -58,6 +66,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/posts': typeof PostsRouteWithChildren
+  '/rsc': typeof RscRoute
   '/posts/$postId': typeof PostsPostIdRoute
   '/posts/': typeof PostsIndexRoute
   '/posts_/$postId/deep': typeof PostsPostIdDeepRoute
@@ -67,15 +76,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/posts'
+    | '/rsc'
     | '/posts/$postId'
     | '/posts/'
     | '/posts/$postId/deep'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/posts/$postId' | '/posts' | '/posts/$postId/deep'
+  to: '/' | '/rsc' | '/posts/$postId' | '/posts' | '/posts/$postId/deep'
   id:
     | '__root__'
     | '/'
     | '/posts'
+    | '/rsc'
     | '/posts/$postId'
     | '/posts/'
     | '/posts_/$postId/deep'
@@ -84,11 +95,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PostsRoute: typeof PostsRouteWithChildren
+  RscRoute: typeof RscRoute
   PostsPostIdDeepRoute: typeof PostsPostIdDeepRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rsc': {
+      id: '/rsc'
+      path: '/rsc'
+      fullPath: '/rsc'
+      preLoaderRoute: typeof RscRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/posts': {
       id: '/posts'
       path: '/posts'
@@ -142,6 +161,7 @@ const PostsRouteWithChildren = PostsRoute._addFileChildren(PostsRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PostsRoute: PostsRouteWithChildren,
+  RscRoute: RscRoute,
   PostsPostIdDeepRoute: PostsPostIdDeepRoute,
 }
 export const routeTree = rootRouteImport
@@ -149,10 +169,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.tsx'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
