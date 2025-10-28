@@ -1,6 +1,8 @@
 # Tanstack Start RSC
 
-## How it works
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/hi-ogawa/experiments/tree/main/tanstack-start-rsc)
+
+## Concepts
 
 This integration enables React Server Components (RSC) in TanStack Start through a custom serialization pipeline:
 
